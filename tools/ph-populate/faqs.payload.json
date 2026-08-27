@@ -1,0 +1,198 @@
+[
+  {
+    "type": "getting-started",
+    "question": "What is PassPLE?",
+    "answer": "PassPLE is a question-based revision platform for the Physician Licensure Examination - the qualifying exam for Philippine medical graduates and IMGs seeking the PRC license and Philippine residency. We focus exclusively on the PLE, with thousands of MCQs reviewed by qualified doctors and mapped to the current PRC Table of Specifications.",
+    "status": 1,
+    "sort_order": 0
+  },
+  {
+    "type": "getting-started",
+    "question": "Which exams do you cover?",
+    "answer": "We focus on the PLE examination - the multiple-choice exam required for PRC licensure and a Philippine residency match. Medical school finals banks are in development. Internship prep is not currently in our scope. The exam list is being finalised; see our <a onclick=\"navTo('exams')\" class=\"link-teal\">exams page</a>.",
+    "status": 1,
+    "sort_order": 1
+  },
+  {
+    "type": "getting-started",
+    "question": "Who writes the questions?",
+    "answer": "Our editorial process is built around clinical review. Every question is reviewed by qualified doctors before publication, with revision based on exam-taker feedback and PRC Table of Specifications updates. Content is mapped to the current PRC Table of Specifications and revised continuously - we don't run a fixed annual cycle, we update banks as soon as feedback or curriculum changes warrant it.",
+    "status": 1,
+    "sort_order": 2
+  },
+  {
+    "type": "getting-started",
+    "question": "Can I access PassPLE on multiple devices?",
+    "answer": "Yes - PassPLE works on any device with a modern browser. Your progress, flagged questions, and analytics sync across all devices. We ask that you don't share login credentials, as simultaneous active sessions from multiple locations may flag your account.",
+    "status": 1,
+    "sort_order": 3
+  },
+  {
+    "type": "pricing",
+    "question": "How does pricing work?",
+    "answer": "PassPLE is offered in four subscription lengths: 1, 2, 3, and 6 months. Prices are shown in Philippine pesos with US Dollar equivalents for international applicants. The 6-month tier offers the best per-month value - see the <a onclick=\"navTo('pricing')\" class=\"link-teal\">pricing page</a> for current rates.",
+    "status": 1,
+    "sort_order": 4
+  },
+  {
+    "type": "pricing",
+    "question": "Is there a free trial?",
+    "answer": "Yes. The PLE bank includes a <strong>7-day free trial</strong> with full access - no credit card needed. You'll be prompted to choose a paid plan when your trial ends. If you don't, your account stays free with limited demo access.",
+    "status": 1,
+    "sort_order": 5
+  },
+  {
+    "type": "pricing",
+    "question": "Do you offer cohort or institutional discounts?",
+    "answer": "For individual subscriptions, the 6-month tier already gives the best per-month value. Hospitals, training networks, and residency programs can access cohort licences at flat per-seat rates - email <a href=\"mailto:institutions@passmed.com\" class=\"link-teal\">institutions@passmed.com</a>.",
+    "status": 1,
+    "sort_order": 6
+  },
+  {
+    "type": "pricing",
+    "question": "What payment methods do you accept?",
+    "answer": "We accept all major Philippine debit and credit cards (Visa, Mastercard, Amex), international cards, Apple Pay, and Google Pay. Payments are processed by Stripe in PHP, with 3D Secure where your bank requires it. Prices are shown in PHP inclusive of 12% VAT where applicable; we also display US Dollar equivalents for reference. International cards will be converted to PHP at your card issuer's exchange rate.",
+    "status": 1,
+    "sort_order": 7
+  },
+  {
+    "type": "content",
+    "question": "Do questions come with full explanations?",
+    "answer": "Every question includes the correct answer and a detailed teaching-point explanation - rooted in current Philippine clinical guidelines (Philippine Medical Association, PPD, MIMS Philippines) and the PRC Table of Specifications, and reviewed by qualified doctors. Not a one-liner: a proper teaching point that explains why the right answer is right and the distractors are wrong.",
+    "status": 1,
+    "sort_order": 8
+  },
+  {
+    "type": "content",
+    "question": "How often is content updated?",
+    "answer": "Continuously. Each bank has an editorial lead who reviews flagged questions weekly, incorporates user feedback, and updates content when the PRC Table of Specifications changes. We maintain a public changelog per bank visible inside your account.",
+    "status": 1,
+    "sort_order": 9
+  },
+  {
+    "type": "content",
+    "question": "How do you decide which topics to cover?",
+    "answer": "We base our content on the official blueprint and curriculum for each exam - only directly relevant questions are included. For the PLE we align to the current PRC Table of Specifications. Every question is categorised by subject and subtopic so you can track performance across every area.",
+    "status": 1,
+    "sort_order": 10
+  },
+  {
+    "type": "content",
+    "question": "Are the questions written in the same style as the real exam?",
+    "answer": "Yes. The PLE is a single-best-answer MCQ exam - our questions match that format exactly, including the case-based clinical scenarios and short stem-based questions that appear on the real exam. Where the real exam includes media (images, ECGs, X-rays, lab results), we include those too.",
+    "status": 1,
+    "sort_order": 11
+  },
+  {
+    "type": "account",
+    "question": "How do I sign up?",
+    "answer": "Click <strong>Sign Up Free</strong> on any exam page or from the homepage. You can register with email or Google. You'll have full access for 7 days - no card needed at signup. After your trial, choose a paid plan to continue.",
+    "status": 1,
+    "sort_order": 12
+  },
+  {
+    "type": "account",
+    "question": "I forgot my password. What now?",
+    "answer": "Click <strong>Log in</strong>, then <strong>Forgot password?</strong> and enter your email. You'll receive a reset link within a few minutes. If it doesn't arrive, check your spam folder or email <a href=\"mailto:support@passmed.com\" class=\"link-teal\">support@passmed.com</a>.",
+    "status": 1,
+    "sort_order": 13
+  },
+  {
+    "type": "account",
+    "question": "Can I pause my subscription?",
+    "answer": "We don't currently offer subscription pausing. Since every subscription is a one-off purchase with no auto-renewal, your access continues to the end date shown in your account regardless. If you have specific circumstances (e.g. exam postponement, illness, parental leave) where you'd like an extension or credit, email us and we'll work something out.",
+    "status": 1,
+    "sort_order": 14
+  },
+  {
+    "type": "account",
+    "question": "Can I cancel my subscription?",
+    "answer": "There's nothing to cancel in the traditional sense - every subscription is a one-off purchase for a fixed duration with no auto-renewal. You won't be charged again at the end of your paid period. Your access simply ends on the date shown in your account, and you can choose whether to renew. If you want to request a refund within 14 days of your paid purchase, see \"Can I get a refund?\" below.",
+    "status": 1,
+    "sort_order": 15
+  },
+  {
+    "type": "pricing",
+    "question": "Can I get a refund?",
+    "answer": "Yes - we offer a 14-day money-back guarantee from your paid purchase date. You can request a refund from your account under Order History, provided you have answered fewer than 50 questions in total (across trial and paid) . Refunds are processed to your original payment method within 10 business days. App Store purchases (Apple or Google) must be refunded through the relevant app store directly.",
+    "status": 1,
+    "sort_order": 16
+  },
+  {
+    "type": "pricing",
+    "question": "What happens at the end of my 7-day free trial?",
+    "answer": "Nothing automatic - we don't charge you. You'll receive an email reminder when your trial is ending. To continue, choose a paid plan from your account. If you don't, your account stays free with limited demo access; you can still log in to see your progress.",
+    "status": 1,
+    "sort_order": 17
+  },
+  {
+    "type": "pricing",
+    "question": "I started a paid plan but I'm no longer sitting the exam. Can I get a refund?",
+    "answer": "Within 14 days of paid purchase, and provided you have answered fewer than 50 questions in total (across trial and paid) : yes, full refund via your Order History. Outside those limits: we can't always refund the full amount, but email us and we'll work out a partial refund or credit.",
+    "status": 1,
+    "sort_order": 18
+  },
+  {
+    "type": "pricing",
+    "question": "Do you offer a trial for institutional licences?",
+    "answer": "Yes - we offer a free 14-day institutional pilot covering up to 10 seats so faculty can evaluate the platform before committing. Email <a href=\"mailto:institutions@passmed.com\" class=\"link-teal\">institutions@passmed.com</a> to set one up.",
+    "status": 1,
+    "sort_order": 19
+  },
+  {
+    "type": "institutions",
+    "question": "Do you offer institutional licences?",
+    "answer": "Yes. We offer seat-based licences for medical schools, hospital training networks, Department of Health regional offices, and residency training programs. Includes a faculty dashboard, cohort reporting by exam and topic, and tools to assign question sets to students or trainees. See the <a onclick=\"navTo('institutions')\" class=\"link-teal\">institutions page</a> for details.",
+    "status": 1,
+    "sort_order": 20
+  },
+  {
+    "type": "institutions",
+    "question": "Can institutions get a custom set of exams?",
+    "answer": "Yes. Institutional licences include PLE access for all enrolled trainees. The faculty dashboard reports cohort performance against the PRC Table of Specifications, with per-discipline breakdowns to help you target weak areas in your residency program.",
+    "status": 1,
+    "sort_order": 21
+  },
+  {
+    "type": "institutions",
+    "question": "How do I get pricing for my institution?",
+    "answer": "Email <a href=\"mailto:institutions@passmed.com\" class=\"link-teal\">institutions@passmed.com</a> with your institution's name, the exams your cohort sits, and the approximate number of seats you need. We'll send a quote within 1 working day.",
+    "status": 1,
+    "sort_order": 22
+  },
+  {
+    "type": "institutions",
+    "question": "How is institutional pricing structured?",
+    "answer": "Annual per-seat licence covering all exams in your scope. Volume discounts kick in at 25, 50, and 100 seats. Email <a href=\"mailto:institutions@passmed.com\" class=\"link-teal\">institutions@passmed.com</a> with your cohort size and exam mix for a tailored quote.",
+    "status": 1,
+    "sort_order": 23
+  },
+  {
+    "type": "institutions",
+    "question": "How does pricing scale across our cohort?",
+    "answer": "Yes. PassPLE covers the PLE - the single qualifying exam for IMGs seeking PRC license and Philippine residency. Pricing is per-seat across your cohort regardless of which doctors are using the platform at any time.",
+    "status": 1,
+    "sort_order": 24
+  },
+  {
+    "type": "institutions",
+    "question": "Do you handle Philippine privacy compliance?",
+    "answer": "Yes. We're compliant with the Data Privacy Act of 2012 (R.A. 10173). Trainee data is processed under our Data Processing Agreement (DPA), which we provide on request. Our processing aligns with the ten Fair Information Principles in Data Privacy Act 2012 Schedule 1, with particular emphasis on Consent, Limiting Use/Disclosure/Retention, Safeguards, and Individual Access. For institutional cohorts, we can also sign customised DPAs, confidentiality agreements, and institution-specific addenda where required.",
+    "status": 1,
+    "sort_order": 25
+  },
+  {
+    "type": "institutions",
+    "question": "Can we get an invoice (not card payment)?",
+    "answer": "Yes. Institutional licences are invoiced annually with 30-day payment terms. We accept EFT in PHP. SWIFT transfers also accepted for international institutions.",
+    "status": 1,
+    "sort_order": 26
+  },
+  {
+    "type": "institutions",
+    "question": "Do you provide a Data Processing Agreement (DPA)?",
+    "answer": "Yes. Our standard DPA is included with every institutional contract and is available for review during procurement. If your institution has specific clauses, our legal team can review additions on request.",
+    "status": 1,
+    "sort_order": 27
+  }
+]

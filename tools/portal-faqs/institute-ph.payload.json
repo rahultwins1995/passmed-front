@@ -1,0 +1,58 @@
+[
+  {
+    "type": "other",
+    "question": "Can I customise the mock exam blueprint?",
+    "answer": "Yes. In Assign Exams, select New Exam and use the Blueprint step to adjust question counts per domain. The default blueprint mirrors the standard domain weighting for the exam you select.",
+    "status": 1,
+    "sort_order": 0
+  },
+  {
+    "type": "other",
+    "question": "What happens to data when a resident's seat is removed?",
+    "answer": "Their historical performance data is preserved in Reports for 12 months. Active sessions are terminated immediately and they lose login access.",
+    "status": 1,
+    "sort_order": 1
+  },
+  {
+    "type": "other",
+    "question": "Can I add a co-administrator to the dashboard?",
+    "answer": "Yes — go to Settings › Administrator access and click \"+ Add admin\". They will receive an email invitation with a link to set up their access.",
+    "status": 1,
+    "sort_order": 2
+  },
+  {
+    "type": "other",
+    "question": "How is the Board Readiness score calculated?",
+    "answer": "It uses a weighted model combining question bank accuracy, score trajectory over the last 8 weeks, mock exam performance, and question volume against weekly targets. Individual reports include a full breakdown.",
+    "status": 1,
+    "sort_order": 3
+  },
+  {
+    "type": "other",
+    "question": "When are mock exam results released to residents?",
+    "answer": "You can set this per exam in Assign Exams (Recipients & Settings step): either immediately on completion or held until you manually release them.",
+    "status": 1,
+    "sort_order": 4
+  },
+  {
+    "type": "other",
+    "question": "How do I reassign an existing mock exam to a new cohort?",
+    "answer": "Go to Assign Exams, select \"Reassign existing exam\", pick the exam from the list, and proceed to Recipients & Settings to choose the new cohort or individual residents.",
+    "status": 1,
+    "sort_order": 5
+  },
+  {
+    "type": "other",
+    "question": "How do I import questions from my own question bank?",
+    "answer": "Go to Question Bank and click \"Import Questions\". Download the CSV template, fill in your questions, and upload. Questions are reviewed and approved by Passmed editorial before appearing.",
+    "status": 1,
+    "sort_order": 6
+  },
+  {
+    "type": "other",
+    "question": "How is the at-risk threshold calculated?",
+    "answer": "Residents are flagged when their rolling average score across the last 20 completed questions falls below the pass threshold (default 65%). You can adjust this in Settings.",
+    "status": 1,
+    "sort_order": 7
+  }
+]

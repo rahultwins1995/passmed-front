@@ -1,0 +1,32 @@
+# Env
+.env
+.env.*
+!.env.example
+
+# Dependencies
+node_modules
+
+# Nuxt / build outputs
+.nuxt/
+.output/
+.data/
+.nitro/
+.cache/
+dist/
+
+# Logs
+*.log
+logs/
+
+# macOS
+.DS_Store
+**/.DS_Store
+
+# Editor duplicates & backup files — never commit.
+# Nuxt registers any *.vue under pages/ as a live route, so a stray "index - Copy.vue"
+# ships as a real bundled page. Also keeps *.bak and backups/ safety copies out of git.
+*Copy*
+* - Copy*
+*.bak
+*.bak-*
+**/backups/

@@ -1,0 +1,121 @@
+[
+  {
+    "type": "other",
+    "question": "How do I reset my password?",
+    "answer": "Click \"Forgot password\" on the login page and follow the emailed link to set a new password.",
+    "status": 1,
+    "sort_order": 0
+  },
+  {
+    "type": "technical",
+    "question": "My progress isn't saving between sessions",
+    "answer": "Make sure you're logged into the same account on each device. Progress is synced to your account in real time — if you see a discrepancy, try logging out and back in. If the problem persists, contact support.",
+    "status": 1,
+    "sort_order": 1
+  },
+  {
+    "type": "billing",
+    "question": "How do I extend or renew my subscription?",
+    "answer": "Go to Settings → Subscription to see your current plan and renew or extend it. You can add weeks to your existing plan without losing any progress or question history.",
+    "status": 1,
+    "sort_order": 2
+  },
+  {
+    "type": "other",
+    "question": "What is Passmed?",
+    "answer": "Passmed is an online medical-exam preparation platform with a question bank and detailed explanations.",
+    "status": 1,
+    "sort_order": 3
+  },
+  {
+    "type": "other",
+    "question": "How is my progress tracked?",
+    "answer": "Your performance is tracked per topic so you can see strengths and weak areas over time.",
+    "status": 1,
+    "sort_order": 4
+  },
+  {
+    "type": "billing",
+    "question": "How does the pass guarantee work?",
+    "answer": "Complete 80% or more of your question bank and still don't pass your exam — we'll refund your subscription in full. Email your score report to support@passmed.com within 30 days of the report being published.",
+    "status": 1,
+    "sort_order": 5
+  },
+  {
+    "type": "questions",
+    "question": "Can I flag questions to review later?",
+    "answer": "Yes. During any session, tap the flag icon on a question to save it. All flagged questions appear in the Flagged Questions section in the sidebar, where you can review explanations, add notes, and remove flags.",
+    "status": 1,
+    "sort_order": 6
+  },
+  {
+    "type": "questions",
+    "question": "How do I reset my question progress?",
+    "answer": "Go to Settings → Danger Zone and select \"Reset progress\". This is a permanent one-time action that wipes your question history, scores, and flagged questions for the selected exam bank. It cannot be undone.",
+    "status": 1,
+    "sort_order": 7
+  },
+  {
+    "type": "questions",
+    "question": "What's the difference between Tutor Mode and Timed Mode?",
+    "answer": "Tutor Mode shows you the answer and explanation immediately after each question — ideal for learning and understanding. Timed Mode simulates real exam conditions: you answer all questions first, then review results at the end.",
+    "status": 1,
+    "sort_order": 8
+  },
+  {
+    "type": "account",
+    "question": "Can I use Passmed on multiple devices?",
+    "answer": "Yes — Passmed works on any device with a modern browser. Log in with your credentials on any device. We ask that you don't share login credentials, as simultaneous access from multiple locations may flag your account.",
+    "status": 1,
+    "sort_order": 9
+  },
+  {
+    "type": "other",
+    "question": "How do I change my exam bank?",
+    "answer": "Click the exam selector in the top of the sidebar (showing your current active exam). You can switch between any exam banks included in your subscription. Your progress is saved separately for each bank.",
+    "status": 1,
+    "sort_order": 10
+  },
+  {
+    "type": "other",
+    "question": "Do you offer institutional plans?",
+    "answer": "Yes, institutions can purchase seats for their students — contact institutions@passmed.com for details.",
+    "status": 1,
+    "sort_order": 11
+  },
+  {
+    "type": "other",
+    "question": "Can I get a refund?",
+    "answer": "Refunds are handled case by case — please reach out to support within the eligibility window.",
+    "status": 1,
+    "sort_order": 12
+  },
+  {
+    "type": "other",
+    "question": "Can I use Passmed on mobile?",
+    "answer": "Yes, Passmed works on any modern browser, including phones and tablets.",
+    "status": 1,
+    "sort_order": 13
+  },
+  {
+    "type": "other",
+    "question": "Which exams does Passmed cover?",
+    "answer": "We cover the MCCQE Part 1 — the Medical Council of Canada Qualifying Examination Part 1, the national qualifying exam for medical licensure in Canada. See the Exams page for details.",
+    "status": 1,
+    "sort_order": 14
+  },
+  {
+    "type": "other",
+    "question": "How do I start a free trial?",
+    "answer": "Sign up with your email and you'll get instant access to a limited number of trial questions.",
+    "status": 1,
+    "sort_order": 15
+  },
+  {
+    "type": "technical",
+    "question": "Questions or images aren't loading correctly",
+    "answer": "Try a hard refresh (Ctrl+Shift+R on Windows, Cmd+Shift+R on Mac). If the issue persists, try clearing your browser cache or switching to a different browser. If you're still having trouble, contact us with your browser version and a screenshot.",
+    "status": 1,
+    "sort_order": 16
+  }
+]

@@ -1,0 +1,156 @@
+{
+  "student": [
+    {
+      "type": "other",
+      "sort_order": 0,
+      "question": "How do I reset my password?",
+      "answer": "Click \\\"Forgot password\\\"\" on the login page and follow the emailed link to set a new password.\""
+    },
+    {
+      "type": "technical",
+      "sort_order": 1,
+      "question": "My progress isn't saving between sessions",
+      "answer": "Make sure you're logged into the same account on each device. Progress is synced to your account in real time — if you see a discrepancy, try logging out and back in. If the problem persists, contact support."
+    },
+    {
+      "type": "billing",
+      "sort_order": 2,
+      "question": "How do I extend or renew my subscription?",
+      "answer": "Go to Settings → Subscription to see your current plan and renew or extend it. You can add weeks to your existing plan without losing any progress or question history."
+    },
+    {
+      "type": "other",
+      "sort_order": 3,
+      "question": "What is Passmed?",
+      "answer": "Passmed is an online medical-exam preparation platform with a question bank and detailed explanations."
+    },
+    {
+      "type": "other",
+      "sort_order": 4,
+      "question": "How is my progress tracked?",
+      "answer": "Your performance is tracked per topic so you can see strengths and weak areas over time."
+    },
+    {
+      "type": "billing",
+      "sort_order": 5,
+      "question": "How does the pass guarantee work?",
+      "answer": "Complete 80% or more of your question bank and still don't pass your exam — we'll refund your subscription in full. Email your score report to [email protected] within 30 days of the report being published."
+    },
+    {
+      "type": "questions",
+      "sort_order": 6,
+      "question": "Can I flag questions to review later?",
+      "answer": "Yes. During any session, tap the flag icon on a question to save it. All flagged questions appear in the Flagged Questions section in the sidebar, where you can review explanations, add notes, and remove flags."
+    },
+    {
+      "type": "questions",
+      "sort_order": 7,
+      "question": "How do I reset my question progress?",
+      "answer": "Go to Settings → Danger Zone and select \"Reset progress\". This is a permanent one-time action that wipes your question history, scores, and flagged questions for the selected exam bank. It cannot be undone."
+    },
+    {
+      "type": "questions",
+      "sort_order": 8,
+      "question": "What's the difference between Tutor Mode and Timed Mode?",
+      "answer": "Tutor Mode shows you the answer and explanation immediately after each question — ideal for learning and understanding. Timed Mode simulates real exam conditions: you answer all questions first, then review results at the end."
+    },
+    {
+      "type": "account",
+      "sort_order": 9,
+      "question": "Can I use Passmed on multiple devices?",
+      "answer": "Yes — Passmed works on any device with a modern browser. Log in with your credentials on any device. We ask that you don't share login credentials, as simultaneous access from multiple locations may flag your account."
+    },
+    {
+      "type": "other",
+      "sort_order": 10,
+      "question": "How do I change my exam bank?",
+      "answer": "Click the exam selector in the top of the sidebar (showing your current active exam). You can switch between any exam banks included in your subscription. Your progress is saved separately for each bank."
+    },
+    {
+      "type": "other",
+      "sort_order": 11,
+      "question": "Do you offer institutional plans?",
+      "answer": "Yes, institutions can purchase seats for their students — contact support@passmed.com for details."
+    },
+    {
+      "type": "other",
+      "sort_order": 12,
+      "question": "Can I get a refund?",
+      "answer": "Refunds are handled case by case — please reach out to support within the eligibility window."
+    },
+    {
+      "type": "other",
+      "sort_order": 13,
+      "question": "Can I use Passmed on mobile?",
+      "answer": "Yes, Passmed works on any modern browser, including phones and tablets."
+    },
+    {
+      "type": "other",
+      "sort_order": 14,
+      "question": "Which exams does Passmed cover?",
+      "answer": "We cover USMLE Step 2 CK, Shelf exams, ABFM, ABIM and more — see the Exams page for the full list."
+    },
+    {
+      "type": "other",
+      "sort_order": 15,
+      "question": "How do I start a free trial?",
+      "answer": "Sign up with your email and you'll get instant access to a limited number of trial questions."
+    },
+    {
+      "type": "technical",
+      "sort_order": 16,
+      "question": "Questions or images aren't loading correctly",
+      "answer": "Try a hard refresh (Ctrl+Shift+R on Windows, Cmd+Shift+R on Mac). If the issue persists, try clearing your browser cache or switching to a different browser. If you're still having trouble, contact us with your browser version and a screenshot."
+    }
+  ],
+  "institute": [
+    {
+      "type": "other",
+      "sort_order": 0,
+      "question": "Can I customise the mock exam blueprint?",
+      "answer": "Yes. In Assign Exams, select New Exam and use the Blueprint step to adjust question counts per domain. The default blueprint mirrors the ABA Basic Boards weighting."
+    },
+    {
+      "type": "other",
+      "sort_order": 1,
+      "question": "What happens to data when a resident's seat is removed?",
+      "answer": "Their historical performance data is preserved in Reports for 12 months. Active sessions are terminated immediately and they lose login access."
+    },
+    {
+      "type": "other",
+      "sort_order": 2,
+      "question": "Can I add a co-administrator to the dashboard?",
+      "answer": "Yes — go to Settings › Administrator access and click \"+ Add admin\". They will receive an email invitation with a link to set up their access."
+    },
+    {
+      "type": "other",
+      "sort_order": 3,
+      "question": "How is the Board Readiness score calculated?",
+      "answer": "It uses a weighted model combining question bank accuracy, score trajectory over the last 8 weeks, mock exam performance, and question volume against weekly targets. Individual reports include a full breakdown."
+    },
+    {
+      "type": "other",
+      "sort_order": 4,
+      "question": "When are mock exam results released to residents?",
+      "answer": "You can set this per exam in Assign Exams (Recipients & Settings step): either immediately on completion or held until you manually release them."
+    },
+    {
+      "type": "other",
+      "sort_order": 5,
+      "question": "How do I reassign an existing mock exam to a new cohort?",
+      "answer": "Go to Assign Exams, select \"Reassign existing exam\", pick the exam from the list, and proceed to Recipients & Settings to choose the new cohort or individual residents."
+    },
+    {
+      "type": "other",
+      "sort_order": 6,
+      "question": "How do I import questions from my own question bank?",
+      "answer": "Go to Question Bank and click \"Import Questions\". Download the CSV template, fill in your questions, and upload. Questions are reviewed and approved by Passmed editorial before appearing."
+    },
+    {
+      "type": "other",
+      "sort_order": 7,
+      "question": "How is the at-risk threshold calculated?",
+      "answer": "Residents are flagged when their rolling average score across the last 20 completed questions falls below the pass threshold (default 65%). You can adjust this in Settings."
+    }
+  ]
+}

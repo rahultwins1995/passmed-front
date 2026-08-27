@@ -1,0 +1,359 @@
+[
+ {
+  "type": "getting-started",
+  "question": "What is Passmed and who is it for?",
+  "answer": "Passmed is a question bank platform built specifically for South African postgraduate medical exams. We serve two audiences:\n        <ul>\n          <li><strong>Doctors in Training</strong> sitting CMSA Fellowship and HPCSA exams (FCP, FCS Primary, FCOG, FCA, FCEM, FCPsych, FCPaed, FCD, FCMFOS, the Dip HIV Management, and the HPCSA Board Examination for foreign-qualified doctors)</li>\n          <li><strong>Medical Students</strong> preparing for their undergraduate clinical examinations</li>\n        </ul>\n        Every question is reviewed by a qualified doctor and matched to the official exam curriculum. Passmed started in the UK, where it's helped thousands of doctors pass their exams — now we've brought that same proven methodology to South Africa.",
+  "status": 1,
+  "sort_order": 0
+ },
+ {
+  "type": "getting-started",
+  "question": "Is there a free trial?",
+  "answer": "Yes — you can try Passmed free for 7 days with no credit card required. The trial gives you your first 50 questions in your chosen bank. After 7 days — or once you've used your 50 free questions — choose a plan or let the trial expire with no charge. We recommend signing up for the free trial before purchasing so you can see whether the platform suits your learning style.",
+  "status": 1,
+  "sort_order": 1
+ },
+ {
+  "type": "getting-started",
+  "question": "How do I get started?",
+  "answer": "Click \"Free Trial\" and create your account. You'll select your exam — either a Fellowship or HPCSA exam (Doctors in Training) or your student clinical exams (Medical Students). From there, you can start answering questions immediately. No setup or downloads required.",
+  "status": 1,
+  "sort_order": 2
+ },
+ {
+  "type": "getting-started",
+  "question": "What devices does Passmed work on?",
+  "answer": "Passmed is fully web-based and works on any modern device — desktop, laptop, tablet, or smartphone. Your progress syncs automatically across all your devices. We recommend Chrome, Firefox, Edge, or Safari, updated within the last 12 months.",
+  "status": 1,
+  "sort_order": 3
+ },
+ {
+  "type": "getting-started",
+  "question": "How do I log in?",
+  "answer": "Enter your email address and password at <a href=\"/login\">the login page</a>. The password field is case sensitive. Click \"Log in\" and you'll be taken straight into your learning portal.",
+  "status": 1,
+  "sort_order": 4
+ },
+ {
+  "type": "getting-started",
+  "question": "What should I do if I forgot my password?",
+  "answer": "Click the \"Forgot password?\" link on the login page to reset your password via email.",
+  "status": 1,
+  "sort_order": 5
+ },
+ {
+  "type": "getting-started",
+  "question": "I'm unable to log in — what should I do?",
+  "answer": "Common reasons for failed logins include:\n        <ul>\n          <li><strong>Browser issues</strong> — try a different browser (Chrome, Firefox, Safari, or Edge)</li>\n          <li><strong>Incorrect email or password</strong> — the password is case-sensitive; check for extra spaces if you're copy-pasting</li>\n          <li><strong>Account not yet activated</strong> — make sure you've verified your email after signing up</li>\n        </ul>\n        If you're still unable to log in after trying the above, contact us at <a href=\"mailto:support@passmed.com\">support@passmed.com</a>.",
+  "status": 1,
+  "sort_order": 6
+ },
+ {
+  "type": "getting-started",
+  "question": "How long should I study before my exam?",
+  "answer": "We recommend starting at least 3 months before your Fellowship or HPCSA exam date, and at least 4–6 weeks before a student clinical exam. Begin with a practice session to baseline your current knowledge, then build a topic-by-topic plan around the official exam curriculum. Consistent daily sessions produce far better results than last-minute cramming — spaced repetition requires time to work.",
+  "status": 1,
+  "sort_order": 7
+ },
+ {
+  "type": "getting-started",
+  "question": "What is your pass rate?",
+  "answer": "We don't publish a single pass rate figure because it would be misleading. Pass rates vary significantly by exam, by how much of the bank a user completed, and by how long they studied — a headline number risks creating false expectations. What we can tell you: users who complete at least 85% of their question bank consistently outperform national averages — and we back that with our pass guarantee.",
+  "status": 1,
+  "sort_order": 8
+ },
+ {
+  "type": "getting-started",
+  "question": "I'm a foreign-qualified doctor — can I use Passmed?",
+  "answer": "Absolutely. If you're preparing for the HPCSA Board Examination — the exam foreign-qualified doctors must pass to register and practise in South Africa — or any other exam we cover, Passmed works for you regardless of where you trained. Our bank is matched to the official exam scope, so you can focus your study where it counts.",
+  "status": 1,
+  "sort_order": 9
+ },
+ {
+  "type": "getting-started",
+  "question": "Is there a mobile app or an offline mode?",
+  "answer": "There's no separate app to install — Passmed runs in any modern browser and is fully responsive on phones and tablets, so you can study on any device just by logging in at our website. An internet connection is required; there is currently no offline mode.",
+  "status": 1,
+  "sort_order": 10
+ },
+ {
+  "type": "pricing",
+  "question": "How much does Passmed cost?",
+  "answer": "We offer 1-month, 3-month, 6-month, and 12-month subscription plans for each exam bank. Longer plans offer better value per month. Visit our <a href=\"/pricing\">Pricing page</a> for current rates. Institutional pricing is also available.",
+  "status": 1,
+  "sort_order": 11
+ },
+ {
+  "type": "pricing",
+  "question": "Does one subscription cover all exams?",
+  "answer": "Each subscription gives you access to one exam question bank. If you're preparing for multiple exams, you'll need a separate subscription for each. You can hold multiple subscriptions under the same account, and progress for each bank is tracked independently.",
+  "status": 1,
+  "sort_order": 12
+ },
+ {
+  "type": "pricing",
+  "question": "Can I subscribe to multiple question banks at once?",
+  "answer": "Yes — you can subscribe to more than one exam bank with a single account.",
+  "status": 1,
+  "sort_order": 13
+ },
+ {
+  "type": "pricing",
+  "question": "When does my subscription start?",
+  "answer": "Your subscription begins within minutes after you submit payment.",
+  "status": 1,
+  "sort_order": 14
+ },
+ {
+  "type": "pricing",
+  "question": "Can I renew or extend my subscription?",
+  "answer": "Yes. You can extend your subscription at any time without losing your progress. A renewal discount is automatically applied at checkout. You'll be prompted before your subscription expires with an option to purchase additional time.",
+  "status": 1,
+  "sort_order": 15
+ },
+ {
+  "type": "pricing",
+  "question": "Will I lose my progress if I renew?",
+  "answer": "Not at all — your account data is retained even after your subscription expires. If you renew with the same subscription, all of your statistics will still be available. You also have the option to reset if you prefer a fresh start.",
+  "status": 1,
+  "sort_order": 16
+ },
+ {
+  "type": "pricing",
+  "question": "Can I temporarily suspend my subscription?",
+  "answer": "Unfortunately, subscriptions cannot be temporarily paused or suspended at this time.",
+  "status": 1,
+  "sort_order": 17
+ },
+ {
+  "type": "pricing",
+  "question": "Do you offer a pass guarantee?",
+  "answer": "Yes. If you complete 85% of the questions in your package and don't pass your exam, we will refund the full amount of your subscription costs. To claim, email your score report to <a href=\"mailto:support@passmed.com\">support@passmed.com</a> within 30 days of the score report being published.",
+  "status": 1,
+  "sort_order": 18
+ },
+ {
+  "type": "pricing",
+  "question": "Can I get a refund?",
+  "answer": "Yes, within limits. We offer a free trial so you can try Passmed before you buy. After you purchase, you can request a full refund within 14 days as long as you've answered fewer than 50 questions in your bank — just email <a href=\"mailto:support@passmed.com\">support@passmed.com</a>. Beyond that, refunds are covered only by our pass guarantee (see above).",
+  "status": 1,
+  "sort_order": 19
+ },
+ {
+  "type": "pricing",
+  "question": "How do I apply a coupon code?",
+  "answer": "During checkout, click the \"Have a promo code?\" box, enter your code, and click \"Apply.\" The discount will be applied to all eligible products and your cart total will update automatically. Only one coupon code can be used per purchase.",
+  "status": 1,
+  "sort_order": 20
+ },
+ {
+  "type": "pricing",
+  "question": "What forms of payment do you accept?",
+  "answer": "We accept Visa, Mastercard, and American Express. Institutional accounts can also pay by EFT bank transfer or via purchase order and invoice.",
+  "status": 1,
+  "sort_order": 21
+ },
+ {
+  "type": "pricing",
+  "question": "Is my payment information secure?",
+  "answer": "Absolutely — your security is our priority. We do not store any credit card information. All payment data is sent over an encrypted TLS connection. Payments are processed by Stripe, a global leader in secure payment processing. For more information, see our Privacy Policy.",
+  "status": 1,
+  "sort_order": 22
+ },
+ {
+  "type": "pricing",
+  "question": "What should I do if my credit card was declined?",
+  "answer": "Declines are usually caused by your card-issuing bank — this can happen due to unusual transaction patterns, purchase limits, or incorrect card details. Contact your bank to resolve the issue and try again, or use a different card. If problems persist, email <a href=\"mailto:support@passmed.com\">support@passmed.com</a>.",
+  "status": 1,
+  "sort_order": 23
+ },
+ {
+  "type": "pricing",
+  "question": "Do you offer group or institutional discounts?",
+  "answer": "Yes. We offer institutional licensing for training programmes, academic departments, universities, and hospital groups. Group discounts are available for 5+ users. Visit our <a href=\"institutions\">Institutions page</a> or email <a href=\"mailto:institutions@passmed.com\">institutions@passmed.com</a> for a custom quote.",
+  "status": 1,
+  "sort_order": 24
+ },
+ {
+  "type": "pricing",
+  "question": "Can I share my subscription with a colleague?",
+  "answer": "No. Subscriptions are single-user only. Sharing accounts means your performance analytics become inaccurate and your personalised recommendations won't work properly. Account sharing violates our Terms of Service and may result in suspension. For multi-user access, see our <a href=\"/institutions\">Institutional plans</a>.",
+  "status": 1,
+  "sort_order": 25
+ },
+ {
+  "type": "pricing",
+  "question": "Can I get a receipt or invoice for reimbursement?",
+  "answer": "Yes. You'll automatically receive an emailed payment receipt after checkout, which most employers accept for education-allowance or employer reimbursement. If you need an itemised invoice or specific billing details (for example, your programme or department as the bill-to), email <a href=\"mailto:support@passmed.com\">support@passmed.com</a> and we'll send one.",
+  "status": 1,
+  "sort_order": 26
+ },
+ {
+  "type": "content",
+  "question": "What exams do you currently cover?",
+  "answer": "We currently cover:\n        <ul>\n          <li><strong>Fellowship &amp; HPCSA exams (Doctors in Training):</strong> FCP, FCS Primary, FCOG, FCA, FCEM, FCPsych, FCPaed, FCD, FCMFOS, the Dip HIV Management, and the HPCSA Board Examination</li>\n          <li><strong>Undergraduate exams (Medical Students):</strong> core clinical disciplines across the medical curriculum</li>\n        </ul>\n        More exams are in development. See our <a href=\"/exams\">Exams page</a> for the full list and question counts.",
+  "status": 1,
+  "sort_order": 27
+ },
+ {
+  "type": "content",
+  "question": "Who writes the questions?",
+  "answer": "Every question on Passmed is reviewed by a qualified doctor and our authors are specialty-matched.",
+  "status": 1,
+  "sort_order": 28
+ },
+ {
+  "type": "content",
+  "question": "How is content matched to the exam curriculum?",
+  "answer": "We map every question to the official curriculum published by the relevant body (the CMSA colleges, HPCSA, and university faculties). Question weighting across topics mirrors the actual exam distribution, so your study time is spent where the points are. Curricula are reviewed quarterly and questions updated whenever official distributions change.",
+  "status": 1,
+  "sort_order": 29
+ },
+ {
+  "type": "content",
+  "question": "How often is content updated?",
+  "answer": "Content is updated on a regular basis according to feedback from our Passmed community and exam changes. We don't set a fixed schedule — if a question becomes outdated, we update it. New questions are added regularly.",
+  "status": 1,
+  "sort_order": 30
+ },
+ {
+  "type": "content",
+  "question": "What is the difference between Test Mode and Tutor Mode?",
+  "answer": "<ul>\n          <li><strong>Test Mode</strong> — you won't see any answers or explanations until you submit the entire test. Use this to simulate real exam conditions and practice pacing.</li>\n          <li><strong>Tutor Mode</strong> — the correct answer and full explanation are displayed immediately after each question, allowing you to learn as you go. Best for building knowledge on new topics.</li>\n        </ul>",
+  "status": 1,
+  "sort_order": 31
+ },
+ {
+  "type": "content",
+  "question": "Do you only provide the correct answer, or a full explanation?",
+  "answer": "Each question includes the correct answer and a detailed explanation. These explanations are derived from quality resources and publications and written by qualified doctors. We also explain why each incorrect answer option is wrong — understanding the distractors is one of the most effective ways to avoid similar traps on the real exam.",
+  "status": 1,
+  "sort_order": 32
+ },
+ {
+  "type": "content",
+  "question": "How many questions are in each bank?",
+  "answer": "Question counts vary by exam. See our <a href=\"/exams\">Exams page</a> for the specific count for each bank. All banks grow continuously as our doctor author teams add new questions.",
+  "status": 1,
+  "sort_order": 33
+ },
+ {
+  "type": "content",
+  "question": "Does Passmed track my performance?",
+  "answer": "Yes. Your dashboard automatically tracks your performance by topic and subtopic, showing where you're strongest and where to focus so you can target your weak areas. You can see your accuracy per topic, your activity over time, and how much of each bank you've completed.",
+  "status": 1,
+  "sort_order": 34
+ },
+ {
+  "type": "content",
+  "question": "Can I save Passmed content to my hard drive or print it?",
+  "answer": "Printing, saving, copying, screen capture, or any other reproduction of Passmed materials is strictly prohibited and constitutes copyright infringement and a breach of our Terms and Conditions. We monitor all user activity and any violation may result in account suspension, termination without refund, and/or legal action.",
+  "status": 1,
+  "sort_order": 35
+ },
+ {
+  "type": "content",
+  "question": "Can I become a question writer?",
+  "answer": "We are continually expanding our content and always looking for contributors and editors. If you're a keen academic with attention to detail who would love to contribute, please send your information via our contact page or email <a href=\"mailto:support@passmed.com\">support@passmed.com</a> and we'll be in touch.",
+  "status": 1,
+  "sort_order": 36
+ },
+ {
+  "type": "content",
+  "question": "How do I provide feedback on a question?",
+  "answer": "Use the \"Submit Feedback\" button within the question interface to share your thoughts. Every piece of feedback is reviewed by our editorial team and used to drive continuous improvement.",
+  "status": 1,
+  "sort_order": 37
+ },
+ {
+  "type": "content",
+  "question": "Which CMSA and HPCSA exams do you cover?",
+  "answer": "Passmed focuses on CMSA Fellowship exams (including FCP, FCS Primary, FCOG, FCA, FCEM, FCPsych, FCPaed, FCD, and FCMFOS), the Dip HIV Management, and the HPCSA Board Examination for foreign-qualified doctors, plus undergraduate clinical exams for medical students. Coverage is expanding continually. See our <a href=\"/exams\">Exams page</a> for the full, up-to-date list.",
+  "status": 1,
+  "sort_order": 38
+ },
+ {
+  "type": "content",
+  "question": "Do you offer CPD points?",
+  "answer": "No. Passmed is an exam-preparation question bank and does not currently offer HPCSA Continuing Professional Development (CPD) points or CEUs.",
+  "status": 1,
+  "sort_order": 39
+ },
+ {
+  "type": "content",
+  "question": "How is my score calculated, and is there negative marking?",
+  "answer": "In your personal question bank, your dashboard tracks your accuracy by topic so you can see your strengths and weak areas. Negative marking (points deducted for wrong answers) is not used in your own practice; it only applies to some institution-assigned mock exams, where your programme sets the marking rules — and any mock that uses it tells you before you start.",
+  "status": 1,
+  "sort_order": 40
+ },
+ {
+  "type": "account",
+  "question": "Can I switch between exam banks?",
+  "answer": "Yes, you can switch freely between them from your dashboard — your progress in each bank is tracked independently.",
+  "status": 1,
+  "sort_order": 41
+ },
+ {
+  "type": "account",
+  "question": "Can I reset my progress?",
+  "answer": "Yes, you can reset your question bank once from your account settings. Please note this will permanently erase all your progress and statistics and cannot be undone. Use it wisely — once it's gone, it's gone.",
+  "status": 1,
+  "sort_order": 42
+ },
+ {
+  "type": "account",
+  "question": "Can I use my subscription from multiple devices?",
+  "answer": "Yes — you can access your subscription from any device (phone, laptop, tablet) and from any location. Please note that sharing accounts is not permitted, and simultaneous logins are prohibited. Violations of our Terms &amp; Conditions may result in account cancellation.",
+  "status": 1,
+  "sort_order": 43
+ },
+ {
+  "type": "account",
+  "question": "I found an error in a question. How do I report it?",
+  "answer": "Every question has a \"Submit Feedback\" button. Use it to flag the issue and add a note. Our content team reviews all reports. If you're correct, we'll update the question.",
+  "status": 1,
+  "sort_order": 44
+ },
+ {
+  "type": "account",
+  "question": "Is my performance shared with my programme or university?",
+  "answer": "Only if you're using a seat your institution gave you. On an institutional (programme-provided) subscription, your programme's faculty can see your performance as part of their cohort dashboard. On a personal subscription you bought yourself, your data is private and is never shared with any institution.",
+  "status": 1,
+  "sort_order": 45
+ },
+ {
+  "type": "institutions",
+  "question": "Can our training programme get group access?",
+  "answer": "Yes. We offer institutional licensing for training programmes, academic departments, and universities. Institutional accounts include a programme director dashboard, cohort benchmarking, assigned question sets, and flexible billing. Visit our <a href=\"/institutions\">Institutions page</a> or email <a href=\"mailto:institutions@passmed.com\">institutions@passmed.com</a> for a custom quote.",
+  "status": 1,
+  "sort_order": 46
+ },
+ {
+  "type": "institutions",
+  "question": "Can programme directors assign questions or quizzes to registrars?",
+  "answer": "Yes. Programme directors can create and assign custom question sets, quizzes, and mock assessments. You can set due dates and track completion.",
+  "status": 1,
+  "sort_order": 47
+ },
+ {
+  "type": "institutions",
+  "question": "Can programme directors see registrar performance data?",
+  "answer": "Yes. Institutional accounts include a programme director dashboard with aggregate and individual-level performance data — topic-level scores, session activity, progress over time, and cohort benchmarking. Note: data from personal (retail) subscriptions is not shared with the institution.",
+  "status": 1,
+  "sort_order": 48
+ },
+ {
+  "type": "institutions",
+  "question": "How does billing work for institutions?",
+  "answer": "Institutional billing is flexible. We can invoice annually per programme or per seat, and we work with university and hospital finance offices and can accommodate purchase orders. Contact <a href=\"mailto:institutions@passmed.com\">institutions@passmed.com</a> and we'll walk you through the options.",
+  "status": 1,
+  "sort_order": 49
+ },
+ {
+  "type": "institutions",
+  "question": "Can you support test accommodations, such as extra time?",
+  "answer": "Yes, for institution-assigned assessments. When a programme assigns a timed mock exam, faculty can grant per-student accommodations such as extra time. Personal question-bank practice isn't force-timed — in Tutor Mode you work at your own pace — so no accommodation is needed there.",
+  "status": 1,
+  "sort_order": 50
+ }
+]

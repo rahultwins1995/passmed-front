@@ -1,0 +1,2282 @@
+{
+  "meta": {
+    "title": "Passmed IMG Pathways Data",
+    "description": "Structured content foundation for the Passmed International Medical Graduate resource. Licensing requirements are DESTINATION-driven; ORIGIN mainly affects school recognition, competent-authority/fast-track eligibility and English-test exemptions.",
+    "lastUpdated": "2026-07-27",
+    "disclaimer": "Fees, salaries, exam structures and immigration rules change frequently and vary by school, province/state and individual circumstances. All figures are indicative and were compiled from official sources in July 2026. Always verify against the official regulator before relying on any number.",
+    "note": "Origin countries not individually researched use a rules engine that infers recognition, English-test and route status from destination policy. Always verify your specific medical school and current regulator rules."
+  },
+  "origins": [
+    {
+      "id": "af",
+      "name": "Afghanistan",
+      "eng": "other",
+      "ca": false,
+      "dev": false
+    },
+    {
+      "id": "dz",
+      "name": "Algeria",
+      "eng": "other",
+      "ca": false,
+      "dev": false
+    },
+    {
+      "id": "ar",
+      "name": "Argentina",
+      "eng": "other",
+      "ca": false,
+      "dev": false
+    },
+    {
+      "id": "au",
+      "name": "Australia",
+      "eng": "first",
+      "ca": true,
+      "dev": true
+    },
+    {
+      "id": "at",
+      "name": "Austria",
+      "eng": "other",
+      "ca": false,
+      "dev": true
+    },
+    {
+      "id": "bs",
+      "name": "Bahamas",
+      "eng": "first",
+      "ca": false,
+      "dev": false
+    },
+    {
+      "id": "bh",
+      "name": "Bahrain",
+      "eng": "other",
+      "ca": false,
+      "dev": false
+    },
+    {
+      "id": "bd",
+      "name": "Bangladesh",
+      "eng": "medium",
+      "ca": false,
+      "dev": false
+    },
+    {
+      "id": "bb",
+      "name": "Barbados",
+      "eng": "first",
+      "ca": false,
+      "dev": false
+    },
+    {
+      "id": "by",
+      "name": "Belarus",
+      "eng": "other",
+      "ca": false,
+      "dev": false
+    },
+    {
+      "id": "be",
+      "name": "Belgium",
+      "eng": "other",
+      "ca": false,
+      "dev": true
+    },
+    {
+      "id": "bt",
+      "name": "Bhutan",
+      "eng": "medium",
+      "ca": false,
+      "dev": false
+    },
+    {
+      "id": "bo",
+      "name": "Bolivia",
+      "eng": "other",
+      "ca": false,
+      "dev": false
+    },
+    {
+      "id": "bw",
+      "name": "Botswana",
+      "eng": "medium",
+      "ca": false,
+      "dev": false
+    },
+    {
+      "id": "br",
+      "name": "Brazil",
+      "eng": "other",
+      "ca": false,
+      "dev": false
+    },
+    {
+      "id": "bg",
+      "name": "Bulgaria",
+      "eng": "other",
+      "ca": false,
+      "dev": false
+    },
+    {
+      "id": "cm",
+      "name": "Cameroon",
+      "eng": "medium",
+      "ca": false,
+      "dev": false
+    },
+    {
+      "id": "ca",
+      "name": "Canada",
+      "eng": "first",
+      "ca": true,
+      "dev": true
+    },
+    {
+      "id": "cl",
+      "name": "Chile",
+      "eng": "other",
+      "ca": false,
+      "dev": true
+    },
+    {
+      "id": "cn",
+      "name": "China",
+      "eng": "other",
+      "ca": false,
+      "dev": false
+    },
+    {
+      "id": "co",
+      "name": "Colombia",
+      "eng": "other",
+      "ca": false,
+      "dev": false
+    },
+    {
+      "id": "hr",
+      "name": "Croatia",
+      "eng": "other",
+      "ca": false,
+      "dev": false
+    },
+    {
+      "id": "cu",
+      "name": "Cuba",
+      "eng": "other",
+      "ca": false,
+      "dev": false
+    },
+    {
+      "id": "cz",
+      "name": "Czechia",
+      "eng": "other",
+      "ca": false,
+      "dev": true
+    },
+    {
+      "id": "dk",
+      "name": "Denmark",
+      "eng": "other",
+      "ca": false,
+      "dev": true
+    },
+    {
+      "id": "do",
+      "name": "Dominican Republic",
+      "eng": "other",
+      "ca": false,
+      "dev": false
+    },
+    {
+      "id": "ec",
+      "name": "Ecuador",
+      "eng": "other",
+      "ca": false,
+      "dev": false
+    },
+    {
+      "id": "eg",
+      "name": "Egypt",
+      "eng": "other",
+      "ca": false,
+      "dev": false
+    },
+    {
+      "id": "ee",
+      "name": "Estonia",
+      "eng": "other",
+      "ca": false,
+      "dev": true
+    },
+    {
+      "id": "et",
+      "name": "Ethiopia",
+      "eng": "medium",
+      "ca": false,
+      "dev": false
+    },
+    {
+      "id": "fi",
+      "name": "Finland",
+      "eng": "other",
+      "ca": false,
+      "dev": true
+    },
+    {
+      "id": "fr",
+      "name": "France",
+      "eng": "other",
+      "ca": false,
+      "dev": true
+    },
+    {
+      "id": "de",
+      "name": "Germany",
+      "eng": "other",
+      "ca": false,
+      "dev": true
+    },
+    {
+      "id": "gh",
+      "name": "Ghana",
+      "eng": "medium",
+      "ca": false,
+      "dev": false
+    },
+    {
+      "id": "gr",
+      "name": "Greece",
+      "eng": "other",
+      "ca": false,
+      "dev": true
+    },
+    {
+      "id": "gd",
+      "name": "Grenada",
+      "eng": "first",
+      "ca": false,
+      "dev": false
+    },
+    {
+      "id": "gy",
+      "name": "Guyana",
+      "eng": "first",
+      "ca": false,
+      "dev": false
+    },
+    {
+      "id": "hu",
+      "name": "Hungary",
+      "eng": "other",
+      "ca": false,
+      "dev": true
+    },
+    {
+      "id": "in",
+      "name": "India",
+      "eng": "medium",
+      "ca": false,
+      "dev": false
+    },
+    {
+      "id": "id",
+      "name": "Indonesia",
+      "eng": "other",
+      "ca": false,
+      "dev": false
+    },
+    {
+      "id": "ir",
+      "name": "Iran",
+      "eng": "other",
+      "ca": false,
+      "dev": false
+    },
+    {
+      "id": "iq",
+      "name": "Iraq",
+      "eng": "other",
+      "ca": false,
+      "dev": false
+    },
+    {
+      "id": "ie",
+      "name": "Ireland",
+      "eng": "first",
+      "ca": true,
+      "dev": true
+    },
+    {
+      "id": "il",
+      "name": "Israel",
+      "eng": "other",
+      "ca": false,
+      "dev": true
+    },
+    {
+      "id": "it",
+      "name": "Italy",
+      "eng": "other",
+      "ca": false,
+      "dev": true
+    },
+    {
+      "id": "jm",
+      "name": "Jamaica",
+      "eng": "first",
+      "ca": false,
+      "dev": false
+    },
+    {
+      "id": "jp",
+      "name": "Japan",
+      "eng": "other",
+      "ca": false,
+      "dev": true
+    },
+    {
+      "id": "jo",
+      "name": "Jordan",
+      "eng": "other",
+      "ca": false,
+      "dev": false
+    },
+    {
+      "id": "kz",
+      "name": "Kazakhstan",
+      "eng": "other",
+      "ca": false,
+      "dev": false
+    },
+    {
+      "id": "ke",
+      "name": "Kenya",
+      "eng": "medium",
+      "ca": false,
+      "dev": false
+    },
+    {
+      "id": "kw",
+      "name": "Kuwait",
+      "eng": "other",
+      "ca": false,
+      "dev": false
+    },
+    {
+      "id": "lv",
+      "name": "Latvia",
+      "eng": "other",
+      "ca": false,
+      "dev": false
+    },
+    {
+      "id": "lb",
+      "name": "Lebanon",
+      "eng": "other",
+      "ca": false,
+      "dev": false
+    },
+    {
+      "id": "lr",
+      "name": "Liberia",
+      "eng": "medium",
+      "ca": false,
+      "dev": false
+    },
+    {
+      "id": "ly",
+      "name": "Libya",
+      "eng": "other",
+      "ca": false,
+      "dev": false
+    },
+    {
+      "id": "lt",
+      "name": "Lithuania",
+      "eng": "other",
+      "ca": false,
+      "dev": false
+    },
+    {
+      "id": "mw",
+      "name": "Malawi",
+      "eng": "medium",
+      "ca": false,
+      "dev": false
+    },
+    {
+      "id": "my",
+      "name": "Malaysia",
+      "eng": "medium",
+      "ca": false,
+      "dev": false
+    },
+    {
+      "id": "mt",
+      "name": "Malta",
+      "eng": "first",
+      "ca": false,
+      "dev": true
+    },
+    {
+      "id": "mu",
+      "name": "Mauritius",
+      "eng": "medium",
+      "ca": false,
+      "dev": false
+    },
+    {
+      "id": "mx",
+      "name": "Mexico",
+      "eng": "other",
+      "ca": false,
+      "dev": false
+    },
+    {
+      "id": "ma",
+      "name": "Morocco",
+      "eng": "other",
+      "ca": false,
+      "dev": false
+    },
+    {
+      "id": "mm",
+      "name": "Myanmar",
+      "eng": "medium",
+      "ca": false,
+      "dev": false
+    },
+    {
+      "id": "na",
+      "name": "Namibia",
+      "eng": "medium",
+      "ca": false,
+      "dev": false
+    },
+    {
+      "id": "np",
+      "name": "Nepal",
+      "eng": "medium",
+      "ca": false,
+      "dev": false
+    },
+    {
+      "id": "nl",
+      "name": "Netherlands",
+      "eng": "other",
+      "ca": false,
+      "dev": true
+    },
+    {
+      "id": "nz",
+      "name": "New Zealand",
+      "eng": "first",
+      "ca": true,
+      "dev": true
+    },
+    {
+      "id": "ng",
+      "name": "Nigeria",
+      "eng": "medium",
+      "ca": false,
+      "dev": false
+    },
+    {
+      "id": "no",
+      "name": "Norway",
+      "eng": "other",
+      "ca": false,
+      "dev": true
+    },
+    {
+      "id": "om",
+      "name": "Oman",
+      "eng": "other",
+      "ca": false,
+      "dev": false
+    },
+    {
+      "id": "pk",
+      "name": "Pakistan",
+      "eng": "medium",
+      "ca": false,
+      "dev": false
+    },
+    {
+      "id": "ps",
+      "name": "Palestine",
+      "eng": "other",
+      "ca": false,
+      "dev": false
+    },
+    {
+      "id": "pe",
+      "name": "Peru",
+      "eng": "other",
+      "ca": false,
+      "dev": false
+    },
+    {
+      "id": "ph",
+      "name": "Philippines",
+      "eng": "medium",
+      "ca": false,
+      "dev": false
+    },
+    {
+      "id": "pl",
+      "name": "Poland",
+      "eng": "other",
+      "ca": false,
+      "dev": true
+    },
+    {
+      "id": "pt",
+      "name": "Portugal",
+      "eng": "other",
+      "ca": false,
+      "dev": true
+    },
+    {
+      "id": "qa",
+      "name": "Qatar",
+      "eng": "other",
+      "ca": false,
+      "dev": false
+    },
+    {
+      "id": "ro",
+      "name": "Romania",
+      "eng": "other",
+      "ca": false,
+      "dev": false
+    },
+    {
+      "id": "ru",
+      "name": "Russia",
+      "eng": "other",
+      "ca": false,
+      "dev": false
+    },
+    {
+      "id": "rw",
+      "name": "Rwanda",
+      "eng": "medium",
+      "ca": false,
+      "dev": false
+    },
+    {
+      "id": "sa",
+      "name": "Saudi Arabia",
+      "eng": "other",
+      "ca": false,
+      "dev": false
+    },
+    {
+      "id": "rs",
+      "name": "Serbia",
+      "eng": "other",
+      "ca": false,
+      "dev": false
+    },
+    {
+      "id": "sl",
+      "name": "Sierra Leone",
+      "eng": "medium",
+      "ca": false,
+      "dev": false
+    },
+    {
+      "id": "sg",
+      "name": "Singapore",
+      "eng": "medium",
+      "ca": false,
+      "dev": true
+    },
+    {
+      "id": "sk",
+      "name": "Slovakia",
+      "eng": "other",
+      "ca": false,
+      "dev": false
+    },
+    {
+      "id": "si",
+      "name": "Slovenia",
+      "eng": "other",
+      "ca": false,
+      "dev": true
+    },
+    {
+      "id": "za",
+      "name": "South Africa",
+      "eng": "first",
+      "ca": false,
+      "dev": false
+    },
+    {
+      "id": "kr",
+      "name": "South Korea",
+      "eng": "other",
+      "ca": false,
+      "dev": true
+    },
+    {
+      "id": "es",
+      "name": "Spain",
+      "eng": "other",
+      "ca": false,
+      "dev": true
+    },
+    {
+      "id": "lk",
+      "name": "Sri Lanka",
+      "eng": "medium",
+      "ca": false,
+      "dev": false
+    },
+    {
+      "id": "sd",
+      "name": "Sudan",
+      "eng": "other",
+      "ca": false,
+      "dev": false
+    },
+    {
+      "id": "se",
+      "name": "Sweden",
+      "eng": "other",
+      "ca": false,
+      "dev": true
+    },
+    {
+      "id": "ch",
+      "name": "Switzerland",
+      "eng": "other",
+      "ca": false,
+      "dev": true
+    },
+    {
+      "id": "sy",
+      "name": "Syria",
+      "eng": "other",
+      "ca": false,
+      "dev": false
+    },
+    {
+      "id": "tw",
+      "name": "Taiwan",
+      "eng": "other",
+      "ca": false,
+      "dev": true
+    },
+    {
+      "id": "tz",
+      "name": "Tanzania",
+      "eng": "medium",
+      "ca": false,
+      "dev": false
+    },
+    {
+      "id": "th",
+      "name": "Thailand",
+      "eng": "other",
+      "ca": false,
+      "dev": false
+    },
+    {
+      "id": "tt",
+      "name": "Trinidad and Tobago",
+      "eng": "first",
+      "ca": false,
+      "dev": false
+    },
+    {
+      "id": "tn",
+      "name": "Tunisia",
+      "eng": "other",
+      "ca": false,
+      "dev": false
+    },
+    {
+      "id": "tr",
+      "name": "Turkey",
+      "eng": "other",
+      "ca": false,
+      "dev": false
+    },
+    {
+      "id": "ug",
+      "name": "Uganda",
+      "eng": "medium",
+      "ca": false,
+      "dev": false
+    },
+    {
+      "id": "ua",
+      "name": "Ukraine",
+      "eng": "other",
+      "ca": false,
+      "dev": false
+    },
+    {
+      "id": "ae",
+      "name": "United Arab Emirates",
+      "eng": "other",
+      "ca": false,
+      "dev": false
+    },
+    {
+      "id": "gb",
+      "name": "United Kingdom",
+      "eng": "first",
+      "ca": true,
+      "dev": true
+    },
+    {
+      "id": "us",
+      "name": "United States",
+      "eng": "first",
+      "ca": true,
+      "dev": true
+    },
+    {
+      "id": "uz",
+      "name": "Uzbekistan",
+      "eng": "other",
+      "ca": false,
+      "dev": false
+    },
+    {
+      "id": "ve",
+      "name": "Venezuela",
+      "eng": "other",
+      "ca": false,
+      "dev": false
+    },
+    {
+      "id": "vn",
+      "name": "Vietnam",
+      "eng": "other",
+      "ca": false,
+      "dev": false
+    },
+    {
+      "id": "ye",
+      "name": "Yemen",
+      "eng": "other",
+      "ca": false,
+      "dev": false
+    },
+    {
+      "id": "zm",
+      "name": "Zambia",
+      "eng": "medium",
+      "ca": false,
+      "dev": false
+    },
+    {
+      "id": "zw",
+      "name": "Zimbabwe",
+      "eng": "medium",
+      "ca": false,
+      "dev": false
+    }
+  ],
+  "destinations": {
+    "uk": {
+      "id": "uk",
+      "name": "United Kingdom",
+      "flag": "🇬🇧",
+      "currency": "GBP",
+      "currencySymbol": "£",
+      "authority": "General Medical Council (GMC)",
+      "overview": "The UK is one of the most popular destinations for international medical graduates, and the NHS actively recruits doctors from around the world. The General Medical Council (GMC) regulates every doctor and grants 'registration with a licence to practise'. For most IMGs the route is PLAB, a two-part exam (a written test you can sit overseas and a practical OSCE in Manchester); doctors who already hold a UK Royal College postgraduate qualification such as MRCP or MRCS can skip PLAB entirely. Once registered you can apply for NHS posts, and the Health and Care Worker visa keeps relocation affordable, with the immigration health surcharge waived. It is a well-structured pathway with strong training, good English-language support and a large existing IMG community to draw on.",
+      "difficulty": "Moderate, well-established pathway",
+      "routes": [
+        {
+          "name": "PLAB route",
+          "detail": "Pass PLAB 1 (theory) + PLAB 2 (OSCE, Manchester only). The default for most IMGs.",
+          "bestFor": "Junior/early-career doctors without a UK postgraduate qualification."
+        },
+        {
+          "name": "Postgraduate qualification route",
+          "detail": "Hold a GMC-approved qualification (MRCP(UK), MRCS, MRCOG, MRCPCH, FRCA, etc.), skips PLAB entirely.",
+          "bestFor": "Doctors targeting registrar/middle-grade posts."
+        },
+        {
+          "name": "GMC-recognised / specialist route",
+          "detail": "Overseas registration plus specialist qualifications recognised by the GMC; leads to the Specialist or GP Register via the Portfolio pathway (CESR).",
+          "bestFor": "Established specialists."
+        },
+        {
+          "name": "Sponsorship (MTI)",
+          "detail": "Medical Training Initiative, a Royal College sponsors a fixed-term (up to 24 months) training placement, bypassing PLAB.",
+          "bestFor": "Doctors wanting structured UK training experience."
+        }
+      ],
+      "steps": [
+        "Confirm your medical school is listed in the World Directory of Medical Schools and your qualification is acceptable to the GMC.",
+        "Create a GMC Online account and confirm eligibility.",
+        "Meet the English requirement (IELTS/OET) or qualify for an exemption.",
+        "Sit and pass PLAB 1 (written, offered in the UK and overseas centres).",
+        "Sit and pass PLAB 2 (OSCE), held only in Manchester, so you must travel to the UK.",
+        "Apply to the GMC for registration with a licence to practise (submit PMQ, certificate of good standing, etc.).",
+        "Attend the in-person identity (ID) check.",
+        "Receive GMC registration with a licence to practise.",
+        "Find an NHS job (trust-grade / clinical fellow posts are common first roles).",
+        "Employer issues a Certificate of Sponsorship; apply for the Health and Care Worker visa.",
+        "Start work (often after an NHS induction / clinical attachment)."
+      ],
+      "english": {
+        "tests": "IELTS Academic: 7.5 overall with at least 7.0 in each section (same sitting). OET (Medicine): grade B in each sub-test. Both valid 2 years.",
+        "exemptions": "Passport from a GMC-recognised majority-English country, OR a primary medical qualification taught & examined in English where ≥75% of clinical interaction was in English (confirmed by the medical school), OR two years' recent practice in an English-first country."
+      },
+      "documents": [
+        "Primary Medical Qualification (degree) certificate",
+        "Certificate of Good Standing from every regulator held in the last 5 years (issued within 3 months)",
+        "Evidence of internship / house-job completion",
+        "English evidence (IELTS/OET or exemption)",
+        "Passport (verified at the in-person ID check)",
+        "Evidence of skills & knowledge (PLAB 1 & 2 pass or postgraduate qualification)",
+        "EPIC primary-source verification of qualifications"
+      ],
+      "costs": [
+        {
+          "item": "English test (IELTS ~£190 / OET ~£360)",
+          "amount": 190,
+          "amountMax": 360
+        },
+        {
+          "item": "PLAB 1",
+          "amount": 283
+        },
+        {
+          "item": "PLAB 2 (Manchester)",
+          "amount": 1036
+        },
+        {
+          "item": "EPIC / primary-source verification (approx.)",
+          "amount": 120
+        },
+        {
+          "item": "GMC full registration with licence (year 1)",
+          "amount": 481
+        },
+        {
+          "item": "Health and Care Worker visa (up to 5 years)",
+          "amount": 628
+        }
+      ],
+      "costNote": "Excludes flights/accommodation for the Manchester PLAB 2 trip (~£800-£1,500), prep courses/question banks (£100-£800+), and any resits. IHS (immigration health surcharge) is WAIVED for Health and Care Worker visa holders, a large saving. Annual GMC retention fee (£481) recurs from year 2.",
+      "totalEstimate": "≈ £2,740 to £2,910 (licensing + visa)",
+      "timeline": "Typically 12-24 months. Fast track ~9-12 months. The main bottleneck is securing a Manchester PLAB 2 slot (often booked months ahead).",
+      "visa": "Health and Care Worker visa: £324 (≤3 yr) or £628 (>3 yr). EXEMPT from the Immigration Health Surcharge. Leads to settlement (ILR) after 5 years.",
+      "salaries": [
+        {
+          "role": "Foundation Year 1 (FY1)",
+          "amount": 38831
+        },
+        {
+          "role": "Foundation Year 2 (FY2)",
+          "amount": 44439
+        },
+        {
+          "role": "Core/IMT trainee ('SHO')",
+          "amount": 52656
+        },
+        {
+          "role": "Specialty Registrar (ST3-ST5)",
+          "amount": 65048
+        },
+        {
+          "role": "Specialty Registrar (ST6-ST8)",
+          "amount": 73992
+        },
+        {
+          "role": "Specialty/SAS doctor",
+          "amount": 61542,
+          "amountMax": 99216
+        },
+        {
+          "role": "Consultant",
+          "amount": 109725,
+          "amountMax": 145478
+        }
+      ],
+      "salaryNote": "Basic NHS pay (England, 2025/26). Actual take-home is higher with banding/enhancements for out-of-hours and on-call (often +20-40%). Most newly-arrived IMGs start in non-training posts at SHO/registrar level.",
+      "sources": [
+        {
+          "label": "GMC, Fees for doctors",
+          "url": "https://www.gmc-uk.org/registration-and-licensing/managing-your-registration/fees-and-funding/fees-for-doctors"
+        },
+        {
+          "label": "GMC, Evidence of knowledge of English",
+          "url": "https://www.gmc-uk.org/registration-and-licensing/join-the-register/before-you-apply/evidence-of-your-knowledge-of-english"
+        },
+        {
+          "label": "gov.uk, Health and Care Worker visa",
+          "url": "https://www.gov.uk/health-care-worker-visa"
+        },
+        {
+          "label": "NHS doctor pay scales 2025/26",
+          "url": "https://nhstakehomepaycalculator.co.uk/guides/nhs-doctor-salary-2025-26/"
+        }
+      ],
+      "flagCode": "gb",
+      "regulatorUrl": "https://www.gmc-uk.org",
+      "demonym": "UK"
+    },
+    "ie": {
+      "id": "ie",
+      "name": "Ireland",
+      "flagCode": "ie",
+      "currency": "EUR",
+      "currencySymbol": "€",
+      "authority": "Medical Council of Ireland (IMC)",
+      "regulatorUrl": "https://www.medicalcouncil.ie",
+      "overview": "Ireland's health service depends heavily on international medical graduates, who make up a large share of its hospital doctors, so the country actively welcomes overseas applicants. The Medical Council of Ireland (IMC) grants registration: EU/EEA and UK graduates are recognised almost automatically, while other IMGs verify their degree and sit the PRES exam unless they hold an approved postgraduate qualification. Pay and training closely resemble the UK system, and doctors sit on the Critical Skills list, giving a clear immigration route with a pathway to long-term residence. Familiar training structures, English as the working language and a welcoming culture make it a comfortable move for many doctors.",
+      "difficulty": "Moderate, PRES exam for most non-EU graduates",
+      "routes": [
+        {
+          "name": "EU/EEA and recognition route",
+          "detail": "Graduates of EU/EEA or otherwise recognised medical schools get near-automatic recognition and register directly in the General or Trainee Specialist Division without PRES.",
+          "bestFor": "EU/EEA-trained doctors"
+        },
+        {
+          "name": "PRES examination route",
+          "detail": "Non-EU graduates verify their degree via EPIC, meet the English requirement, and pass PRES Part 1 (written) and Part 2 (clinical OSCE) to enter the General Division.",
+          "bestFor": "Most non-EU IMGs (India, Pakistan, Sudan, Nigeria and others)"
+        },
+        {
+          "name": "Approved postgraduate qualification (PRES-exempt)",
+          "detail": "Holders of an IMC-recognised postgraduate qualification such as MRCP(UK)/MRCPI, MRCS or MRCGP, with eligible experience, can gain General registration without sitting PRES.",
+          "bestFor": "IMGs with UK/Irish/recognised specialist qualifications"
+        },
+        {
+          "name": "Trainee Specialist Division",
+          "detail": "Entry to an approved Irish postgraduate training scheme supports registration in the Trainee Specialist Division.",
+          "bestFor": "Doctors accepted onto Irish specialist/GP training"
+        }
+      ],
+      "steps": [
+        "Determine your route: recognition vs PRES.",
+        "Create an EPIC (Intealth/ECFMG) account and have your degree and internship certificate source-verified.",
+        "Sit an approved English test (IELTS Academic or OET Medicine) if not exempt.",
+        "Obtain a Certificate of Good Standing from every regulator you have been registered with.",
+        "If required, pass PRES Part 1 (written), then PRES Part 2 (clinical OSCE).",
+        "Secure an NCHD post with the HSE or a voluntary hospital.",
+        "Submit your IMC registration application (General Division) with verified documents and fees.",
+        "Apply for an employment permit (Critical Skills or General) or use the Atypical Working Scheme, then register your Stamp 1 immigration permission.",
+        "Begin supervised practice and maintain annual registration and CPD."
+      ],
+      "english": {
+        "tests": "IELTS Academic: overall 7.0 with no band below 6.5; OR OET Medicine: grade B in all four components. Results within the last 2 years.",
+        "exemptions": "Doctors who completed their primary medical qualification through the medium of English in a recognised majority-English country, or who can show their training and prior practice were in English, may be exempt."
+      },
+      "documents": [
+        "Primary medical qualification, source-verified via EPIC",
+        "Internship / Certificate of Experience (general medicine + general surgery)",
+        "Certificate of Good Standing from every regulator held",
+        "Notarised passport / photo ID",
+        "English test certificate (IELTS or OET), if required",
+        "PRES Part 1 and Part 2 results (if applicable)",
+        "CV and confirmation of employment"
+      ],
+      "costs": [
+        {
+          "item": "PRES Part 1",
+          "amount": 460
+        },
+        {
+          "item": "PRES Part 2",
+          "amount": 1500
+        },
+        {
+          "item": "IMC registration",
+          "amount": 451
+        },
+        {
+          "item": "English test",
+          "amount": 440
+        }
+      ],
+      "costNote": "PRES fees are approximate and have been restructured (written roughly 350-460 euro; clinical OSCE roughly 1,150-1,500 euro). Excludes EPIC verification (~250-300 euro), the annual retention fee (560-665 euro for 2026), notarisation and travel. Holders of approved postgraduate qualifications and EU/EEA graduates are exempt from PRES.",
+      "totalEstimate": "≈ €3,000 - €4,500 (non-EU graduate sitting PRES)",
+      "timeline": "Typically 12-18 months from starting EPIC verification to registration and taking up a post.",
+      "visa": "Non-EU doctors need an employment permit. Doctors are on the Critical Skills list, so most use a Critical Skills Employment Permit (1,000 euro, up to 2 years, leads to Stamp 4). Short-term locum posts under 90 days can use the Atypical Working Scheme. On arrival you register a Stamp 1 immigration permission (IRP fee 300 euro).",
+      "salaries": [
+        {
+          "role": "Intern",
+          "amount": 45703
+        },
+        {
+          "role": "Senior House Officer",
+          "amount": 58000
+        },
+        {
+          "role": "Registrar",
+          "amount": 71000
+        },
+        {
+          "role": "Specialist Registrar",
+          "amount": 85000
+        },
+        {
+          "role": "Consultant",
+          "amount": 222215,
+          "amountMax": 266925
+        }
+      ],
+      "salaryNote": "Approximate gross annual HSE basic pay (2025/26). Hospital doctors typically earn 30-50% above basic once overtime, on-call and unsocial-hours premiums are included.",
+      "sources": [
+        {
+          "label": "Medical Council of Ireland - Registration fees",
+          "url": "https://www.medicalcouncil.ie/registration-applications/fees/"
+        },
+        {
+          "label": "EPIC / Intealth - Instructions for Ireland applicants",
+          "url": "https://www.ecfmg.org/psv/instructions-ireland.html"
+        },
+        {
+          "label": "HSE - pay scales",
+          "url": "https://healthservice.hse.ie/staff/benefits-services/pay/pay-scales.html"
+        },
+        {
+          "label": "DETE - Critical Skills Employment Permit",
+          "url": "https://enterprise.gov.ie/en/what-we-do/workplace-and-skills/employment-permits/permit-types/critical-skills-employment-permit/"
+        }
+      ],
+      "demonym": "Irish"
+    },
+    "us": {
+      "id": "us",
+      "name": "United States",
+      "flag": "🇺🇸",
+      "currency": "USD",
+      "currencySymbol": "$",
+      "authority": "ECFMG/Intealth, USMLE, NRMP (the Match), state medical boards",
+      "overview": "The United States offers the highest earning potential in medicine, but also the most demanding pathway. Every international graduate, however experienced, must complete a US residency, which is obtained through the highly competitive NRMP Match. To get there you earn ECFMG certification by passing the USMLE Step 1 and Step 2 CK exams and an English test, then apply through ERAS. The exams are only the entry ticket; the Match itself is the real hurdle, and US clinical experience together with a strong Step 2 CK score make the biggest difference. It is a long journey, often five to ten years to independent practice, but it leads to the world's best-paid consultant roles.",
+      "difficulty": "High, a US residency via the Match is mandatory for everyone",
+      "routes": [
+        {
+          "name": "USMLE + Match (the only general route)",
+          "detail": "ECFMG certification (USMLE Step 1 pass/fail + Step 2 CK scored + OET + credential verification), then ERAS application and the NRMP Match into a US residency, then Step 3 and a state license.",
+          "bestFor": "All IMGs, there is no credential-recognition shortcut for general practice."
+        }
+      ],
+      "steps": [
+        "Confirm your school is in the World Directory with an ECFMG Sponsor Note.",
+        "Create a MyIntealth (ECFMG) account.",
+        "Pass USMLE Step 1 (now pass/fail).",
+        "Pass USMLE Step 2 CK (scored, now the most important number for the Match).",
+        "Pass OET Medicine (English).",
+        "Obtain ECFMG Certification (after exams, English and credential verification).",
+        "Build and submit the ERAS application (personal statement, MSPE, letters, US clinical experience strongly preferred).",
+        "Register for the NRMP Match, interview, and submit a rank-order list.",
+        "Match Day (March); unmatched applicants may attempt SOAP.",
+        "Complete residency (3-7 years).",
+        "Pass USMLE Step 3 (usually during intern year).",
+        "Apply to the state medical board for a license."
+      ],
+      "english": {
+        "tests": "OET Medicine, Listening 350, Reading 350, Speaking 350, Writing 300 (single sitting).",
+        "exemptions": "NONE. All ECFMG Pathways applicants must satisfy the OET requirement regardless of native language, language of instruction, or citizenship."
+      },
+      "documents": [
+        "Final medical diploma (primary-source verified)",
+        "Final medical school transcript",
+        "Passport / identity documents",
+        "WDOMS listing with ECFMG Sponsor Note",
+        "OET score report + USMLE score reports",
+        "For ERAS: personal statement, CV, MSPE/Dean's letter, 3-4 letters of recommendation (US letters preferred)",
+        "For visa: J-1 (DS-2019 + Statement of Need) or H-1B (employer petition + Step 3 pass)"
+      ],
+      "costs": [
+        {
+          "item": "USMLE Step 1 (incl. international surcharge)",
+          "amount": 900
+        },
+        {
+          "item": "USMLE Step 2 CK (incl. international surcharge)",
+          "amount": 925
+        },
+        {
+          "item": "OET Medicine",
+          "amount": 455
+        },
+        {
+          "item": "MyIntealth + ECFMG certification application",
+          "amount": 690
+        },
+        {
+          "item": "Credential verification",
+          "amount": 220
+        },
+        {
+          "item": "Pathways application",
+          "amount": 945
+        },
+        {
+          "item": "ERAS token + program fees (~100 programs)",
+          "amount": 2615
+        },
+        {
+          "item": "NRMP registration",
+          "amount": 85
+        },
+        {
+          "item": "USMLE Step 3 (during residency)",
+          "amount": 955
+        },
+        {
+          "item": "J-1 visa (ECFMG + SEVIS)",
+          "amount": 590
+        }
+      ],
+      "costNote": "Official fees ≈ US$8,000-12,000. With prep resources (UWorld etc. $1,000-3,000+), US clinical experience/observerships ($2,000-10,000+), travel and any retakes or extra Match cycles, total investment commonly reaches $15,000-30,000+. ERAS program volume is the biggest controllable expense, IMGs often apply to 100-300 programs.",
+      "totalEstimate": "≈ US$8,000 to $12,000 official fees ($15,000-30,000+ all-in)",
+      "timeline": "~2-5 years from starting prep to entering residency; residency is 3-7 years. Total to independent licensed practice ~5-10+ years. Many IMGs need more than one Match cycle.",
+      "visa": "J-1 (ECFMG-sponsored, the default; 2-year home-residency requirement afterwards unless waived, e.g. Conrad 30) or H-1B (employer-sponsored, requires Step 3 first, allows dual intent / green card). Non-US IMG match rate ≈ 58%.",
+      "salaries": [
+        {
+          "role": "Resident PGY1",
+          "amount": 68000
+        },
+        {
+          "role": "Resident PGY3",
+          "amount": 73300
+        },
+        {
+          "role": "Resident PGY5",
+          "amount": 81800
+        },
+        {
+          "role": "Primary care attending",
+          "amount": 266000,
+          "amountMax": 307000
+        },
+        {
+          "role": "Specialist attending (top fields)",
+          "amount": 530000,
+          "amountMax": 611000
+        }
+      ],
+      "salaryNote": "Resident salaries are national averages (AAMC); attending figures are Medscape 2025. IMGs disproportionately enter primary care, psychiatry and internal medicine, where they have historically been more welcome.",
+      "sources": [
+        {
+          "label": "ECFMG, Certification requirements",
+          "url": "https://www.ecfmg.org/2026ib/certification-requirements.html"
+        },
+        {
+          "label": "ECFMG / Intealth, Fees",
+          "url": "https://www.ecfmg.org/fees/"
+        },
+        {
+          "label": "AAMC, ERAS fees",
+          "url": "https://students-residents.aamc.org/applying-residencies-eras/fees-eras-residency-applications"
+        },
+        {
+          "label": "NRMP, 2025 Match results and data",
+          "url": "https://www.nrmp.org/wp-content/uploads/2025/05/Main_Match_Results_and_Data_20250529_FINAL.pdf"
+        }
+      ],
+      "flagCode": "us",
+      "regulatorUrl": "https://www.ecfmg.org",
+      "demonym": "US"
+    },
+    "ca": {
+      "id": "ca",
+      "name": "Canada",
+      "flag": "🇨🇦",
+      "currency": "CAD",
+      "currencySymbol": "C$",
+      "authority": "Medical Council of Canada (MCC) + provincial colleges + CaRMS",
+      "overview": "Canada is a highly sought-after destination with excellent pay and quality of life, but also one of the most competitive to enter, and licensing is provincial rather than national. Most IMGs must either win a residency place through the competitive CaRMS match, or, if already an experienced family physician or specialist, qualify for a Practice-Ready Assessment (PRA), a faster route granted in exchange for a multi-year rural return-of-service. A new federal immigration category for physicians has made relocating easier for licensed doctors. South African graduates have real structural advantages here, being English-exempt and eligible for several provincial PRA programmes.",
+      "difficulty": "High, most competitive and longest pathway",
+      "routes": [
+        {
+          "name": "Route A, Residency via CaRMS",
+          "detail": "Foreign residency is usually not recognised, so most IMGs re-do residency, entering through the competitive CaRMS R-1 match (small, capped IMG stream, mostly family medicine, often with return-of-service).",
+          "bestFor": "Recent graduates and those without independent-practice experience."
+        },
+        {
+          "name": "Route B, Practice-Ready Assessment (PRA)",
+          "detail": "For IMGs already fully trained and practising independently abroad. A ~12-week workplace assessment leads to provisional licensure, in exchange for a 2-3 year rural return-of-service. Offered by 9 provinces, mostly for family medicine.",
+          "bestFor": "Experienced family physicians / some specialists."
+        }
+      ],
+      "steps": [
+        "Create a physiciansapply.ca account (MCC portal).",
+        "Complete source verification of your degree, transcripts and licence (via ECFMG/EPIC).",
+        "Pass the MCCQE (national knowledge exam).",
+        "Meet the language requirement (test or exemption).",
+        "Pass the NAC Examination (clinical/OSCE), effectively mandatory for CaRMS.",
+        "ROUTE A: Apply through CaRMS, interview, rank programs, and match → complete residency (2 yrs family / 4-6 yrs specialty) → pass certification (CCFP or FRCPC/FRCSC).",
+        "ROUTE B: Pass the TDM Examination → apply to a provincial PRA program → complete the ~12-week clinical assessment → provisional licence under return-of-service.",
+        "Apply to the provincial college for a full independent licence."
+      ],
+      "english": {
+        "tests": "IELTS Academic 7.0 in each skill; CELPIP-General 9 in each; OET (Medicine) grade B in each (same sitting). French (TCF/TEF etc.) for Quebec and francophone programs.",
+        "exemptions": "IMGs who completed medical education in a recognised English-first jurisdiction are exempt, the list INCLUDES South Africa (also Australia, Ireland, NZ, UK, USA, etc.). Graduates of English-medium programs in India, Pakistan, Nigeria, Egypt and the Philippines are NOT exempt and must sit a test."
+      },
+      "documents": [
+        "Medical degree diploma + full transcripts",
+        "Internship/postgraduate certificates and specialty credentials (for PRA)",
+        "Current licence + certificate of good standing from every jurisdiction held",
+        "Proof of postgraduate training and independent-practice experience (critical for PRA)",
+        "Passport / identity + name-change documents",
+        "Language test results (if not exempt)",
+        "All credentials source-verified through ECFMG/EPIC"
+      ],
+      "costs": [
+        {
+          "item": "physiciansapply.ca account setup",
+          "amount": 335
+        },
+        {
+          "item": "Source verification (per credential)",
+          "amount": 232
+        },
+        {
+          "item": "MCCQE application",
+          "amount": 1500
+        },
+        {
+          "item": "NAC Examination",
+          "amount": 3320
+        },
+        {
+          "item": "English test (approx.)",
+          "amount": 350
+        },
+        {
+          "item": "CaRMS match (~10 programs) [Route A]",
+          "amount": 836
+        },
+        {
+          "item": "TDM Examination [Route B / PRA]",
+          "amount": 2850
+        }
+      ],
+      "costNote": "Route A core exam/application spend ≈ C$6,500-7,000; realistic all-in ≈ C$10,000-20,000+ (travel for interviews, prep, relocation, and often multiple match attempts). Route B adds the TDM (C$2,850) plus provincial PRA program fees (vary). Failure to match is the biggest cause of extended timelines and cost.",
+      "totalEstimate": "≈ C$10,000 to C$20,000+ (Route A, all-in)",
+      "timeline": "Route A (residency) ~4-8+ years, often with multiple CaRMS attempts. Route B (PRA) ~1.5-3 years if eligible. This is one of the longer pathways overall.",
+      "visa": "New 'Physicians with Canadian work experience' Express Entry category (2025, no job offer needed, low CRS cut-offs); Provincial Nominee Program (5,000 reserved PR spots for licensed doctors with job offers); expedited 14-day work permits for province-nominated doctors.",
+      "salaries": [
+        {
+          "role": "Resident PGY1",
+          "amount": 73367
+        },
+        {
+          "role": "Resident PGY3",
+          "amount": 85564
+        },
+        {
+          "role": "Resident PGY6",
+          "amount": 104167
+        },
+        {
+          "role": "Family physician (gross billings)",
+          "amount": 230000,
+          "amountMax": 320000
+        },
+        {
+          "role": "Medical specialist (gross billings)",
+          "amount": 320000,
+          "amountMax": 650000
+        },
+        {
+          "role": "Surgical specialist (gross billings)",
+          "amount": 370000,
+          "amountMax": 850000
+        }
+      ],
+      "salaryNote": "Resident salaries are Ontario/PARO (2025/26). Independent-practice figures are GROSS billings before overhead (often 20-40% for community practice) and tax.",
+      "sources": [
+        {
+          "label": "MCC, Examination and service fees",
+          "url": "https://mcc.ca/fees/"
+        },
+        {
+          "label": "MCC, Practice-Ready Assessment",
+          "url": "https://mcc.ca/examinations-assessments/practice-ready-assessment/"
+        },
+        {
+          "label": "CaRMS, R-1 match fees & language requirements",
+          "url": "https://www.carms.ca/match/r-1-main-residency-match/match-fees-r1/"
+        },
+        {
+          "label": "SIPPA (Saskatchewan PRA, recognises SA training)",
+          "url": "https://www.saskdocs.ca/work/familyphysicians/imgfamilyphysician/sippa/"
+        }
+      ],
+      "flagCode": "ca",
+      "regulatorUrl": "https://mcc.ca",
+      "demonym": "Canadian"
+    },
+    "au": {
+      "id": "au",
+      "name": "Australia",
+      "flag": "🇦🇺",
+      "currency": "AUD",
+      "currencySymbol": "A$",
+      "authority": "Australian Medical Council (AMC) + AHPRA / Medical Board of Australia",
+      "overview": "Australia is a top destination for international medical graduates, offering high pay, an excellent lifestyle and a clear route to permanent residence. The Australian Medical Council (AMC) assesses competence and AHPRA grants registration. Most IMGs use the Standard Pathway (the AMC MCQ exam plus a clinical exam or workplace-based assessment, then 12 months of supervised practice), while doctors trained and registered in the UK, Ireland, Canada, New Zealand or the US can take the faster Competent Authority route and skip the AMC exams. Recognised specialists are assessed by the relevant Australian college, and demand for doctors is strong, especially in regional areas.",
+      "difficulty": "Moderate to high, exams plus supervised practice",
+      "routes": [
+        {
+          "name": "Standard Pathway",
+          "detail": "AMC MCQ CAT exam, then AMC Clinical Exam or Workplace-Based Assessment (WBA), then 12 months supervised practice.",
+          "bestFor": "Most IMGs from the six focus countries (non-specialists)."
+        },
+        {
+          "name": "Competent Authority Pathway",
+          "detail": "Exempt from AMC exams. ONLY for doctors trained/registered via the GMC (UK), MCI (Ireland), MCC (Canada), MCNZ (NZ), or ECFMG/NBOME (USA). Based on where you completed the recognised assessment, not nationality.",
+          "bestFor": "Doctors who first qualified/registered in one of those countries."
+        },
+        {
+          "name": "Specialist Pathway",
+          "detail": "For recognised specialists; the relevant Australian college assesses comparability (substantially/partially/not comparable).",
+          "bestFor": "Established specialists."
+        },
+        {
+          "name": "Expedited Specialist Pathway (new, Oct 2024)",
+          "detail": "Bypasses full college assessment with 6 months supervision. Initially for GPs from UK/Ireland/NZ, plus anaesthetics, O&G and psychiatry.",
+          "bestFor": "Eligible UK/Ireland/NZ specialists."
+        }
+      ],
+      "steps": [
+        "Verify your medical school is listed in the World Directory with an AMC/ECFMG sponsor note.",
+        "Create an AMC portfolio and pay the portfolio fee.",
+        "Complete Primary Source Verification (PSV) of your qualification via ECFMG EPIC / MyIntealth.",
+        "Meet the English requirement (test or exemption).",
+        "Sit and pass the AMC MCQ CAT exam (computer-adaptive, at Pearson VUE centres worldwide).",
+        "Complete the clinical competence assessment: AMC Clinical Exam (OSCE) OR Workplace-Based Assessment.",
+        "Secure a job with an approved position and supervisor.",
+        "Apply to AHPRA for registration (limited/provisional).",
+        "Complete 12 months of supervised practice (~47 weeks FTE).",
+        "Apply for general registration."
+      ],
+      "english": {
+        "tests": "IELTS Academic 7.0 overall (7.0 listening/reading, 6.5 writing, 7.0 speaking from 23 Apr 2026); OET grade B; PTE Academic 63; TOEFL iBT 91. Results can sometimes be combined across two sittings within 12 months.",
+        "exemptions": "Qualifying education taught & assessed in English in one of ~30 recognised countries. IMPORTANT: South Africa was REMOVED from the recognised-countries list in Dec 2024 (12-month transition), so South African graduates increasingly must sit a test, verify current status."
+      },
+      "documents": [
+        "Primary medical degree + transcript (for PSV)",
+        "Internship / provisional-registration certificate",
+        "Certificate(s) of good standing from every board held",
+        "Certified identity documents (passport) + name-change evidence",
+        "English test results or exemption evidence",
+        "CV and evidence of recency of practice",
+        "Australian and overseas police / criminal-history checks"
+      ],
+      "costs": [
+        {
+          "item": "AMC portfolio (incl. 1 qualification)",
+          "amount": 642
+        },
+        {
+          "item": "EPIC / primary-source verification (approx.)",
+          "amount": 400
+        },
+        {
+          "item": "English test (approx.)",
+          "amount": 450
+        },
+        {
+          "item": "AMC MCQ CAT exam",
+          "amount": 2920
+        },
+        {
+          "item": "AMC Clinical Exam (in-person) or WBA (A$1,070)",
+          "amount": 1070,
+          "amountMax": 3000
+        },
+        {
+          "item": "AHPRA registration (application + fee)",
+          "amount": 1100,
+          "amountMax": 1800
+        },
+        {
+          "item": "Skilled visa (subclass 482 / 189, primary applicant)",
+          "amount": 3210,
+          "amountMax": 4910
+        }
+      ],
+      "costNote": "Assessment + registration alone is ~A$8,500-9,500; all-in (with visa) ~A$12,000-15,000+. Add more for family on the visa, prep courses, resits and relocation. Competent Authority applicants save the ~A$5,900 in AMC exam fees.",
+      "totalEstimate": "≈ A$12,000 to A$15,000+ (all-in)",
+      "timeline": "Standard Pathway ~1.5-3 years (bottlenecks: AMC Clinical Exam/WBA capacity and securing a supervised job), plus 12 months supervised practice. Competent Authority ~6-12 months. Expedited Specialist ~3-6 months.",
+      "visa": "Subclass 482 (Skills in Demand, temporary, ~A$3,210), or permanent 186/189/190 (~A$4,910). Employer-sponsored 482 tied to a hospital job is common, then transition to PR.",
+      "salaries": [
+        {
+          "role": "Intern (PGY1)",
+          "amount": 73000,
+          "amountMax": 88000
+        },
+        {
+          "role": "Resident (RMO, PGY2-3)",
+          "amount": 85000,
+          "amountMax": 105000
+        },
+        {
+          "role": "Registrar (trainee)",
+          "amount": 106000,
+          "amountMax": 220000
+        },
+        {
+          "role": "GP (Fellowed)",
+          "amount": 200000,
+          "amountMax": 350000
+        },
+        {
+          "role": "Consultant / Specialist",
+          "amount": 330000,
+          "amountMax": 600000
+        }
+      ],
+      "salaryNote": "Gross salaries (2024/25). Public-hospital pay is award-based and varies by state; private and procedural specialties earn substantially more (surgery A$450k-1M+). Overtime, on-call and penalty rates boost junior take-home.",
+      "sources": [
+        {
+          "label": "AMC, Fees and charges",
+          "url": "https://www.amc.org.au/pathways/fees-and-charges/"
+        },
+        {
+          "label": "Medical Board, Standard Pathway",
+          "url": "https://www.medicalboard.gov.au/Registration/International-Medical-Graduates/Standard-Pathway.aspx"
+        },
+        {
+          "label": "AHPRA, English language skills standard",
+          "url": "https://www.ahpra.gov.au/Registration/Registration-Standards/English-language-skills/English-language-skills-registration-standard.aspx"
+        },
+        {
+          "label": "AHPRA, More flexible English pathways (SA removal, Dec 2024)",
+          "url": "https://www.ahpra.gov.au/News/2024-12-12-English-language-skills.aspx"
+        }
+      ],
+      "flagCode": "au",
+      "regulatorUrl": "https://www.medicalboard.gov.au",
+      "demonym": "Australian"
+    },
+    "nz": {
+      "id": "nz",
+      "name": "New Zealand",
+      "flagCode": "nz",
+      "currency": "NZD",
+      "currencySymbol": "NZ$",
+      "authority": "Medical Council of New Zealand (MCNZ)",
+      "regulatorUrl": "https://www.mcnz.org.nz",
+      "overview": "New Zealand relies on international medical graduates for a large part of its workforce and offers a relaxed lifestyle with a direct route to residence. Doctors trained in one of 29 recognised comparable health systems can register without sitting NZREX, while others take the NZREX Clinical exam after a screening test, then begin on provisional registration with a period of supervised practice. Every registered doctor is on the immigration Green List, so eligible applicants and their families can go straight to residence. It is an especially attractive option for doctors already working in the UK, Ireland, Australia, Canada or the US.",
+      "difficulty": "Moderate, easier for comparable-health-system graduates",
+      "routes": [
+        {
+          "name": "Comparable health system pathway",
+          "detail": "For doctors with current general registration in one of 29 recognised countries plus at least 33 months recent clinical practice. Grants provisional general registration with supervision; no NZREX required.",
+          "bestFor": "IMGs already registered and working in a recognised comparable health system"
+        },
+        {
+          "name": "NZREX Clinical pathway",
+          "detail": "For IMGs outside the comparable systems. Requires primary-source verification, a pass in a screening exam (PLAB 1, AMC MCQ, MCCQE I or USMLE Steps 1 and 2), English proficiency, then a pass in NZREX Clinical, then a PGY1 job for provisional registration.",
+          "bestFor": "IMGs trained outside recognised comparable health systems"
+        },
+        {
+          "name": "Vocational (specialist) pathway",
+          "detail": "Specialists are assessed against the relevant NZ medical college, with provisional vocational registration and a vocational practice assessment before full vocational registration.",
+          "bestFor": "Overseas-trained specialists with recognised postgraduate qualifications"
+        }
+      ],
+      "steps": [
+        "Confirm your route (comparable health system vs NZREX vs vocational).",
+        "Create a MyIntealth (EPIC) account and arrange primary-source verification.",
+        "Meet the English requirement (exemption, IELTS Academic or OET Medicine).",
+        "NZREX route: pass a screening exam (PLAB 1 / AMC MCQ / MCCQE I / USMLE 1 and 2), then sit NZREX Clinical.",
+        "Secure a job offer from an accredited employer (PGY1 house officer for NZREX graduates).",
+        "Apply to MCNZ for provisional general registration and pay the fee.",
+        "Obtain an Annual Practising Certificate and begin supervised practice.",
+        "Complete 6-12 months supervised practice to progress to full general registration.",
+        "Arrange immigration (Green List Straight to Residence or Accredited Employer Work Visa)."
+      ],
+      "english": {
+        "tests": "IELTS Academic: 7.0 in Speaking/Listening/Reading and 6.5 in Writing (often cited as overall 7.5); OR OET Medicine grade B (350) in three components and at least 300 in Writing. Single sitting within 2 years.",
+        "exemptions": "Exempt if you trained in New Zealand; or English is your first language and your degree was taught solely in English in Australia, UK, Ireland, USA, Canada or South Africa; or 2+ years recent registered practice in English; or you passed NZREX Clinical or PLAB 1 and 2."
+      },
+      "documents": [
+        "Primary medical degree (EPIC/MyIntealth verified)",
+        "Certificate of good standing from every regulator held",
+        "Proof of identity (verified via MyIntealth)",
+        "Evidence of English proficiency or exemption",
+        "Screening exam results (NZREX route)",
+        "CV and evidence of clinical hours (comparable route)",
+        "Job offer from an accredited NZ employer",
+        "Passport and immigration documents"
+      ],
+      "costs": [
+        {
+          "item": "NZREX Clinical",
+          "amount": 4967
+        },
+        {
+          "item": "MCNZ registration/application",
+          "amount": 619
+        },
+        {
+          "item": "EPIC verification",
+          "amount": 600
+        },
+        {
+          "item": "English test",
+          "amount": 450
+        }
+      ],
+      "costNote": "MCNZ fees vary by route (NZ$387 NZREX graduates; NZ$619 comparable-authority applicants; NZ$1,936 comparable health system applicants). NZREX Clinical also has a separate NZ$861 application fee. An Annual Practising Certificate is ~NZ$1,000/year. EPIC fees are charged in USD.",
+      "totalEstimate": "≈ NZ$1,700 - NZ$3,500 (comparable route) to ≈ NZ$7,500 - NZ$9,500 (NZREX route)",
+      "timeline": "Comparable route: ~2-6 months once documents and a job offer are ready. NZREX route: typically 12-24 months, then ~2 years prevocational training and 6-12 months supervised practice for full registration.",
+      "visa": "All registered doctors are on Immigration NZ's Green List Tier 1 Straight to Residence pathway, so eligible doctors (and family) can apply directly for residence with MCNZ registration and a qualifying job offer. Alternatively enter on an Accredited Employer Work Visa and transition to residence.",
+      "salaries": [
+        {
+          "role": "House Officer (PGY1-2)",
+          "amount": 82000,
+          "amountMax": 100000
+        },
+        {
+          "role": "Registrar",
+          "amount": 110000,
+          "amountMax": 205000
+        },
+        {
+          "role": "Senior Medical Officer / Consultant",
+          "amount": 175000,
+          "amountMax": 250000
+        },
+        {
+          "role": "GP",
+          "amount": 160000,
+          "amountMax": 300000
+        }
+      ],
+      "salaryNote": "Gross annual pay before tax under national collective agreements; RMOs often earn well above base once penal/overtime and on-call are added. Private practice and rural GP work pay more.",
+      "sources": [
+        {
+          "label": "MCNZ - Fees",
+          "url": "https://www.mcnz.org.nz/registration/forms-fees-and-checklists/fees/"
+        },
+        {
+          "label": "MCNZ - NZREX Clinical",
+          "url": "https://www.mcnz.org.nz/registration/getting-registered/registration-exam-nzrex/"
+        },
+        {
+          "label": "MCNZ - Comparable health system pathway",
+          "url": "https://www.mcnz.org.nz/registration/getting-registered/registration-pathways/general-scope/comparable-health-system/"
+        },
+        {
+          "label": "Immigration New Zealand - Green List",
+          "url": "https://www.immigration.govt.nz/about-us/media-centre/news-notifications/green-list-and-other-immigration-changes"
+        }
+      ],
+      "demonym": "New Zealand"
+    },
+    "ae": {
+      "id": "ae",
+      "name": "United Arab Emirates",
+      "flagCode": "ae",
+      "currency": "AED",
+      "currencySymbol": "AED ",
+      "authority": "DHA (Dubai) / DOH (Abu Dhabi) / MOHAP (other emirates)",
+      "regulatorUrl": "https://www.dha.gov.ae",
+      "overview": "The UAE is one of the most popular destinations in the Gulf, offering tax-free salaries, modern hospitals and a fast, exam-based licensing process with no need to redo residency. Three regulators license doctors depending on the emirate: DHA in Dubai, DOH in Abu Dhabi and MOHAP for the other emirates. The pathway is DataFlow primary-source verification followed by a computer-based licensing exam, with doctors already board-certified in Western countries often exempt. An employer sponsors your residence visa and usually covers the licensing costs, and packages typically include housing, flights and family sponsorship.",
+      "difficulty": "Moderate, exam-based, no residency redo",
+      "routes": [
+        {
+          "name": "DataFlow + licensing exam",
+          "detail": "Verify your credentials via DataFlow, then pass the regulator's computer-based exam (DHA/MOHAP Prometric, DOH Pearson VUE) for your grade. DataFlow reports transfer between the three authorities.",
+          "bestFor": "Most IMGs with the required experience"
+        },
+        {
+          "name": "Exam-exempt (Western board-certified)",
+          "detail": "Doctors licensed or board-certified in the USA, UK, Canada, Australia, NZ, Ireland and much of Western Europe are often exempt from the exam; some need only a short oral assessment.",
+          "bestFor": "Doctors with Western registration or board certification"
+        },
+        {
+          "name": "Employer-sponsored placement",
+          "detail": "A UAE hospital or recruiter secures the job offer and manages (and often pays for) DataFlow, exam and visa.",
+          "bestFor": "Doctors who want the employer to handle licensing logistics"
+        }
+      ],
+      "steps": [
+        "Choose the emirate/regulator (DHA Dubai, DOH Abu Dhabi, or MOHAP for other emirates).",
+        "Complete DataFlow primary-source verification of your qualifications and experience.",
+        "Create a regulator account and apply for eligibility/assessment.",
+        "Sit and pass the licensing exam (Prometric for DHA/MOHAP, Pearson VUE for DOH), unless exempt.",
+        "Secure a job offer from a licensed employer.",
+        "Employer sponsors your residence visa and work permit.",
+        "Activate your professional licence and start practising."
+      ],
+      "english": {
+        "tests": "No universal IELTS/OET is mandated by the regulators; some employers or categories may request it.",
+        "exemptions": "Graduates of English-medium programmes and doctors from majority-English countries generally face no test."
+      },
+      "documents": [
+        "Passport",
+        "Primary medical degree + transcripts",
+        "Postgraduate/specialty certificates",
+        "Current licence + certificate of good standing",
+        "Experience/employment letters (~2 years GP, ~3 years specialist)",
+        "DataFlow verification report",
+        "Passport photos"
+      ],
+      "costs": [
+        {
+          "item": "DataFlow primary source verification",
+          "amount": 1000,
+          "amountMax": 3000
+        },
+        {
+          "item": "Licensing exam (Prometric / Pearson VUE)",
+          "amount": 1030
+        },
+        {
+          "item": "Licence activation / evaluation",
+          "amount": 2500,
+          "amountMax": 7500
+        }
+      ],
+      "costNote": "Fees vary by regulator and document volume; employers frequently reimburse or pay them. The DHA exam is ~USD 280; DOH uses Pearson VUE. Excludes visa and medical costs (usually employer-paid).",
+      "totalEstimate": "AED 4,500 - AED 12,000 (often employer-paid)",
+      "timeline": "Around 2-5 months: DataFlow (4-8 weeks) and exam scheduling are the main drivers.",
+      "visa": "Employer-sponsored residence visa and work permit; the hospital handles it after your licence eligibility is confirmed.",
+      "salaries": [
+        {
+          "role": "General Practitioner",
+          "amount": 216000,
+          "amountMax": 540000
+        },
+        {
+          "role": "Specialist",
+          "amount": 420000,
+          "amountMax": 1080000
+        },
+        {
+          "role": "Consultant",
+          "amount": 660000,
+          "amountMax": 1440000
+        }
+      ],
+      "salaryNote": "Annual figures in AED and TAX-FREE. Packages usually add housing, health insurance, annual flights and family sponsorship. Surgical and senior consultant roles can exceed these ranges.",
+      "sources": [
+        {
+          "label": "DHA (Dubai Health Authority)",
+          "url": "https://www.dha.gov.ae/"
+        },
+        {
+          "label": "DOH Abu Dhabi",
+          "url": "https://www.doh.gov.ae/"
+        },
+        {
+          "label": "MOHAP (Ministry of Health and Prevention)",
+          "url": "https://mohap.gov.ae/"
+        },
+        {
+          "label": "DataFlow Group",
+          "url": "https://www.dataflowgroup.com/"
+        }
+      ],
+      "demonym": "UAE"
+    },
+    "sa": {
+      "id": "sa",
+      "name": "Saudi Arabia",
+      "flagCode": "sa",
+      "currency": "SAR",
+      "currencySymbol": "SAR ",
+      "authority": "Saudi Commission for Health Specialties (SCFHS)",
+      "regulatorUrl": "https://scfhs.org.sa",
+      "overview": "Saudi Arabia has a very large expatriate medical workforce and offers high, tax-free pay with generous benefits. There is no need to redo residency: the Saudi Commission for Health Specialties (SCFHS) classifies you by grade from your qualifications and experience. The process runs through the Mumaris Plus portal with DataFlow verification and a Prometric exam, and senior Western board-certified doctors may be exempt from the exam. An employer sponsors your work visa and Iqama, and packages typically add housing, transport, education allowances, annual flights and an end-of-service gratuity.",
+      "difficulty": "Moderate, mainly administrative",
+      "routes": [
+        {
+          "name": "Standard SCFHS classification + exam",
+          "detail": "Create a Mumaris Plus profile, apply for professional classification, complete DataFlow verification, then pass the Prometric exam and register. Grade (GP, Specialist, Senior Specialist, Consultant) is set from qualifications plus experience.",
+          "bestFor": "Most IMGs who need an exam to be licensed"
+        },
+        {
+          "name": "Exam-exempt (premium qualification)",
+          "detail": "Holders of certain board certifications/fellowships (US ABMS, UK CCT/CESR, Canadian Royal College, Australian/NZ fellowship) may have the exam waived at SCFHS discretion. Assessed case by case.",
+          "bestFor": "Senior specialists and consultants with Western board certification"
+        },
+        {
+          "name": "Employer-sponsored placement",
+          "detail": "A Saudi employer or recruiter secures the offer and handles (and often pays for) classification, DataFlow, exam and visa.",
+          "bestFor": "IMGs who prefer the hospital to manage logistics"
+        }
+      ],
+      "steps": [
+        "Create a Mumaris Plus (SCFHS) account with details matching your passport.",
+        "Submit the professional classification application with degree, postgraduate qualifications, experience letters and good-standing certificate.",
+        "Complete DataFlow primary-source verification.",
+        "Receive the SCFHS classification and grade with an eligibility number (valid one year).",
+        "Book and pass the Prometric exam (unless granted an exemption).",
+        "Complete registration and pay the final fees to obtain the licence.",
+        "Accept a job offer; the employer sponsors your work visa and Iqama.",
+        "Complete medicals, visa stamping and relocation, then start practising."
+      ],
+      "english": {
+        "tests": "SCFHS does not mandate a universal IELTS/OET score for the licence itself.",
+        "exemptions": "Individual employers may set their own English requirements; graduates of English-medium programmes and majority-English countries generally face no test."
+      },
+      "documents": [
+        "Valid passport",
+        "Primary medical degree and transcripts",
+        "Postgraduate/specialty certificates (MD, MS, DNB, FCPS, board/fellowship)",
+        "Internship/training completion certificates",
+        "Current registration/licence",
+        "Certificate of Good Standing",
+        "Detailed experience/employment letters",
+        "CV and photograph"
+      ],
+      "costs": [
+        {
+          "item": "DataFlow primary source verification",
+          "amount": 900
+        },
+        {
+          "item": "SCFHS classification / registration",
+          "amount": 1340
+        },
+        {
+          "item": "Prometric exam",
+          "amount": 1100
+        }
+      ],
+      "costNote": "DataFlow for physicians is roughly SAR 900-1,200 (extra documents ~SAR 300 each). SCFHS fees total ~SAR 1,340. The Prometric exam is paid separately in USD (~USD 280-300). Employers and recruiters frequently reimburse or pay these costs.",
+      "totalEstimate": "SAR 3,500 - SAR 4,500",
+      "timeline": "Around 4-10 months: DataFlow ~1-3 months, classification ~1-2 weeks (up to ~35 working days if reviewed), plus exam and visa processing.",
+      "visa": "Employer-sponsored work visa with Iqama; the sponsoring hospital handles the block visa, work permit and Iqama.",
+      "salaries": [
+        {
+          "role": "General Practitioner",
+          "amount": 180000,
+          "amountMax": 360000
+        },
+        {
+          "role": "Specialist",
+          "amount": 300000,
+          "amountMax": 600000
+        },
+        {
+          "role": "Consultant",
+          "amount": 540000,
+          "amountMax": 1080000
+        }
+      ],
+      "salaryNote": "Indicative annual pay in SAR and effectively TAX-FREE, usually plus housing, transport, annual home flights, health insurance, child education allowance and end-of-service gratuity. Sub-specialties and senior consultants earn more.",
+      "sources": [
+        {
+          "label": "SCFHS official portal",
+          "url": "https://scfhs.org.sa"
+        },
+        {
+          "label": "SCFHS Mumaris Plus licensing guide",
+          "url": "https://medexamcenter.com/blogs/neac/scfhs-mumaris-plus-licensing-guide-saudi-arabia"
+        },
+        {
+          "label": "SCFHS classification grades (PrepMedico)",
+          "url": "https://prepmedico.com/scfhs-eligibility-criteria-for-doctors/"
+        }
+      ],
+      "demonym": "Saudi"
+    },
+    "qa": {
+      "id": "qa",
+      "name": "Qatar",
+      "flagCode": "qa",
+      "currency": "QAR",
+      "currencySymbol": "QAR ",
+      "authority": "Dept of Healthcare Professions (DHP) / Qatar Council for Healthcare Practitioners (QCHP)",
+      "regulatorUrl": "https://dhp.gov.qa",
+      "overview": "Qatar offers tax-free salaries, world-class facilities and a straightforward, exam-based route with no residency to redo. The Department of Healthcare Professions (DHP/QCHP) recognises foreign qualifications plus experience; the process runs through the Sheryan portal with mandatory DataFlow verification, a qualification evaluation and a Prometric exam, though holders of USMLE Step 3, PLAB, AMC or MCCQE Part 1 are exempt from the exam. An employer sponsors your residence permit, and packages usually include housing, education and transport allowances, health insurance and annual flights.",
+      "difficulty": "Moderate, evaluation plus exam",
+      "routes": [
+        {
+          "name": "Standard Prometric route",
+          "detail": "Complete DataFlow verification, a DHP qualification evaluation, and pass the Qatar Prometric exam for your specialty and grade.",
+          "bestFor": "Doctors qualified outside the exempt boards/countries"
+        },
+        {
+          "name": "Exam-exempt (fast-track)",
+          "detail": "Holders of recognised credentials (USMLE Step 3, PLAB, AMC, MCCQE Part 1, IFOM, Irish pre-registration exam) skip the exam but still complete DataFlow and evaluation.",
+          "bestFor": "Graduates/licensees of USA, UK, Australia, Canada, Ireland"
+        },
+        {
+          "name": "Provisional licence + conversion",
+          "detail": "After evaluation approval and employer sponsorship a provisional licence (up to 6 months) is issued and converted to a full licence once all steps are complete.",
+          "bestFor": "Doctors with a confirmed job offer relocating quickly"
+        }
+      ],
+      "steps": [
+        "Create an account on the DHP Sheryan portal and start a preliminary eligibility evaluation.",
+        "Submit qualifications for DataFlow primary-source verification (mandatory for all).",
+        "DHP evaluates degree length, qualifications and experience against the target grade.",
+        "Pass the Qatar Prometric exam, unless exempt via a recognised credential.",
+        "Receive the eligibility letter and secure a sponsoring employer.",
+        "Employer arranges the residence permit; DHP issues a provisional licence (up to 6 months).",
+        "Complete registration to obtain the full DHP/QCHP licence, then maintain CPD for renewal."
+      ],
+      "english": {
+        "tests": "English proficiency is generally required and can be shown via IELTS or TOEFL (OET is also commonly accepted); Arabic is not mandatory.",
+        "exemptions": "Graduates of English-medium institutions, or those trained/licensed in majority-English countries, are typically exempt from a language test."
+      },
+      "documents": [
+        "Primary medical degree and transcripts",
+        "Postgraduate/specialty certificates",
+        "Current registration/licence and good-standing certificate",
+        "Experience/employment letters (~1 year in specialty)",
+        "Passport and photographs",
+        "English test certificate (if required)",
+        "Police clearance (last ~5 years)",
+        "DataFlow verification report",
+        "Exam result or exemption evidence"
+      ],
+      "costs": [
+        {
+          "item": "DataFlow primary source verification",
+          "amount": 1100
+        },
+        {
+          "item": "QCHP evaluation / registration",
+          "amount": 1000
+        },
+        {
+          "item": "Prometric exam",
+          "amount": 550
+        }
+      ],
+      "costNote": "Fees are approximate and set in USD, depending on documents and category (Prometric ~USD 90-150, DataFlow ~USD 200-300). Additional charges apply for licensing, attestation, translation and police clearance. Employers frequently pay these for sponsored doctors.",
+      "totalEstimate": "QAR 2,500 - QAR 4,000",
+      "timeline": "Around 3-7 months, with DataFlow (4-12 weeks) and exam scheduling the main drivers.",
+      "visa": "Employer-sponsored residence permit and work visa; the provisional licence (up to 6 months) allows practice pending full licensing.",
+      "salaries": [
+        {
+          "role": "General Practitioner",
+          "amount": 260000,
+          "amountMax": 480000
+        },
+        {
+          "role": "Specialist",
+          "amount": 450000,
+          "amountMax": 960000
+        },
+        {
+          "role": "Consultant",
+          "amount": 600000,
+          "amountMax": 1200000
+        }
+      ],
+      "salaryNote": "Annual figures in QAR and fully TAX-FREE. Packages typically add housing, transport and education allowances, health insurance and annual flights; surgical and senior consultant roles can exceed these ranges.",
+      "sources": [
+        {
+          "label": "Department of Healthcare Professions (DHP), Qatar",
+          "url": "https://dhp.gov.qa"
+        },
+        {
+          "label": "DHP/QCHP licensing steps 2025/2026",
+          "url": "https://www.allocationassist.com/how-to-get-a-qchp-license-in-qatar-essential-steps-for-2025/"
+        },
+        {
+          "label": "DHP exam exemption criteria",
+          "url": "https://www.interface.edu.pk/dhp-moph-qatar-exam-exemption-criteria"
+        }
+      ],
+      "demonym": "Qatar"
+    },
+    "za": {
+      "id": "za",
+      "name": "South Africa",
+      "flag": "🇿🇦",
+      "flagCode": "za",
+      "currency": "ZAR",
+      "currencySymbol": "R",
+      "authority": "HPCSA (Medical & Dental Professions Board) + National Dept of Health, Foreign Workforce Management Programme (FWMP)",
+      "overview": "One of the hardest destinations in the world for a non-citizen foreign doctor. For foreign nationals, HPCSA registration is gated by a government endorsement (FWMP), is normally restricted to public-sector posts in rural/underserved areas for a renewable ~3-year term, and generally EXCLUDES private practice. Returning South African citizens and permanent residents have a far easier route than foreign nationals.",
+      "difficulty": "Very high, largely closed to non-specialist foreign nationals",
+      "routes": [
+        {
+          "name": "HPCSA Board Examination route",
+          "detail": "For doctors whose qualification is NOT on the HPCSA recognised list. A written paper (incl. a medico-legal, ethics & language assessment) then a clinical OSCE, held twice a year at UKZN. You must pass the written before the clinical.",
+          "bestFor": "Graduates of non-recognised (mostly developing-country) medical schools."
+        },
+        {
+          "name": "Direct registration (recognised curriculum)",
+          "detail": "Graduates of recognised / developed-country curricula may be exempt from the Board Exam, but still need FWMP endorsement, ECFMG verification and a visa.",
+          "bestFor": "Graduates of developed-country / HPCSA-recognised schools."
+        },
+        {
+          "name": "Public Service GP category",
+          "detail": "The usual employment category for foreign nationals. Requires a minimum of 3 years’ postgraduate general-practice experience and is restricted to public-sector practice only.",
+          "bestFor": "Experienced GPs filling a public-sector post."
+        },
+        {
+          "name": "Supernumerary registrar (training)",
+          "detail": "Foreign nationals are generally admitted to postgraduate/registrar training only as supernumerary (often self-funded, non-paid) posts at recognised teaching hospitals.",
+          "bestFor": "Doctors seeking SA specialist training."
+        }
+      ],
+      "steps": [
+        "Secure a genuine public-sector post/expression of interest (rural/underserved), nothing proceeds without a real unfilled need.",
+        "Primary-source credential verification via ECFMG EPIC.",
+        "Obtain an FWMP letter of endorsement from the National Department of Health (do NOT travel before receiving it).",
+        "HPCSA curriculum review determines whether you sit the Board Exam.",
+        "Sit and pass the HPCSA Board Examination (written then clinical) if required.",
+        "Apply to the HPCSA for registration (usually Public Service GP), with endorsement, ECFMG verification and certificate of good standing.",
+        "Apply for the work visa at the Department of Home Affairs.",
+        "Register and begin public-service employment (restricted, ~3-year renewable term)."
+      ],
+      "english": {
+        "tests": "No standalone IELTS/OET is required. A language + medico-legal/ethics assessment is built into the written Board Examination.",
+        "exemptions": "Functional clinical English is expected and assessed through the process rather than by a certificate. Exam-exempt (recognised-curriculum) applicants are assessed on the basis of English-medium training."
+      },
+      "documents": [
+        "Certified ID / passport",
+        "Notarised degree certificate(s) + sworn English translation if applicable",
+        "Full curriculum / transcript of the medical course (for curriculum review)",
+        "ECFMG EPIC primary-source verification",
+        "Certificate of good standing (not older than 6 months)",
+        "Proof of internship / postgraduate experience (e.g. 3 years for Public Service GP)",
+        "FWMP letter of endorsement from the National Department of Health",
+        "Job-offer letter from a public-sector institution",
+        "Police clearance, medical & radiological reports (for the visa)"
+      ],
+      "costs": [
+        {
+          "item": "ECFMG EPIC verification (~US$150)",
+          "amount": 2800
+        },
+        {
+          "item": "HPCSA Board Examination (if required)",
+          "amount": 11525
+        },
+        {
+          "item": "HPCSA initial registration",
+          "amount": 3300
+        },
+        {
+          "item": "First annual retention fee",
+          "amount": 3480
+        },
+        {
+          "item": "Work visa + police clearance + medicals",
+          "amount": 3000,
+          "amountMax": 6000
+        },
+        {
+          "item": "Notarisation / translation / courier",
+          "amount": 2000,
+          "amountMax": 5000
+        }
+      ],
+      "costNote": "Exam-track total ~R27,000-R33,000; non-exam (recognised-curriculum) track ~R15,000-R21,000. Excludes relocation, travel to sit the exam at UKZN, and any immigration-agent/legal fees. HPCSA fees are revised each 1 April.",
+      "totalEstimate": "≈ R15,000 to R33,000 (exam track is higher end)",
+      "timeline": "About 12 months minimum, frequently 18-24 months, longer where the Board Exam and curriculum review are involved. Start 6-8 months ahead at minimum.",
+      "visa": "Everything hinges on the FWMP endorsement. Medical SPECIALISTS (~27 fields) are on the Critical Skills list and can use the Critical Skills work visa (a route to PR). GPs (non-specialists) are NOT on the list and must use the much harder General Work visa (requires labour-market testing).",
+      "salaries": [
+        {
+          "role": "Medical Officer Grade 1 (public sector)",
+          "amount": 1041402
+        },
+        {
+          "role": "Medical Specialist Grade 1",
+          "amount": 1341855,
+          "amountMax": 1422810
+        },
+        {
+          "role": "Medical Specialist Grade 2",
+          "amount": 1531032,
+          "amountMax": 1623609
+        },
+        {
+          "role": "Medical Specialist Grade 3",
+          "amount": 1773222,
+          "amountMax": 2212680
+        },
+        {
+          "role": "Private GP / specialist",
+          "amount": null,
+          "text": "Higher, but closed to foreign nationals on FWMP registration"
+        }
+      ],
+      "salaryNote": "Public-sector OSD packages (~2026), all-inclusive. Rural allowance adds ~18-22%. Intern (~R645k) and community-service (~R849k) posts are NOT open to foreign nationals. Private practice earns substantially more but foreign nationals on FWMP registration are barred from it.",
+      "sources": [
+        {
+          "label": "HPCSA, Foreign Graduates",
+          "url": "https://www.hpcsa.co.za/board/medical-dental/foreign-graduates"
+        },
+        {
+          "label": "HPCSA, Fees",
+          "url": "https://www.hpcsa.co.za/fees"
+        },
+        {
+          "label": "NDoH, Foreign Workforce Management Programme guidelines (PDF)",
+          "url": "https://www.health.gov.za/wp-content/uploads/2021/02/Form-Foreign-Workforce-Guidelines-formatted.pdf"
+        },
+        {
+          "label": "Critical Skills List & healthcare (Webber Wentzel)",
+          "url": "https://www.webberwentzel.com/News/Pages/new-critical-skills-list-provides-relief-for-foreign-professionals-in-the-healthcare-sector.aspx"
+        }
+      ],
+      "regulatorUrl": "https://www.hpcsa.co.za",
+      "demonym": "South African"
+    },
+    "ph": {
+      "id": "ph",
+      "name": "Philippines",
+      "flag": "🇵🇭",
+      "flagCode": "ph",
+      "currency": "PHP",
+      "currencySymbol": "₱",
+      "authority": "Professional Regulation Commission (PRC) – Professional Regulatory Board of Medicine",
+      "overview": "PROVISIONAL — this Philippines destination pathway has NOT yet been researched or verified; the content below is placeholder scaffolding and must be filled in with confirmed data before it is relied upon. In broad terms, the practice of medicine in the Philippines is tightly restricted: under the Medical Act (RA 2382) full PRC licensure has historically been limited to Filipino citizens, and foreign nationals generally require a reciprocity arrangement with their home country plus special permits. Verify every requirement with the PRC before acting.",
+      "difficulty": "Provisional — largely restricted for foreign nationals (citizenship / reciprocity rules)",
+      "routes": [
+        {
+          "name": "PLE (Physician Licensure Examination) route",
+          "detail": "PLACEHOLDER: Graduates of PRC-recognized medical schools sit the Physician Licensure Examination administered by the Board of Medicine. Eligibility, citizenship and reciprocity conditions need to be confirmed.",
+          "bestFor": "Graduates of Philippine (or reciprocity-eligible) medical schools."
+        },
+        {
+          "name": "Reciprocity / special-permit route",
+          "detail": "PLACEHOLDER: Foreign nationals may only practice where a reciprocity treaty and the relevant permits exist. Details to be researched.",
+          "bestFor": "Foreign nationals from reciprocity countries."
+        }
+      ],
+      "steps": [
+        "PLACEHOLDER: Confirm PRC recognition of your medical school and your eligibility (including citizenship / reciprocity).",
+        "PLACEHOLDER: Complete any required internship / clerkship recognized by the PRC.",
+        "PLACEHOLDER: Apply to the Board of Medicine and sit the Physician Licensure Examination (PLE).",
+        "PLACEHOLDER: Register with the PRC and obtain your Professional Identification Card.",
+        "PLACEHOLDER: Obtain the appropriate work visa / permit (foreign nationals)."
+      ],
+      "english": {
+        "tests": "PLACEHOLDER — to be confirmed. English is a primary language of medical education and practice in the Philippines; formal test requirements for foreign applicants need verification.",
+        "exemptions": "PLACEHOLDER — to be confirmed with the PRC."
+      },
+      "documents": [
+        "PLACEHOLDER: Medical degree certificate and full transcript",
+        "PLACEHOLDER: Proof of internship / clinical training",
+        "PLACEHOLDER: Certificate of good standing from your home regulator",
+        "PLACEHOLDER: Passport / proof of citizenship or reciprocity eligibility",
+        "PLACEHOLDER: PRC application forms and fees"
+      ],
+      "costs": [
+        {
+          "item": "PLE / PRC application & licensure fees",
+          "amount": null,
+          "text": "To be researched"
+        },
+        {
+          "item": "Credential verification & documents",
+          "amount": null,
+          "text": "To be researched"
+        },
+        {
+          "item": "Work visa / permit (foreign nationals)",
+          "amount": null,
+          "text": "To be researched"
+        }
+      ],
+      "costNote": "PROVISIONAL — no verified figures yet. All Philippine fees, salaries and requirements in this entry are placeholders pending research.",
+      "totalEstimate": "≈ to be confirmed",
+      "timeline": "PLACEHOLDER — timeline to be researched. Start well ahead and confirm current PRC processing times.",
+      "visa": "PLACEHOLDER: Foreign nationals require an appropriate working visa/permit in addition to PRC licensure; specifics (e.g. 9(g) work visa, Alien Employment Permit) must be verified with the Bureau of Immigration and DOLE.",
+      "salaries": [
+        {
+          "role": "Resident / junior doctor",
+          "amount": null,
+          "text": "To be researched"
+        },
+        {
+          "role": "Specialist / consultant",
+          "amount": null,
+          "text": "To be researched"
+        }
+      ],
+      "salaryNote": "PROVISIONAL — salary figures not yet researched.",
+      "sources": [
+        {
+          "label": "Professional Regulation Commission (PRC)",
+          "url": "https://www.prc.gov.ph/"
+        },
+        {
+          "label": "PRC Board of Medicine",
+          "url": "https://www.prc.gov.ph/medicine"
+        }
+      ],
+      "regulatorUrl": "https://www.prc.gov.ph/",
+      "demonym": "Filipino"
+    }
+  },
+  "modifiers": {
+    "za": {
+      "uk": {
+        "recognised": "Yes, MBChB from recognised schools (UCT, Wits, Stellenbosch, Pretoria, UKZN, etc.).",
+        "english": "Exemption commonly available (taught & examined in English). SA is also on the UKVI majority-English list for visa purposes.",
+        "note": "PLAB or postgraduate (MRCP/MRCS). Ensure a recent HPCSA certificate of good standing."
+      },
+      "au": {
+        "recognised": "Yes, well-regarded schools (Wits, UCT, Stellenbosch, Pretoria, etc.).",
+        "english": "MAJOR CHANGE: South Africa was removed from AHPRA's recognised-English list in Dec 2024. Many SA graduates will now need to sit IELTS/OET/PTE, check the current transition status.",
+        "note": "Standard Pathway (MBChB + HPCSA does NOT grant Competent Authority status). Use apostille via DIRCO for documents."
+      },
+      "ca": {
+        "recognised": "Yes, strong reputation.",
+        "english": "EXEMPT, South Africa is on the recognised English-first list (no IELTS/OET needed).",
+        "note": "STANDOUT ADVANTAGE: Saskatchewan's SIPPA and other provincial PRA programs specifically recognise SA training. Combined with the language exemption, SA experienced family physicians have arguably the smoothest IMG path into Canada (subject to rural return-of-service)."
+      },
+      "us": {
+        "recognised": "Yes, eligible for ECFMG certification (school needs an ECFMG Sponsor Note).",
+        "english": "OET Medicine still required (no exemptions in the US).",
+        "note": "HPCSA/CHE is not yet WFME-recognised, so schools lack the accreditation notation, but this is informational, not disqualifying. English-medium training and clinical exposure help with OET and US clinical experience."
+      },
+      "za": {
+        "recognised": "You qualified in South Africa, you register directly with the HPCSA and are not treated as a foreign graduate.",
+        "english": "No English test needed.",
+        "note": "This tool is designed for moving between countries. As a South African graduate you follow the domestic internship + community-service route."
+      }
+    },
+    "ng": {
+      "uk": {
+        "recognised": "Generally yes, verify the specific school (Ibadan, Lagos, ABU, etc.), regulated by MDCN.",
+        "english": "Taught in English, but the GMC assesses the exemption per university and excludes many schools, so most graduates sit IELTS or OET, check your specific school.",
+        "note": "PLAB most common. EPIC verification and MDCN good-standing certificates can be slow, start early."
+      },
+      "au": {
+        "recognised": "Generally listed, verify the specific school's sponsor note before PSV.",
+        "english": "English test required (Nigeria is not a recognised country for exemption).",
+        "note": "Standard Pathway. PSV can be slow due to institution response times; document NYSC/internship."
+      },
+      "ca": {
+        "recognised": "Nigerian schools listed in WDOMS (verify sponsor note and graduation year).",
+        "english": "NOT exempt (English-medium but not on the exemption list), IELTS/OET required.",
+        "note": "Route A (CaRMS) is the norm; experienced GPs can target PRA. MDCN is not yet WFME-recognised."
+      },
+      "us": {
+        "recognised": "Eligible for ECFMG certification (ensure the specific school has a Sponsor Note).",
+        "english": "OET Medicine required.",
+        "note": "Large motivated applicant pool. MDCN not yet WFME-recognised (informational only). Visa sponsorship and US clinical experience are the practical bottlenecks."
+      },
+      "za": {
+        "recognised": "Qualification usually NOT on the HPCSA recognised list → HPCSA Board Exam expected. Nigeria features prominently among Board Exam candidates.",
+        "english": "No separate IELTS/OET, a language/ethics assessment is built into the Board Exam.",
+        "note": "Hardest case: the HPCSA Board Exam is usually required AND, as a developing country, individual recruitment is not endorsed by the Dept of Health without a government-to-government agreement. Realistically only specialists filling a scarce public-sector post have a route."
+      }
+    },
+    "in": {
+      "uk": {
+        "recognised": "Yes, MBBS from NMC-recognised, World-Directory-listed colleges (verify the specific college).",
+        "english": "PMQ-in-English exemption frequently used, though many still sit IELTS/OET to be safe.",
+        "note": "India is the single largest source of IMGs to the UK. PLAB dominant; MRCP/MRCS popular for registrar posts."
+      },
+      "au": {
+        "recognised": "Most MBBS colleges listed, VERIFY the individual college (not all carry the required sponsor note).",
+        "english": "English test required (India is not a recognised country).",
+        "note": "Standard Pathway. Many Indian doctors alternatively route via the UK/GMC first to unlock the Competent Authority pathway."
+      },
+      "ca": {
+        "recognised": "MBBS recognised; NMC is WFME-recognised. Verify the specific college.",
+        "english": "NOT exempt despite English-medium teaching, IELTS/OET required.",
+        "note": "Predominantly Route A (CaRMS); IMG match competition is intense. Experienced doctors may target PRA."
+      },
+      "us": {
+        "recognised": "Largest single IMG source; NMC is WFME-recognised.",
+        "english": "OET Medicine required.",
+        "note": "Highly competitive, strong Step 2 CK scores and US clinical experience are decisive. International test surcharge applies."
+      },
+      "za": {
+        "recognised": "Qualification usually NOT on the HPCSA recognised list → HPCSA Board Exam expected. Indian MBBS is usually not on the non-exam recognised list.",
+        "english": "No separate IELTS/OET, a language/ethics assessment is built into the Board Exam.",
+        "note": "Hardest case: the HPCSA Board Exam is usually required AND, as a developing country, individual recruitment is not endorsed by the Dept of Health without a government-to-government agreement. Realistically only specialists filling a scarce public-sector post have a route."
+      }
+    },
+    "pk": {
+      "uk": {
+        "recognised": "Yes, PMDC/PMC-regulated schools (Aga Khan, King Edward, Dow, etc.), verify the school.",
+        "english": "PMQ-in-English exemption commonly available.",
+        "note": "PLAB primary; MRCP common. Obtain a current PMC good-standing certificate."
+      },
+      "au": {
+        "recognised": "Generally listed, verify each college; PMDC/PMC registration needed for good standing.",
+        "english": "English test required (Pakistan is not a recognised country).",
+        "note": "Standard Pathway. Watch document-verification delays."
+      },
+      "ca": {
+        "recognised": "PMDC-recognised schools appear in WDOMS; PMDC is WFME-recognised.",
+        "english": "NOT exempt, IELTS/OET required.",
+        "note": "Predominantly Route A; experienced FCPS family physicians may qualify for PRA."
+      },
+      "us": {
+        "recognised": "Eligible; PMDC is WFME-recognised.",
+        "english": "OET Medicine required.",
+        "note": "Competitive, large pool, English-medium. Similar profile to India."
+      },
+      "za": {
+        "recognised": "Qualification usually NOT on the HPCSA recognised list → HPCSA Board Exam expected. Pakistani MBBS usually requires the Board Exam.",
+        "english": "No separate IELTS/OET, a language/ethics assessment is built into the Board Exam.",
+        "note": "Hardest case: the HPCSA Board Exam is usually required AND, as a developing country, individual recruitment is not endorsed by the Dept of Health without a government-to-government agreement. Realistically only specialists filling a scarce public-sector post have a route."
+      }
+    },
+    "eg": {
+      "uk": {
+        "recognised": "Yes, recognised universities (Cairo, Ain Shams, Alexandria, etc.), verify the school.",
+        "english": "HIGHER RISK on the exemption: clinical interaction is often in Arabic, so the '75% in English' test frequently fails, most Egyptian doctors must sit IELTS/OET.",
+        "note": "PLAB most common. Budget for the English test; get a good-standing certificate from the Egyptian Medical Syndicate/Ministry of Health."
+      },
+      "au": {
+        "recognised": "Major faculties generally listed, verify individually.",
+        "english": "English test required (Egyptian degrees are largely Arabic-medium).",
+        "note": "Standard Pathway. Budget for translation and attestation of documents."
+      },
+      "ca": {
+        "recognised": "6-year MBBCh recognised and WDOMS-listed; NAQAAE is WFME-recognised.",
+        "english": "NOT exempt (instruction/patient care in Arabic), IELTS/OET required.",
+        "note": "Route A predominant; document internship fully for source verification."
+      },
+      "us": {
+        "recognised": "Eligible; NAQAAE is WFME-recognised.",
+        "english": "OET Medicine required.",
+        "note": "Growing IMG cohort. OET/English preparation and US clinical experience are the main levers."
+      },
+      "za": {
+        "recognised": "Qualification usually NOT on the HPCSA recognised list → HPCSA Board Exam expected. Egyptian degrees generally require the Board Exam.",
+        "english": "No separate IELTS/OET, a language/ethics assessment is built into the Board Exam.",
+        "note": "Hardest case: the HPCSA Board Exam is usually required AND, as a developing country, individual recruitment is not endorsed by the Dept of Health without a government-to-government agreement. Realistically only specialists filling a scarce public-sector post have a route."
+      }
+    },
+    "ph": {
+      "uk": {
+        "recognised": "Yes, recognised MD schools, verify the specific school's listing.",
+        "english": "Taught in English, but the GMC assesses the exemption per university and excludes many schools, so most graduates sit IELTS or OET, check your specific school.",
+        "note": "PLAB common. Note USMLE is more commonly pursued from the Philippines, so UK-specific local support may be thinner."
+      },
+      "au": {
+        "recognised": "Many MD schools listed, verify each; note the pre-med + MD + PRC structure.",
+        "english": "English test required (Philippines is not a recognised country), despite English-medium schooling.",
+        "note": "Standard Pathway. Document PRC licensure and internship."
+      },
+      "ca": {
+        "recognised": "MD recognised and WDOMS-listed; PAASCU is WFME-recognised.",
+        "english": "NOT exempt despite English-medium teaching, IELTS/OET required.",
+        "note": "Route A standard; PRA possible with a strong independent-practice record. Some newer schools attract extra scrutiny."
+      },
+      "us": {
+        "recognised": "Eligible; PAASCU is WFME-recognised.",
+        "english": "OET Medicine required.",
+        "note": "Strong US ties; many US-citizen graduates. US-IMGs match at higher rates than non-US IMGs."
+      },
+      "za": {
+        "recognised": "Qualification usually NOT on the HPCSA recognised list → HPCSA Board Exam expected. Philippine MD generally requires the Board Exam.",
+        "english": "No separate IELTS/OET, a language/ethics assessment is built into the Board Exam.",
+        "note": "Hardest case: the HPCSA Board Exam is usually required AND, as a developing country, individual recruitment is not endorsed by the Dept of Health without a government-to-government agreement. Realistically only specialists filling a scarce public-sector post have a route."
+      }
+    }
+  }
+}
