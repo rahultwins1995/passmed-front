@@ -1511,8 +1511,11 @@ body.dark .modal-box{border-color:rgba(255,255,255,0.14)}
   .s-body{flex-direction:column;overflow-y:auto}
   .q-panel{border-right:none;flex:0 0 auto;overflow:visible}
   .a-panel{flex:0 0 auto;background:transparent;border-top:1px solid var(--border)}
-  .q-scroll{overflow:auto;padding:16px}
-  .a-scroll{overflow:auto;padding:16px 16px calc(100px + env(safe-area-inset-bottom, 0px))}
+  /* overflow:visible (not auto) so the stacked panes flow into the SINGLE .s-body
+     scroll on mobile — nested inner scrolls (q/a-scroll) captured touch and blocked
+     scrolling down to the explanation. Matches timed.vue / mock-timed.vue. */
+  .q-scroll{overflow:visible;padding:16px}
+  .a-scroll{overflow:visible;padding:16px 16px calc(100px + env(safe-area-inset-bottom, 0px))}
   /* Action bar: lift above the mobile browser chrome / home indicator and trim
      padding + keyboard hints so every button stays on-screen and tappable. */
   .q-actions{
