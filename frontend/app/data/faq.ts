@@ -28,8 +28,8 @@ export const faqSections: FaqSection[] = [
         "id": "getting-started-2",
         "cat": "getting-started",
         "q": "How do I get started?",
-        "a": "Click \"Free Trial\" and create your account. You'll select your exam, either a board exam (residents/doctors) or a shelf exam (medical students). From there, you can start answering questions immediately. No setup or downloads required.",
-        "searchText": "how do i get started? click \"free trial\" and create your account. you'll select your exam, either a board exam (residents/doctors) or a shelf exam (medical students). from there, you can start answering questions immediately. no setup or downloads required."
+        "a": "Click \"Sign Up Free\" and create your account. You'll select your exam, either a board exam (residents/doctors) or a shelf exam (medical students). From there, you can start answering questions immediately. No setup or downloads required.",
+        "searchText": "how do i get started? click \"sign up free\" and create your account. you'll select your exam, either a board exam (residents/doctors) or a shelf exam (medical students). from there, you can start answering questions immediately. no setup or downloads required."
       },
       {
         "id": "getting-started-3",
@@ -70,8 +70,8 @@ export const faqSections: FaqSection[] = [
         "id": "getting-started-8",
         "cat": "getting-started",
         "q": "What is your pass rate?",
-        "a": "We don't publish a single pass rate figure because it would be misleading. Pass rates vary significantly by exam, by how much of the bank a user completed, and by how long they studied, a headline number risks creating false expectations. Instead, we stand behind results directly: complete 100% of your exam bank, score above 65%, and if you still don't pass, we'll refund you in full under our pass guarantee.",
-        "searchText": "what is your pass rate? we don't publish a single pass rate figure because it would be misleading. pass rates vary significantly by exam, by how much of the bank a user completed, and by how long they studied, a headline number risks creating false expectations. instead, we stand behind results directly: complete 100% of your exam bank, score above 65%, and if you still don't pass, we'll refund you in full under our pass guarantee."
+        "a": "We don't publish a single pass rate figure because it would be misleading. Pass rates vary significantly by exam, by how much of the bank a user completed, and by how long they studied, a headline number risks creating false expectations. Instead, we stand behind results directly: attempt every question in your bank, average above 65% on your first attempts, and if you still don't pass, we'll refund you in full under our pass guarantee.",
+        "searchText": "what is your pass rate? we don't publish a single pass rate figure because it would be misleading. pass rates vary significantly by exam, by how much of the bank a user completed, and by how long they studied, a headline number risks creating false expectations. instead, we stand behind results directly: attempt every question in your bank, average above 65% on your first attempts, and if you still don't pass, we'll refund you in full under our pass guarantee."
       },
       {
         "id": "getting-started-9",
@@ -146,15 +146,15 @@ export const faqSections: FaqSection[] = [
         "id": "pricing-7",
         "cat": "pricing",
         "q": "Do you offer a pass guarantee?",
-        "a": "Yes. If you complete 100% of the questions in your exam bank, score above 65% on average, and still don't pass your exam, we will refund the full amount of your subscription cost. To claim, email your results to <a href=\"mailto:support@passmed.com\">support@passmed.com</a> within 30 days of your results being published.",
-        "searchText": "do you offer a pass guarantee? yes. if you complete 100% of the questions in your exam bank, score above 65% on average, and still don't pass your exam, we will refund the full amount of your subscription cost. to claim, email your results to support@passmed.com within 30 days of your results being published."
+        "a": "Yes. If you've attempted every question in your exam bank during your subscription and your overall average is above 65%, and you still don't pass, we'll refund that subscription in full. Your average is based on your first answer to each question, measured against your most recent subscription. To claim, email your official result to <a href=\"mailto:support@passmed.com\">support@passmed.com</a> within 30 days of the result being published.",
+        "searchText": "do you offer a pass guarantee? yes. if you've attempted every question in your exam bank during your subscription and your overall average is above 65%, and you still don't pass, we'll refund that subscription in full. your average is based on your first answer to each question, measured against your most recent subscription. to claim, email your official result to support@passmed.com within 30 days of the result being published."
       },
       {
         "id": "pricing-8",
         "cat": "pricing",
         "q": "Can I get a refund?",
-        "a": "Yes, within limits. We offer a free trial so you can try Passmed before you buy. After you purchase, you can request a full refund within 14 days as long as you've answered fewer than 50 questions in your bank, just email <a href=\"mailto:support@passmed.com\">support@passmed.com</a>. Beyond that, refunds are covered only by our pass guarantee (see above).",
-        "searchText": "can i get a refund? yes, within limits. we offer a free trial so you can try passmed before you buy. after you purchase, you can request a full refund within 14 days as long as you've answered fewer than 50 questions in your bank, just email support@passmed.com. beyond that, refunds are covered only by our pass guarantee (see above)."
+        "a": "Yes, within limits. We offer a free trial so you can try Passmed before you buy. After you purchase, you can request a full refund within 14 days as long as you've answered fewer than 50 questions in the relevant exam bank during your paid subscription (questions answered during your free trial don't count), just email <a href=\"mailto:support@passmed.com\">support@passmed.com</a>. Beyond that, refunds are covered only by our pass guarantee (see above).",
+        "searchText": "can i get a refund? yes, within limits. we offer a free trial so you can try passmed before you buy. after you purchase, you can request a full refund within 14 days as long as you've answered fewer than 50 questions in the relevant exam bank during your paid subscription (questions answered during your free trial don't count), just email support@passmed.com. beyond that, refunds are covered only by our pass guarantee (see above)."
       },
       {
         "id": "pricing-9",
@@ -188,15 +188,15 @@ export const faqSections: FaqSection[] = [
         "id": "pricing-13",
         "cat": "pricing",
         "q": "Do you offer group or institutional discounts?",
-        "a": "Yes. We offer institutional licensing for residency programs, fellowship programs, medical schools, and hospital systems. Group discounts are available for 5+ users. Visit our <a href=\"institutions\">Institutions page</a> or email <a href=\"mailto:institutions@passmed.com\">institutions@passmed.com</a> for a custom quote.",
-        "searchText": "do you offer group or institutional discounts? yes. we offer institutional licensing for residency programs, fellowship programs, medical schools, and hospital systems. group discounts are available for 5+ users. visit our institutions page or email institutions@passmed.com for a custom quote."
+        "a": "Yes. We offer institutional licensing for residency programs, fellowship programs, medical schools, and hospital systems. Group discounts are available. Visit our <a href=\"/institutions\">Institutions page</a> or email <a href=\"mailto:institutions@passmed.com\">institutions@passmed.com</a> for a custom quote.",
+        "searchText": "do you offer group or institutional discounts? yes. we offer institutional licensing for residency programs, fellowship programs, medical schools, and hospital systems. group discounts are available. visit our institutions page or email institutions@passmed.com for a custom quote."
       },
       {
         "id": "pricing-14",
         "cat": "pricing",
         "q": "Can I share my subscription with a colleague?",
-        "a": "No. Subscriptions are single-user only. Sharing accounts means your performance analytics become inaccurate and your personalized recommendations won't work properly. Account sharing violates our Terms of Service and may result in suspension. For multi-user access, see our <a href=\"/institutions\">Institutional plans</a>.",
-        "searchText": "can i share my subscription with a colleague? no. subscriptions are single-user only. sharing accounts means your performance analytics become inaccurate and your personalized recommendations won't work properly. account sharing violates our terms of service and may result in suspension. for multi-user access, see our institutional plans."
+        "a": "No. Subscriptions are single-user only. Sharing accounts means your performance analytics become inaccurate and your personalized recommendations won't work properly. Account sharing violates our Terms &amp; Conditions and may result in suspension. For multi-user access, see our <a href=\"/institutions\">Institutional plans</a>.",
+        "searchText": "can i share my subscription with a colleague? no. subscriptions are single-user only. sharing accounts means your performance analytics become inaccurate and your personalized recommendations won't work properly. account sharing violates our terms & conditions and may result in suspension. for multi-user access, see our institutional plans."
       },
       {
         "id": "pricing-15",

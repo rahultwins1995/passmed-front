@@ -41,6 +41,13 @@ export default defineNitroPlugin(async (nitroApp) => {
   })
 
   nitroApp.hooks.hook('error', (error, ctx) => {
+    // Skip deliberate 4xx responses. A crawler asking for a slug we don't have
+    // is a correct 404, not a fault, and would otherwise bury real 5xx issues
+    // now that the CSP fix (csp.ts) lets client-side errors reach Sentry too.
+    // 5xx (incl. "… not configured" misconfiguration errors) still reports.
+    const status = (error as { statusCode?: number })?.statusCode
+    if (typeof status === 'number' && status >= 400 && status < 500) return
+
     const event = (ctx as { event?: unknown })?.event as { path?: string } | undefined
     let host: string | undefined
     try { if (event) host = getRequestHost(event as never, { xForwardedHost: true }) } catch { /* noop */ }

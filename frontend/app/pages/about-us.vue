@@ -5,7 +5,14 @@ const { openSignup, isLoginOpen } = useLoginModal()
 const { onContentClick: sharedOnContentClick } = useContentClick()
 const rc = useRegionContent()
 const region = useRegion()
-const practisingHeadline = computed(() => region === 'UK' ? 'Ready to start practising?' : 'Ready to start practicing?')
+const practisingHeadline = computed(() => (region === 'UK' || region === 'SA') ? 'Ready to start practising?' : 'Ready to start practicing?')
+
+// "X yrs" was a hardcoded CMS number ("8 yrs" against a 2017 founding date —
+// audit SA-49/PM-49) that drifted stale every January. Compute it instead and
+// patch the CMS-authored mission-card number at render, so this never needs a
+// manual edit again. Founding year mirrors the homepage's "Trusted since 2017".
+const FOUNDED_YEAR = 2017
+const yearsActive = computed(() => new Date().getFullYear() - FOUNDED_YEAR)
 
 
 /* === SSR-safe page fetch === */
@@ -17,6 +24,14 @@ const { data: page, pending: loading, error } = await useAsyncData(
     return null
   }
 )
+
+const aboutContent = computed(() => {
+  const html = sanitizeHtml(page.value?.content || '')
+  return html.replace(
+    /(class="mission-card-number">)\s*\d+\s*yrs\s*(<)/i,
+    `$1${yearsActive.value} yrs$2`
+  )
+})
 
 /* === SEO — use page data when available, fall back to static === */
 usePageSeo({
@@ -69,7 +84,7 @@ function onAboutContentClick(e) {
     </div>
 
     <div id="page-about" class="page active">
-        <div  v-if="page && page.content" v-html="sanitizeHtml(page.content)"   @click="onAboutContentClick"></div>
+        <div  v-if="page && page.content" v-html="aboutContent"   @click="onAboutContentClick"></div>
     </div>
 <section class="cta-section reveal">
    <div class="cta-inner">

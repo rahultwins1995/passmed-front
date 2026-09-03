@@ -49,6 +49,10 @@ const launching = ref(false)
 
 // Taxonomy checked state: catId -> Set of checked subIds (rebuilt after fetch)
 const taxState = ref<Record<string, Set<string>>>({})
+// One-shot guard: a dashboard "Areas to Improve" tile deep-links here with
+// ?topic_type&topic_id — preselect that single topic on the FIRST taxonomy load
+// only, never on later exam-switch refetches.
+let weakPreselectApplied = false
 
 // ─── Subtitle = active exam name (was hardcoded "ABA Basic Boards") ──────────
 const topbarSubtitle = computed(() => {
@@ -146,6 +150,13 @@ async function loadQbankData() {
     // Reset taxonomy checked-state per category to "all selected" so the
     // counter on first load matches total_available.
     selectAllTax(true)
+
+    // Deep-link from a dashboard weak-area tile: narrow the selection to just
+    // that topic. Only once, on first load — an exam switch clears it back to all.
+    if (!weakPreselectApplied && route.query.topic_id) {
+      weakPreselectApplied = true
+      preselectTopic(String(route.query.topic_type || 'category'), String(route.query.topic_id))
+    }
   } catch (e: any) {
     error.value = e?.data?.msg || e?.message || 'Failed to load question bank.'
   } finally {
@@ -416,6 +427,46 @@ function selectAllTax(val: boolean) {
       taxState.value[cat.id].clear()
     }
   })
+  taxState.value = { ...taxState.value }
+}
+
+// Narrow the taxonomy selection to a single weak topic (deep-linked from the
+// dashboard). `type` is 'category' | 'subject', `id` the numeric topic id.
+// Handles both shapes: a category that lives as a SUB under a parent row, and a
+// flat top-level row (categories are currently leaf nodes). If the topic isn't
+// in this exam's taxonomy, falls back to all-selected so the user still lands on
+// a usable qbank rather than an empty selection.
+function preselectTopic(type: string, id: string) {
+  const target = String(id)
+  taxonomy.value.forEach(cat => { taxState.value[cat.id] = new Set() })
+
+  let matched = false
+  if (type === 'subject') {
+    for (const cat of taxonomy.value) {
+      if (String(cat.id) === target) {
+        const set = new Set<string>([String(cat.id)])
+        cat.subs.forEach(s => set.add(String(s.id)))
+        taxState.value[cat.id] = set
+        matched = true
+        break
+      }
+    }
+  } else { // 'category'
+    for (const cat of taxonomy.value) {
+      if (cat.subs.some(s => String(s.id) === target)) {
+        taxState.value[cat.id] = new Set([target])
+        matched = true
+        break
+      }
+      if (String(cat.id) === target) {
+        taxState.value[cat.id] = new Set([target])
+        matched = true
+        break
+      }
+    }
+  }
+
+  if (!matched) { selectAllTax(true); return }
   taxState.value = { ...taxState.value }
 }
 

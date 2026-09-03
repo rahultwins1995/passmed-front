@@ -14,10 +14,14 @@
 <script setup lang="ts">
 import type { Listing } from '~/composables/useOpportunities'
 
+const region = useRegion()
+// "Resident" has no meaning in UK/SA postgraduate training — both use "doctors in training".
+const audienceWord = (region === 'UK' || region === 'SA') ? 'doctors in training' : 'residents'
+
 usePageSeo({
   title: 'Courses, jobs & events · Passmed',
   description:
-    'A curated board of courses, jobs and events, hand-picked for residents and medical students. Free to browse, free to list.',
+    `A curated board of courses, jobs and events, hand-picked for ${audienceWord} and medical students. Free to browse, free to list.`,
 })
 
 const { isLoggedIn, user } = useAuth()
@@ -58,7 +62,22 @@ function toggleCat (key: string) {
   if (s.size === CATS.length) s.clear() // all four ≡ All
   selectedCats.value = s
 }
-const catCount = (key: string) => listings.value.filter(l => l.category === key).length
+// Chip counts should reflect the active search/country/format filters (just not
+// the category filter itself) — otherwise the "All" chip shows the full board
+// total while the result line below shows a much smaller filtered count.
+const preCategoryFiltered = computed(() => {
+  const needle = q.value.trim().toLowerCase()
+  return listings.value.filter((l) => {
+    if (format.value && l.format !== format.value) return false
+    if (country.value && countryBucket(l) !== country.value) return false
+    if (needle) {
+      const h = `${l.title} ${l.org} ${l.location} ${l.tags.join(' ')} ${l.description}`.toLowerCase()
+      if (!h.includes(needle)) return false
+    }
+    return true
+  })
+})
+const catCount = (key: string) => preCategoryFiltered.value.filter(l => l.category === key).length
 
 /* ---------- small helpers ---------- */
 const esc = (s: unknown) => String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/"/g, '&quot;')
@@ -456,14 +475,14 @@ watch(postOpen, open => open ? lock('opps-post') : unlock('opps-post'))
       <div class="ob-hero-inner">
         <span class="eyebrow">Passmed Community</span>
         <h1>Courses, jobs &amp; events <span>— all in one place.</span></h1>
-        <p class="sub">A curated board of courses, jobs and events, hand-picked for residents and medical students. Free to browse. Free to list.</p>
+        <p class="sub">A curated board of courses, jobs and events, hand-picked for {{ audienceWord }} and medical students. Free to browse. Free to list.</p>
         <div class="searchbar">
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true"><circle cx="11" cy="11" r="7" stroke="#7a95ad" stroke-width="2" /><path d="M20 20l-3-3" stroke="#7a95ad" stroke-width="2" stroke-linecap="round" /></svg>
           <input v-model="q" type="search" aria-label="Search listings" placeholder="Search courses, jobs, events, cities…">
         </div>
         <div class="tabs">
           <button class="tab" :aria-pressed="selectedCats.size === 0" :class="{ active: selectedCats.size === 0 }" @click="selectedCats = new Set()">
-            All <span class="count">{{ listings.length }}</span>
+            All <span class="count">{{ preCategoryFiltered.length }}</span>
           </button>
           <button
             v-for="c in CATS" :key="c.key"
@@ -923,13 +942,22 @@ watch(postOpen, open => open ? lock('opps-post') : unlock('opps-post'))
 .opps .cv-dowrow{display:grid;grid-template-columns:repeat(7,minmax(0,1fr))}
 .opps .cv-dow{padding:8px 6px;text-align:center;font-size:11px;font-weight:700;color:var(--ink-dim);text-transform:uppercase;letter-spacing:.04em;border-bottom:1px solid var(--border);background:var(--surface)}
 .opps .cv-dnum{font-size:12.5px;font-weight:700;color:var(--ink-mid);min-width:22px;height:22px;display:inline-flex;align-items:center;justify-content:center;border-radius:7px;padding:0 4px}
-.opps .cvw{position:relative}
-.opps .cvw-bg{display:grid;grid-template-columns:repeat(7,minmax(0,1fr))}
+/* .cvw-bg (the day-number cells) and .cvw-bars (the event bars) are two
+   independent 7-column grids stacked into the SAME cell of .cvw via
+   grid-area:1/1, rather than .cvw-bars being position:absolute+overflow:
+   hidden over a fixed-height row. That old approach clipped any day with
+   more events than the 118px row could show, with no way to reveal the
+   rest (audit: mobile calendar cards cut off, unscrollable). Grid rows
+   size to their tallest item by default, so the shared row now genuinely
+   grows to fit however many event bars a day has — days pack in tighter
+   just don't need the extra height. */
+.opps .cvw{display:grid}
+.opps .cvw-bg{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));grid-area:1/1}
 .opps .cvd{min-height:118px;border-bottom:1px solid var(--border);border-right:1px solid var(--border);padding:6px}
 .opps .cvd:nth-child(7n){border-right:none}
 .opps .cvd.pad{background:var(--surface)}
 .opps .cvd.today .cv-dnum{background:var(--teal);color:#fff}
-.opps .cvw-bars{position:absolute;inset:0;display:grid;grid-template-columns:repeat(7,minmax(0,1fr));grid-auto-rows:23px;row-gap:4px;padding:32px 0 6px;pointer-events:none;overflow:hidden}
+.opps .cvw-bars{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));grid-auto-rows:23px;row-gap:4px;padding:32px 0 6px;pointer-events:none;grid-area:1/1}
 .opps .cv-bar{pointer-events:auto;margin:0 3px;border:none;text-align:left;font:inherit;font-size:11.5px;font-weight:600;line-height:1;height:22px;display:flex;align-items:center;padding:0 8px;border-radius:6px;cursor:pointer;white-space:nowrap;overflow:hidden;color:#fff;box-shadow:0 1px 2px rgba(0,0,0,.12)}
 .opps .cv-bar.course{background:var(--amber)} .opps .cv-bar.event{background:var(--navy)} .opps .cv-bar.exam{background:var(--exam)}
 .opps .cv-bar.cont-l{border-top-left-radius:0;border-bottom-left-radius:0;margin-left:0}

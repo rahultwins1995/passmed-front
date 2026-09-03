@@ -84,11 +84,22 @@ export function usePageSeo (opts: SeoOpts = {}) {
   // x-default. Built from the path, not `url`, so a page-specific `opts.url`
   // (e.g. an absolutized share/image URL passed by mistake) can't leak in —
   // this always reflects the current route across all six regions.
-  const hreflangLinks = Object.entries(SITE_URL_BY_REGION).map(([region, origin]) => ({
-    rel: 'alternate',
-    hreflang: HREFLANG_BY_REGION[region],
-    href: `${origin}${route.path}`,
-  }))
+  //
+  // Exam pages are the exception (audit SA-29): each exam slug only exists on
+  // the one market that sells it, so emitting all six alternates points five
+  // of them at 404s and burns crawl budget on dead URLs. For /exam/* routes,
+  // emit only the self-referencing tag and skip x-default; shared pages
+  // (home, pricing, faq, about, resources, …) keep the full set.
+  const region = useRegion()
+  const isMarketSpecificExam = route.path.startsWith('/exam/')
+
+  const hreflangLinks = isMarketSpecificExam
+    ? [{ rel: 'alternate', hreflang: HREFLANG_BY_REGION[region] || 'en', href: url }]
+    : Object.entries(SITE_URL_BY_REGION).map(([r, origin]) => ({
+        rel: 'alternate',
+        hreflang: HREFLANG_BY_REGION[r],
+        href: `${origin}${route.path}`,
+      }))
 
   // htmlAttrs.lang: frontend/nuxt.config.ts hardcodes 'en' (build-time, so it
   // can't tell markets apart without NUXT_PUBLIC_REGION reliably set on every
@@ -97,11 +108,11 @@ export function usePageSeo (opts: SeoOpts = {}) {
   // the same host-derived useRegion()/useSiteUrl() everything else here uses,
   // so it overrides the static default with the correct regional variant.
   useHead({
-    htmlAttrs: { lang: HREFLANG_BY_REGION[useRegion()] || 'en' },
+    htmlAttrs: { lang: HREFLANG_BY_REGION[region] || 'en' },
     link: [
       { rel: 'canonical', href: url },
       ...hreflangLinks,
-      { rel: 'alternate', hreflang: 'x-default', href: `${SITE_URL_BY_REGION.US}${route.path}` },
+      ...(isMarketSpecificExam ? [] : [{ rel: 'alternate', hreflang: 'x-default', href: `${SITE_URL_BY_REGION.US}${route.path}` }]),
     ],
   })
 }

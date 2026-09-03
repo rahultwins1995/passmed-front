@@ -176,11 +176,18 @@ watch(() => current.value?.id, (newId, oldId) => {
   if (newId !== undefined && newId !== null) {
     qTimer.value = qTimerMap.value[newId] ?? timerPerQ.value
     qTimerStart.value = secs.value
+    // Re-anchor the wall-clock deadline for the newly shown question.
+    qDeadlineTs = Date.now() + qTimer.value * 1000
   }
 })
 
 let sessionInt: ReturnType<typeof setInterval> | null = null
 let qInt: ReturnType<typeof setInterval> | null = null
+// Wall-clock deadlines (ms epoch): the overall exam clock and the current
+// question's countdown are DERIVED from these (deadline - now), so a throttled /
+// backgrounded tab can neither extend the exam nor gain per-question time.
+let examDeadlineTs = 0
+let qDeadlineTs = 0
 
 onMounted(async () => {
   const sid = Number(route.query.sid)
@@ -247,13 +254,22 @@ onMounted(async () => {
     qTimer.value = qTimerMap.value[current.value.id]
   }
 
+  // Anchor both wall-clock deadlines from the (possibly resumed) remaining time,
+  // BEFORE the tick starts.
+  if (isTimed.value) {
+    examDeadlineTs = Date.now() + timeLeft.value * 1000
+    qDeadlineTs    = Date.now() + qTimer.value * 1000
+  }
+
   // Global ticker. secs always increments (drives per-question time tracking via
   // captureElapsed). The countdown + auto-submit only run for TIMED mocks; an
   // "Open" mock has no clock and no time limit.
   sessionInt = setInterval(() => {
     secs.value++        // kept for captureElapsed (per-question time tracking)
     if (isTimed.value) {
-      timeLeft.value--
+      // Overall exam clock derived from wall-clock — a backgrounded tab can't
+      // extend the exam.
+      timeLeft.value = Math.max(0, Math.round((examDeadlineTs - Date.now()) / 1000))
       if (timeLeft.value <= 0) {
         clearInterval(sessionInt!)
         sessionInt = null
@@ -271,10 +287,11 @@ onMounted(async () => {
       // stays answerable until final submit. (Previously gated on !result, but
       // mock-timed no longer writes result mid-attempt.)
       if (current.value && qTimer.value > 0) {
-        qTimer.value--
+        // Derive remaining from wall-clock — resilient to tab throttling / drift.
+        qTimer.value = Math.max(0, Math.round((qDeadlineTs - Date.now()) / 1000))
         if (qTimer.value <= 0) autoSkip()
       }
-    }, 1000)
+    }, 500)
   }
 })
 

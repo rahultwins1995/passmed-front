@@ -82,8 +82,9 @@ const fbSelected     = ref<string[]>([])
 const fbComment      = ref('')
 const fbSubmitting   = ref(false)
 const fbDone         = ref(false)
+const fbError        = ref('')
 
-function openFeedback() { showFeedback.value = true; fbSelected.value = []; fbComment.value = ''; fbDone.value = false }
+function openFeedback() { showFeedback.value = true; fbSelected.value = []; fbComment.value = ''; fbDone.value = false; fbError.value = '' }
 function closeFeedback() { showFeedback.value = false }
 function toggleFbTheme(t: string) {
   const i = fbSelected.value.indexOf(t)
@@ -96,6 +97,7 @@ async function submitFeedback() {
   // written comment is what we act on).
   if (!fbComment.value.trim()) return
   fbSubmitting.value = true
+  fbError.value = ''
   try {
     const studentApi = useStudentApi()
     await studentApi('/questions/feedback', {
@@ -108,7 +110,11 @@ async function submitFeedback() {
     })
     fbDone.value = true
     setTimeout(closeFeedback, 1800)
-  } catch { /* fail silently */ }
+  } catch (e: any) {
+    // Surface the failure instead of swallowing it — the modal stays open with
+    // the comment intact so the user can retry.
+    fbError.value = e?.data?.msg || e?.data?.message || 'Couldn’t submit your feedback. Please try again.'
+  }
   finally { fbSubmitting.value = false }
 }
 const paused   = ref(false)         // ← session-timer pause flag (click timer toggles)
@@ -968,6 +974,10 @@ function diffLabel(d: string): string {
           </div>
         </div>
 
+        <div v-if="!fbDone && fbError" class="fb-error" role="alert"
+          style="color:var(--rose,#e11d48);font-size:0.72rem;font-weight:600;padding:0 2px 8px;text-align:right">
+          {{ fbError }}
+        </div>
         <div v-if="!fbDone" class="fb-actions">
           <button type="button" class="fb-cancel-btn" @click="closeFeedback">Cancel</button>
           <button type="button" class="fb-submit-btn"
@@ -1332,14 +1342,14 @@ body.single .a-scroll{padding-left:max(40px,calc(50vw - 380px));padding-right:ma
 .opt.ok .o-icon,.opt.bad .o-icon{display:block}
 
 /* ── EXPLANATION CARD ── */
-.exp-card{display:none;background:var(--white);border:1px solid var(--border);border-radius:var(--r-lg);border-left:3px solid var(--teal);overflow:hidden;margin-top:16px;animation:fadeSlide 0.3s ease;transition:background 0.3s,border-color 0.3s}
+.exp-card{display:none;background:var(--teal-pale);border:1px solid var(--border);border-radius:var(--r-lg);border-left:3px solid var(--teal);overflow:hidden;margin-top:16px;animation:fadeSlide 0.3s ease;transition:background 0.3s,border-color 0.3s}
 .exp-card.open{display:block}
 .exp-card .exp-inner{padding:20px 22px 22px}
 /* Single column: hide split card, show inline card after options */
 body.single .exp-card{display:none !important}
 .exp-single{margin-top:14px;display:none}
 body.single .exp-single{display:block}
-.exp-box{background:var(--white);border:1px solid var(--border);border-radius:var(--r-lg);border-left:3px solid var(--teal);overflow:hidden;animation:fadeSlide 0.3s ease;transition:background 0.3s,border-color 0.3s}
+.exp-box{background:var(--teal-pale);border:1px solid var(--border);border-radius:var(--r-lg);border-left:3px solid var(--teal);overflow:hidden;animation:fadeSlide 0.3s ease;transition:background 0.3s,border-color 0.3s}
 .exp-box .exp-inner{padding:20px 22px 22px}
 .exp-verdict{display:flex;align-items:center;gap:10px;padding:10px 13px;border-radius:var(--r);margin-bottom:12px}
 .exp-verdict.ok{background:var(--green-light);border:1px solid var(--green-border)}

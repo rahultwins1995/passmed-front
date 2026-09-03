@@ -13,7 +13,7 @@ const stats         = ref<any>(null)
 // One dated point per completed session (was: 8 weekly averages).
 const scoreTrend    = ref<{ date: string; label?: string; ts?: number; score: number | null; n?: number }[]>([])
 const topics        = ref<{ name: string; pct: number; total: number; correct: number }[]>([])
-const weakAreas     = ref<{ name: string; pct: number; questions: number }[]>([])
+const weakAreas     = ref<{ name: string; pct: number; questions: number; topic_type?: string; topic_id?: number }[]>([])
 const heatmap       = ref<Record<string, number>>({})
 const cohort        = ref<any>(null)
 // Pass mark for this student — from their institution's configured threshold
@@ -613,14 +613,23 @@ const heatmapThisWeek = computed(() => {
             🎉 No weak areas — all topics above {{ passThreshold }}%!
           </div>
           <div v-else class="weak-grid">
-            <div v-for="(w, i) in weakAreas" :key="w.name" class="wc">
+            <!-- Deep-link into the qbank with this weak topic preselected. Falls back
+                 to a plain div (no link) if the backend didn't send a topic_id. -->
+            <component
+              :is="w.topic_id ? 'NuxtLink' : 'div'"
+              v-for="(w, i) in weakAreas"
+              :key="w.name"
+              class="wc"
+              :class="{ 'wc-link': !!w.topic_id }"
+              :to="w.topic_id ? { path: '/student/qbank', query: { topic_type: w.topic_type, topic_id: w.topic_id } } : undefined"
+              :title="w.topic_id ? 'Practice ' + w.name + ' questions' : undefined">
               <div class="wc-name">{{ w.name }}</div>
               <div class="wc-bar"><div class="wc-fill" :style="{ width: w.pct+'%', background: weakColors[i % weakColors.length] }"></div></div>
               <div class="wc-meta">
                 <span class="wc-pct" :style="{ color: weakColors[i % weakColors.length] }">{{ w.pct }}%</span>
                 <span class="wc-cnt">{{ w.questions }} Qs</span>
               </div>
-            </div>
+            </component>
           </div>
         </div>
 

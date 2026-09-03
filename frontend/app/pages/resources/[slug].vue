@@ -43,10 +43,10 @@ useHead({
   }],
 })
 
-// en-US gives "Jul 29, 2026"; en-GB gives the UK day-month-year order
-// "29 Jul 2026" — audit PM-56.
+// en-US gives "Jul 29, 2026"; en-GB gives the day-month-year order
+// "29 Jul 2026" used elsewhere on the UK/SA builds — audit PM-56/SA-36.
 function formatDate (iso) {
-  return new Date(iso + 'T00:00:00Z').toLocaleDateString(region === 'UK' ? 'en-GB' : 'en-US', {
+  return new Date(iso + 'T00:00:00Z').toLocaleDateString((region === 'UK' || region === 'SA') ? 'en-GB' : 'en-US', {
     year: 'numeric', month: 'short', day: 'numeric', timeZone: 'UTC',
   })
 }

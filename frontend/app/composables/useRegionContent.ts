@@ -44,7 +44,7 @@ const REGIONS: Record<string, RegionContent> = {
     seoTitle: 'Passmed, CMSA, HPCSA & SA dentistry exam prep',
     platformTagline: 'The focused revision platform for CMSA Fellowship, HPCSA Board and South African dentistry exams.',
     builtForLine: 'Built for South African doctors and medical students.',
-    doctorsLabel: 'Residents & Doctors',
+    doctorsLabel: 'Doctors in Training',
     supportEmail: 'support@passmed.com',
     institutionsEmail: 'institutions@passmed.com',
     supportHours: 'Mon–Fri, 9am–6pm SAST',

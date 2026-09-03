@@ -34,7 +34,7 @@ const year = new Date().getFullYear()
       <h4>{{ rc.doctorsLabel }}</h4>
       <ul class="two-col">
         <li v-for="exam in tealExams" :key="exam.page">
-          <NuxtLink :to="`/exam/${exam.page}`">
+          <NuxtLink :to="`/exam/${exam.page}`" prefetch-on="interaction">
             {{ exam.name }}
           </NuxtLink>
         </li>
@@ -52,7 +52,7 @@ const year = new Date().getFullYear()
         </template>
         <template v-else>
           <li v-for="exam in amberExams" :key="exam.page">
-            <NuxtLink :to="`/exam/${exam.page}`">
+            <NuxtLink :to="`/exam/${exam.page}`" prefetch-on="interaction">
               {{ exam.name }}
             </NuxtLink>
           </li>

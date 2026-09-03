@@ -6,8 +6,8 @@ const router = useRouter()
 const { isSignupOpen } = useLoginModal()
 const region = useRegion()
 const rc = useRegionContent()
-// Hardcoded shared-template copy — normalised for UK only (see britishize.ts).
-const practicingCta = computed(() => region === 'UK' ? britishize('Start practicing →') : 'Start practicing →')
+// Hardcoded shared-template copy — normalised for UK/SA (British English, audit SA-45; see britishize.ts).
+const practicingCta = computed(() => (region === 'UK' || region === 'SA') ? britishize('Start practicing →') : 'Start practicing →')
 
 /* CA/PH have no student track — force the residents view and hide the tabs. */
 const studentsHidden = useStudentsHidden()
@@ -68,7 +68,7 @@ const externalHref = (exam) => {
 }
 const cardProps = (exam) => isExternalExam(exam)
   ? { href: externalHref(exam), target: '_blank', rel: 'noopener noreferrer' }
-  : { to: `/exam/${exam.page}` }
+  : { to: `/exam/${exam.page}`, prefetchOn: 'interaction' }
 
 // Funnel: user picked an exam from the list (fires before navigation).
 const onExamSelect = (exam) => {

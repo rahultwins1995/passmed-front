@@ -22,8 +22,10 @@ const rc = useRegionContent()
 const trialLabel = `${MARKETING.trialDays}-day free trial`
 const guaranteeLabel = `${MARKETING.guaranteeDays}-day money-back guarantee`
 
-/* === SSR-safe page fetch (for SEO data from API) === */
-const { data: page } = await useAsyncData(
+/* === SSR-safe fetches — both kicked off together (before either is awaited)
+   so the page-content and faqs-list Laravel calls overlap instead of running
+   one after the other; faqs-list doesn't depend on page's data at all. === */
+const pageDataPromise = useAsyncData(
   `page-${route.path}`,
   async () => {
     const res = await $fetch(getApiPath(`getpage${route.path}`), { method: 'GET' })
@@ -31,17 +33,7 @@ const { data: page } = await useAsyncData(
     return null
   }
 )
-
-/* === SEO — uses page data from API, falls back to static === */
-usePageSeo({
-  title: page.value?.seo_title,
-  description: page.value?.seo_description || page.value?.short_description,
-})
-
-/* === SSR-safe dynamic FAQ fetch (published FAQs managed in the admin) ===
-   Grouped by category (`type`). Falls back to the bundled static faq.ts content
-   if the API returns nothing or errors, so the page never renders empty. */
-const { data: apiFaqsRaw } = await useAsyncData(
+const apiFaqsPromise = useAsyncData(
   'faqs-list',
   async () => {
     try {
@@ -53,6 +45,19 @@ const { data: apiFaqsRaw } = await useAsyncData(
     }
   }
 )
+
+const { data: page } = await pageDataPromise
+
+/* === SEO — uses page data from API, falls back to static === */
+usePageSeo({
+  title: page.value?.seo_title,
+  description: page.value?.seo_description || page.value?.short_description,
+})
+
+/* === Published FAQs managed in the admin, grouped by category (`type`).
+   Falls back to the bundled static faq.ts content if the API returns
+   nothing or errors, so the page never renders empty. === */
+const { data: apiFaqsRaw } = await apiFaqsPromise
 
 const CAT_LABELS = {
   'getting-started': 'Getting Started',
@@ -243,7 +248,7 @@ const hasResults = computed(() => filteredSections.value.length > 0)
           <NuxtLink to="/pricing" active-class="active" class="btn-secondary"> View Pricing</NuxtLink>
         </div>
         <div class="cta-note">{{ guaranteeLabel }}<sup style="font-size:0.7em;">*</sup>&nbsp;·&nbsp;No auto-renewal&nbsp;·&nbsp;Pricing shown per exam</div>
-        <div style="margin-top:8px;font-size:0.7rem;color:rgba(255,255,255,0.3);">*Terms and conditions apply. Refund available within 14 days provided fewer than 50 questions answered.</div>
+        <div style="margin-top:8px;font-size:0.7rem;color:rgba(255,255,255,0.3);">*Terms and conditions apply. Refund available within 14 days provided fewer than 50 questions have been answered since purchase.</div>
       </div>
     </section>
   </div>

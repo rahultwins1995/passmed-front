@@ -10,8 +10,14 @@ const rc = useRegionContent()
 // render (no-op on every other market).
 const cms = (html) => region === 'PH' ? americanize(sanitizeHtml(html)) : sanitizeHtml(html)
 
-// SSR-safe page data fetch — runs on the server during initial render
-const { data: page, pending: loading, error } = await useAsyncData(
+// SSR-safe page data fetch — runs on the server during initial render.
+// Kicked off alongside home-faqs below (both calls fire before either is
+// awaited) so the two independent Laravel round-trips overlap instead of
+// serializing — awaiting page-home immediately here used to make home-faqs'
+// fetch wait for page-home to fully resolve before it even started, doubling
+// their combined time on the SSR critical path for no reason (home-faqs
+// doesn't depend on page-home's data).
+const pageDataPromise = useAsyncData(
   'page-home',
   async () => {
     const res = await $fetch(getApiPath('getpage/home'), { method: 'GET' })
@@ -19,6 +25,22 @@ const { data: page, pending: loading, error } = await useAsyncData(
     return null
   }
 )
+const homeFaqsPromise = useAsyncData(
+  'home-faqs',
+  async () => {
+    try {
+      const res = await $fetch(getApiPath('faqs'), { method: 'GET', query: { limit: 10 } })
+      if (res?.status === 'success') {
+        return (res.data || []).map(f => ({ id: f.id, q: f.question || '', a: f.answer || '' }))
+      }
+      return []
+    } catch {
+      return []
+    }
+  }
+)
+
+const { data: page, pending: loading, error } = await pageDataPromise
 
 // SEO — uses page data if API provides seo_title/description, otherwise sensible default
 usePageSeo({
@@ -76,20 +98,9 @@ const { onContentClick } = useContentClick()
 // Home FAQs — top 10 published, pulled from the FAQ admin (Home section) via /faqs.
 // The dedicated /faq page groups by category; the home page just shows the top 10
 // (the API already orders by sort_order, so "top 10" = the admin's chosen order).
-const { data: homeFaqs } = await useAsyncData(
-  'home-faqs',
-  async () => {
-    try {
-      const res = await $fetch(getApiPath('faqs'), { method: 'GET', query: { limit: 10 } })
-      if (res?.status === 'success') {
-        return (res.data || []).map(f => ({ id: f.id, q: f.question || '', a: f.answer || '' }))
-      }
-      return []
-    } catch {
-      return []
-    }
-  }
-)
+// Fetch itself was already started above (homeFaqsPromise), in parallel with
+// page-home — this just waits for it now that it's actually needed.
+const { data: homeFaqs } = await homeFaqsPromise
 
 // The home page must show exactly ONE "Got questions?" FAQ. Some markets author
 // their consumer FAQ inside the CMS `content_1` blob (rendered in .cms-content);
@@ -355,8 +366,8 @@ onMounted(() => nextTick(() => { enhanceBrowseCta(); positionReviews() }))
         </div>
         <div class="faq-inner">
           <div class="faq-item" v-for="f in homeFaqs" :key="f.id">
-            <div class="faq-q"><span v-html="f.q"></span> <span class="faq-icon">+</span></div>
-            <div class="faq-a" v-html="f.a"></div>
+            <div class="faq-q"><span v-html="sanitizeHtml(f.q)"></span> <span class="faq-icon">+</span></div>
+            <div class="faq-a" v-html="sanitizeHtml(f.a)"></div>
           </div>
         </div>
       </div>

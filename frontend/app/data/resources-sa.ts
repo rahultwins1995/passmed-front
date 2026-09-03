@@ -11,6 +11,7 @@ export const SA_ARTICLES: ResourceArticle[] = [
     category: 'CMSA · Physicians',
     readMins: 7,
     updated: '2026-07-29',
+    reviewedBy: 'Reviewed by the Passmed SA clinical team',
     body: `
       <p>The FCP(SA), Fellowship of the College of Physicians of South Africa, is the specialist qualification for internal medicine awarded by the Colleges of Medicine of South Africa (CMSA). Part 1, often called the Medical Primaries, is the basic-sciences hurdle that registrars must clear early in their training, and its breadth makes it one of the harder exams to plan for. This guide explains exactly what the exam involves, how it is structured, and the study approach that reliably gets candidates through.</p>
 
@@ -66,32 +67,33 @@ export const SA_ARTICLES: ResourceArticle[] = [
     `,
   },
   {
-    slug: 'fcog-part-1-sa-complete-guide',
-    title: 'FCOG(SA) Part 1: The Complete Guide',
-    description: 'A complete guide to the FCOG(SA) Part 1 primary exam: the 150-MCQ format, basic and applied science content, eligibility, a study plan and how to pass.',
+    slug: 'fcog-primary-sa-complete-guide',
+    title: 'FCOG(SA) Primary: The Complete Guide',
+    description: 'A complete guide to the FCOG(SA) Primary exam: the 150-MCQ format, basic and applied science content, eligibility, a study plan and how to pass.',
     category: 'CMSA · O&G',
     readMins: 7,
     updated: '2026-07-29',
+    reviewedBy: 'Reviewed by the Passmed SA clinical team',
     body: `
-      <p>The FCOG(SA), Fellowship of the College of Obstetricians and Gynaecologists of South Africa, is the specialist qualification for obstetrics and gynaecology awarded by the Colleges of Medicine of South Africa (CMSA). Part 1, the primary examination, is the basic-and-applied-science foundation that registrars sit early in their training. This guide explains the format, what it covers, who can sit it, and how to prepare efficiently for a first-time pass.</p>
+      <p>The FCOG(SA), Fellowship of the College of Obstetricians and Gynaecologists of South Africa, is the specialist qualification for obstetrics and gynaecology awarded by the Colleges of Medicine of South Africa (CMSA). The Primary, the first of the three examinations, is the basic-and-applied-science foundation that registrars sit early in their training. This guide explains the format, what it covers, who can sit it, and how to prepare efficiently for a first-time pass.</p>
 
-      <h2>What is the FCOG(SA) Part 1 exam?</h2>
-      <p>FCOG(SA) Part 1 is the primary examination for the fellowship, testing the basic and applied sciences that underpin safe practice in obstetrics and gynaecology. It confirms that a trainee has the scientific grounding, anatomy, physiology and the related sciences relevant to the specialty, needed before progressing through the rest of the O&amp;G training pathway.</p>
+      <h2>What is the FCOG(SA) Primary exam?</h2>
+      <p>FCOG(SA) Primary is the entry examination for the fellowship, testing the basic and applied sciences that underpin safe practice in obstetrics and gynaecology. It confirms that a trainee has the scientific grounding, anatomy, physiology and the related sciences relevant to the specialty, needed before progressing through the rest of the O&amp;G training pathway.</p>
 
-      <h2>FCOG(SA) Part 1 format and structure</h2>
-      <p>Part 1 is a single written paper of three hours, containing 150 single-best-answer multiple-choice questions. The content focuses on the basic and applied science relevant to obstetrics and gynaecology, and the single-best-answer format tests applied understanding rather than simple recall.</p>
+      <h2>FCOG(SA) Primary format and structure</h2>
+      <p>The Primary is a single written paper of three hours, containing 150 single-best-answer multiple-choice questions. The content focuses on the basic and applied science relevant to obstetrics and gynaecology, and the single-best-answer format tests applied understanding rather than simple recall.</p>
       <ul>
         <li>One three-hour written paper.</li>
         <li>150 single-best-answer multiple-choice questions.</li>
         <li>Content focused on the basic and applied science of obstetrics and gynaecology.</li>
         <li>Set and administered by the Colleges of Medicine of South Africa (CMSA).</li>
       </ul>
-      <p>Note that the FCOG(SA) structure was updated in 2024 to include three examinations, Primary, Intermediate and Final, with the Intermediate becoming available after a year of registrar training. Confirm the current structure and the exact specification of Part 1 on the CMSA website when you apply.</p>
+      <p>Note that the FCOG(SA) structure was updated in 2024 to include three examinations, Primary, Intermediate and Final, with the Intermediate becoming available after a year of registrar training. Confirm the current structure and the exact specification of the Primary on the CMSA website when you apply.</p>
 
-      <h2>Who can sit FCOG(SA) Part 1?</h2>
+      <h2>Who can sit FCOG(SA) Primary?</h2>
       <p>Eligibility requires a post-internship qualification to practise medicine that is registered or registrable with the HPCSA. Candidates typically sit the primary early in their O&amp;G training, since it is the gateway to the later examinations. As entry criteria are set by the CMSA and can change, confirm the current requirements before registering.</p>
 
-      <h2>FCOG(SA) Part 1 syllabus: where to focus</h2>
+      <h2>FCOG(SA) Primary syllabus: where to focus</h2>
       <p>The paper draws on the basic and applied sciences relevant to obstetrics and gynaecology. High-yield areas typically include:</p>
       <ul>
         <li>Applied anatomy of the pelvis, reproductive tract and related structures.</li>
@@ -100,7 +102,7 @@ export const SA_ARTICLES: ResourceArticle[] = [
         <li>Relevant pharmacology, microbiology, pathology and genetics as applied to the specialty.</li>
       </ul>
 
-      <h2>A realistic FCOG(SA) Part 1 study plan</h2>
+      <h2>A realistic FCOG(SA) Primary study plan</h2>
       <p>Most candidates prepare over three to four months alongside clinical work.</p>
       <ul>
         <li><strong>Weeks 1–6, build coverage.</strong> Work through the basic and applied sciences topic by topic, answering questions as you go and reading every explanation.</li>
@@ -111,28 +113,29 @@ export const SA_ARTICLES: ResourceArticle[] = [
       <h2>Exam technique that earns marks</h2>
       <p>With 150 single-best-answer questions in three hours, disciplined technique protects your score. Read each stem fully before the options, and commit to an answer before scanning the choices so they do not lead you astray. Where two options look plausible, choose the single best answer for the scenario described. Flag anything that stalls you and return with fresh eyes rather than burning minutes, and keep a steady rhythm so you reach the end of the paper. Because there is no negative marking, every question deserves an answer.</p>
 
-      <h2>The best way to revise for FCOG(SA) Part 1</h2>
+      <h2>The best way to revise for FCOG(SA) Primary</h2>
       <p>As an entirely multiple-choice paper, the FCOG(SA) primary rewards a question bank that mirrors the CMSA style and difficulty, explains the reasoning behind each option, and tracks your performance so you can target your weakest basic-and-applied-science topics.</p>
-      <p class="ra-callout"><strong>Passmed's FCOG Part 1 question bank</strong> is written by qualified doctors, mapped to the CMSA basic-and-applied-science syllabus, and includes timed exam simulation with a dashboard that highlights your weakest topics. <a href="/exams">Explore the question banks →</a></p>
+      <p class="ra-callout"><strong>Passmed's FCOG Primary question bank</strong> is written by qualified doctors, mapped to the CMSA basic-and-applied-science syllabus, and includes timed exam simulation with a dashboard that highlights your weakest topics. <a href="/exams">Explore the question banks →</a></p>
 
       <h2>Frequently asked questions</h2>
-      <h3>How many questions are in FCOG(SA) Part 1?</h3>
+      <h3>How many questions are in FCOG(SA) Primary?</h3>
       <p>150 single-best-answer multiple-choice questions in a single three-hour written paper, covering the basic and applied science of obstetrics and gynaecology.</p>
       <h3>Has the FCOG(SA) exam structure changed?</h3>
       <p>Yes. The structure was updated in 2024 to include Primary, Intermediate and Final examinations, with the Intermediate available after a year of registrar training. Confirm the current structure with the CMSA.</p>
-      <h3>How long should I study for FCOG(SA) Part 1?</h3>
+      <h3>How long should I study for FCOG(SA) Primary?</h3>
       <p>Three to four months of consistent, question-led preparation suits most candidates working alongside clinical duties.</p>
 
       <p class="ra-fine">Exam format and scoring details were checked against the official examining bodies (accessed July 2026). Specifications, dates and fees change, always confirm the current details on the <a href="https://cmsa.co.za/" target="_blank" rel="noopener">CMSA website</a> before you sit.</p>
     `,
   },
   {
-    slug: 'surgical-primaries-sa-complete-guide',
-    title: 'Surgical Primaries (FCS SA Part 1): The Complete Guide',
-    description: 'A complete guide to the CMSA Surgical Primaries (FCS Part 1): the two-paper MCQ format, anatomy and physiology content, eligibility and how to pass.',
+    slug: 'fcs-primary-sa-complete-guide',
+    title: 'Surgical Primaries (FCS SA Primary): The Complete Guide',
+    description: 'A complete guide to the CMSA Surgical Primaries (FCS(SA) Primary): the two-paper MCQ format, anatomy and physiology content, eligibility and how to pass.',
     category: 'CMSA · Surgery',
     readMins: 7,
     updated: '2026-07-29',
+    reviewedBy: 'Reviewed by the Passmed SA clinical team',
     body: `
       <p>The Surgical Primaries, the primary examination of the Fellowship of the College of Surgeons of South Africa, FCS(SA), is the basic-sciences hurdle every surgical registrar in South Africa must clear early in training. Dominated by anatomy and physiology, it has a reputation for breadth, and a structured, question-led plan is the key to passing it.</p>
 
@@ -194,6 +197,7 @@ export const SA_ARTICLES: ResourceArticle[] = [
     category: 'CMSA · Diploma',
     readMins: 7,
     updated: '2026-07-29',
+    reviewedBy: 'Reviewed by the Passmed SA clinical team',
     body: `
       <p>The Diploma in HIV Management, Dip HIV Man(SA), is a widely sought qualification for South African healthcare professionals who manage people living with HIV, from general practitioners and medical officers to those working in primary care, community health centres and district hospitals. Awarded by the Colleges of Medicine of South Africa (CMSA) through the College of Family Physicians, it is a practical, clinically focused diploma.</p>
 
@@ -255,6 +259,7 @@ export const SA_ARTICLES: ResourceArticle[] = [
     category: 'CMSA · Emergency',
     readMins: 7,
     updated: '2026-07-29',
+    reviewedBy: 'Reviewed by the Passmed SA clinical team',
     body: `
       <p>The FCEM(SA), Fellowship of the College of Emergency Medicine of South Africa, is the specialist qualification for emergency medicine awarded by the Colleges of Medicine of South Africa (CMSA). Part 1, the primary examination, is the basic-sciences foundation that registrars sit early in their training.</p>
 
@@ -307,6 +312,82 @@ export const SA_ARTICLES: ResourceArticle[] = [
       <p>Three to four months of consistent, question-led preparation suits most candidates working alongside clinical duties.</p>
 
       <p class="ra-fine">Exam format and scoring details were checked against the official examining bodies (accessed July 2026). Specifications, dates and fees change, always confirm the current details on the <a href="https://cmsa.co.za/" target="_blank" rel="noopener">CMSA website</a> before you sit.</p>
+    `,
+  },
+  {
+    slug: 'hpcsa-board-exam-sa-complete-guide',
+    title: 'HPCSA Board Examination: The Complete Guide',
+    description: 'A complete guide to the HPCSA Board Examination for foreign-qualified doctors: the written MCQ and OSCE/OSPE format, eligibility, a study plan and how to pass.',
+    category: 'HPCSA · Registration',
+    readMins: 8,
+    updated: '2026-08-27',
+    reviewedBy: 'Reviewed by the Passmed SA clinical team',
+    body: `
+      <p>The HPCSA Board Examination is the assessment foreign-qualified medical practitioners must pass to register with the Health Professions Council of South Africa (HPCSA) and practise medicine in South Africa. Set under the Health Professions Act No. 56 of 1974, it tests both clinical knowledge and the ethical and medico-legal framework you're expected to know before you're registered to treat patients here. This guide explains the format, what it covers, who can sit it, and how to prepare efficiently.</p>
+
+      <h2>What is the HPCSA Board Examination?</h2>
+      <p>The HPCSA Board Exam is the route to registration for doctors who qualified outside South Africa and want to practise here. It assesses whether your clinical knowledge and your understanding of South Africa's ethical and medico-legal requirements meet the standard the HPCSA requires, independent of where and how you originally trained.</p>
+
+      <h2>HPCSA Board Exam format and structure</h2>
+      <p>The exam has two components, and you must clear the first before you're eligible to sit the second:</p>
+      <ul>
+        <li>Written exam: 100 single-best-answer multiple-choice questions in three hours — 75 on clinical knowledge, 25 on ethics and medico-legal practice. No negative marking.</li>
+        <li>Practical exam: an OSCE/OSPE with a minimum of 13 stations, sat only once you've passed the written component.</li>
+        <li>A minimum score of 50% in the written exam is required before you may sit the practical.</li>
+        <li>Written sittings are held in Pretoria, Durban and Cape Town, at least twice a calendar year (three sittings were held in 2025).</li>
+        <li>Administered by the University of KwaZulu-Natal on the HPCSA's behalf, under a three-year contract.</li>
+      </ul>
+      <p>Confirm the current sitting dates, fees and any specification changes on the HPCSA website when you apply.</p>
+
+      <h2>Who can sit the HPCSA Board Examination?</h2>
+      <p>Eligibility is documentation-heavy, and gathering everything is often the slowest part of the process, not the studying. You'll typically need:</p>
+      <ul>
+        <li>A completed application (Form 12).</li>
+        <li>Certified copies of your medical qualification, with certified translations if it wasn't awarded in English.</li>
+        <li>Proof of English proficiency — an IELTS score of Band 6 or higher.</li>
+        <li>Credential verification through ECFMG.</li>
+        <li>A CV, a Certificate of Good Standing from your home regulator, and a valid passport or ID.</li>
+        <li>Documentary proof of your internship and clinical experience.</li>
+        <li>An endorsement letter from the Directorate Workforce Management (DWM) at the Department of Health.</li>
+      </ul>
+      <p>Start this paperwork early — verification through bodies like ECFMG can take weeks, and a missing document can push you to a later sitting. Confirm the current requirements on the HPCSA website before you apply.</p>
+
+      <h2>HPCSA Board Exam syllabus: where to focus</h2>
+      <p>The written exam splits 75/25 between general clinical knowledge and South Africa's ethical and medico-legal framework, and both halves need deliberate preparation:</p>
+      <ul>
+        <li>Broad clinical knowledge across general (internal) medicine, surgery, obstetrics and gynaecology, paediatrics, and the acute and emergency presentations any generalist doctor is expected to manage.</li>
+        <li>The disease burden and clinical context relevant to South African practice, including HIV and TB management protocols.</li>
+        <li>The HPCSA's own ethical rules and guidelines for practitioners.</li>
+        <li>The medico-legal framework doctors practise under in South Africa, including the Health Professions Act and patient consent requirements.</li>
+      </ul>
+      <p>The ethics and medico-legal quarter is where experienced clinicians most often lose marks, not because the concepts are unfamiliar, but because the specific South African rules differ from wherever you trained. Don't leave it to the final week.</p>
+
+      <h2>A realistic HPCSA Board Exam study plan</h2>
+      <p>You're already a qualified, practising doctor, so this isn't first-principles learning — it's targeted revision and familiarisation. Most candidates prepare over six to ten weeks alongside work or relocation admin.</p>
+      <ul>
+        <li><strong>Weeks 1–3, build the ethics and medico-legal foundation</strong> first, since it's the newest material for most candidates, while reviewing clinical topics in parallel through questions.</li>
+        <li><strong>Weeks 4–7, consolidate</strong> through a question bank across both halves, in tutor mode, logging weak areas and returning to them.</li>
+        <li><strong>Weeks 8–10, simulate.</strong> Sit timed, 100-question papers to build pacing across the three-hour limit, review your analytics, and taper in the final week.</li>
+      </ul>
+
+      <h2>Exam technique that earns marks</h2>
+      <p>With 100 questions in three hours and no negative marking, every question deserves an answer, so never leave one blank. Read each stem fully before the options, and on the ethics and medico-legal quarter in particular, answer from the South African regulatory position rather than what your home country's guidelines would say — the exam is testing SA-specific knowledge, not general medical ethics. Flag anything that stalls you and return with fresh eyes rather than burning minutes on it.</p>
+
+      <h2>The best way to revise for the HPCSA Board Exam</h2>
+      <p>As an entirely multiple-choice written paper, the HPCSA Board Exam rewards a question bank that mirrors its style and its 75/25 split, explains the reasoning behind each option — especially on the ethics and medico-legal side, where the "why" is what actually transfers — and tracks your performance so you can target your weakest areas before the sitting.</p>
+      <p class="ra-callout"><strong>Passmed's HPCSA Board Exam question bank</strong> is written by qualified doctors, mapped to the exam's clinical and ethics/medico-legal split, and includes timed exam simulation with a dashboard that highlights your weakest topics. It covers the written MCQ component — pair it with dedicated OSCE/clinical-skills practice for the separate practical exam. <a href="/exams">Explore the question banks →</a></p>
+
+      <h2>Frequently asked questions</h2>
+      <h3>How many questions are in the HPCSA Board Exam written component?</h3>
+      <p>100 single-best-answer multiple-choice questions in three hours — 75 on clinical knowledge and 25 on ethics and medico-legal practice — with no negative marking.</p>
+      <h3>What is the pass mark for the HPCSA Board Exam?</h3>
+      <p>A minimum of 50% in the written exam is required before you're eligible to sit the OSCE/OSPE practical. Confirm the current pass-mark and progression rules on the HPCSA website.</p>
+      <h3>Where and how often is the HPCSA Board Exam held?</h3>
+      <p>Written sittings are held in Pretoria, Durban and Cape Town, administered by the University of KwaZulu-Natal on the HPCSA's behalf, at least twice a calendar year.</p>
+      <h3>Does Passmed prepare me for the OSCE/OSPE practical exam?</h3>
+      <p>Passmed's HPCSA question bank covers the written MCQ component only. Combine it with dedicated clinical-skills and OSCE preparation for the practical component.</p>
+
+      <p class="ra-fine">Exam format and eligibility details were checked against the official examining bodies (accessed August 2026). Specifications, dates and fees change, always confirm the current details on the <a href="https://www.hpcsa.co.za/board/medical-dental/examinations" target="_blank" rel="noopener">HPCSA website</a> before you sit.</p>
     `,
   },
 ]

@@ -1,6 +1,8 @@
 <script setup>
 const route = useRoute()
 const rc = useRegionContent()
+const region = useRegion()
+const enquiriesWord = (region === 'UK' || region === 'SA') ? 'enquiries' : 'inquiries'
 
 /* === SSR-safe page fetch (for SEO data from API) === */
 const { data: page } = await useAsyncData(
@@ -194,7 +196,7 @@ function resetForm () {
             <div>
               <div style="font-size:0.72rem; font-weight:700; text-transform:uppercase; letter-spacing:1.5px; color:var(--ink-dim); margin-bottom:3px;">Institutions</div>
               <div style="font-size:0.9rem; color:var(--ink); font-weight:500;">
-                For group licensing inquiries,
+                For group licensing {{ enquiriesWord }},
                 <NuxtLink to="/institutions" style="color:var(--teal); text-decoration:none; font-weight:700;">visit our Institutions page →</NuxtLink>
               </div>
             </div>

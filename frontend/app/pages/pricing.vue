@@ -4,7 +4,7 @@ import { MARKETING } from '~/utils/marketing'
 const router = useRouter()
 const { openSignup, signupPrefillEmail } = useLoginModal()
 const { trackViewItemList, trackSelectItem } = useAnalytics()
-const { symbol, code, usdToggle } = useCurrency()
+const { symbol, code, usdToggle, format: formatAmount } = useCurrency()
 
 // Currency toggle: only markets where a USD reference is useful (AU/CA/PH) get
 // it — UK (£) and SA (R) are unambiguous, so they keep their standard currency
@@ -20,17 +20,20 @@ onMounted(ensureRate)
 const dispSymbol = computed(() => (showUsd.value ? '$' : symbol))
 function toUsd (local) { return Math.round((Number(local) || 0) / usdRate.value) }
 function dispPrice (local) { return showUsd.value ? toUsd(local) : (Number(local) || 0) }
+function dispPriceFmt (local) { return formatAmount(dispPrice(local), showUsd.value) }
 
 const guaranteeLabel = `${MARKETING.guaranteeDays}-day money-back guarantee`
 const rc = useRegionContent()
 const region = useRegion()
 // Institutional-block copy — American "residency program(s)" has no UK
 // equivalent; UK training bodies use "training programme(s)".
-const entHeadingWord = computed(() => region === 'UK' ? 'training programmes' : 'programs')
-const entDesc = computed(() => region === 'UK'
-  ? 'Seat-based access for training programmes, fellowships, and medical schools — with a faculty dashboard and reporting tools.'
-  : 'Seat-based access for residency programs, fellowships, and medical schools — with a faculty dashboard and reporting tools.')
-const entDirectorLabel = computed(() => region === 'UK' ? 'Training Programme Director / faculty dashboard' : 'Program director / faculty dashboard')
+const entHeadingWord = computed(() => (region === 'UK' || region === 'SA') ? 'training programmes' : 'programs')
+const entDesc = computed(() => region === 'SA'
+  ? 'Seat-based access for registrar training programmes, fellowships, and medical schools — with a training programme / HOD dashboard and reporting tools.'
+  : (region === 'UK'
+    ? 'Seat-based access for training programmes, fellowships, and medical schools — with a faculty dashboard and reporting tools.'
+    : 'Seat-based access for residency programs, fellowships, and medical schools — with a faculty dashboard and reporting tools.'))
+const entDirectorLabel = computed(() => region === 'SA' ? 'Training programme / HOD dashboard' : (region === 'UK' ? 'Training Programme Director / faculty dashboard' : 'Program director / faculty dashboard'))
 
 /* === API — useExams must be SSR-safe (using useAsyncData/useFetch internally) === */
 const { data: response } = await useExams()
@@ -116,7 +119,7 @@ function perMonth (examPage, plan) {
   const months = Number(plan)
   // Guard against non-numeric plan ids (e.g. '12m', '1y') → avoids '$NaN/mo'.
   if (!total || !Number.isFinite(months) || months <= 0) return ''
-  return `${dispSymbol.value}${dispPrice(Math.round(total / months))}/mo`
+  return `${dispSymbol.value}${dispPriceFmt(Math.round(total / months))}/mo`
 }
 // Approximate USD equivalent line shown under a local price (only where the
 // toggle is offered, and only while showing the local currency).
@@ -295,7 +298,7 @@ onMounted(() => {
                   <td><strong>{{ exam.name }}</strong></td>
                   <td class="exam-desc">{{ exam.short_description }}</td>
                   <td style="text-align:right;white-space:nowrap;">
-                    <div class="exam-price">{{ dispSymbol }}{{ dispPrice(priceFor(exam.page, resDur)) }}</div>
+                    <div class="exam-price">{{ dispSymbol }}{{ dispPriceFmt(priceFor(exam.page, resDur)) }}</div>
                     <div v-if="usdNote(priceFor(exam.page, resDur))" class="exam-price-usd">{{ usdNote(priceFor(exam.page, resDur)) }}</div>
                     <div v-if="resDur > 1" class="exam-price-sub">{{ perMonth(exam.page, resDur) }}<span v-if="savingsPct(exam.page, resDur) > 0" class="exam-price-save"> · Save {{ savingsPct(exam.page, resDur) }}%</span></div>
                   </td>
@@ -356,7 +359,7 @@ onMounted(() => {
                       <td><strong>{{ exam.name }}</strong></td>
                       <td class="exam-desc">{{ exam.short_description }}</td>
                       <td style="text-align:right;white-space:nowrap;">
-                        <div class="exam-price">{{ dispSymbol }}{{ dispPrice(priceFor(exam.page, stuDur)) }}</div>
+                        <div class="exam-price">{{ dispSymbol }}{{ dispPriceFmt(priceFor(exam.page, stuDur)) }}</div>
                         <div v-if="usdNote(priceFor(exam.page, stuDur))" class="exam-price-usd">{{ usdNote(priceFor(exam.page, stuDur)) }}</div>
                         <div v-if="stuDur > 1" class="exam-price-sub">{{ perMonth(exam.page, stuDur) }}<span v-if="savingsPct(exam.page, stuDur) > 0" class="exam-price-save"> · Save {{ savingsPct(exam.page, stuDur) }}%</span></div>
                       </td>
@@ -401,7 +404,7 @@ onMounted(() => {
             <div class="ent-feat"><div class="ent-dot"></div>{{ entDirectorLabel }}</div>
             <div class="ent-feat"><div class="ent-dot"></div>Cohort performance benchmarking</div>
             <div class="ent-feat"><div class="ent-dot"></div>Faculty-assigned question sets</div>
-            <div class="ent-feat"><div class="ent-dot"></div>Volume discounts from 5+ seats</div>
+            <div class="ent-feat"><div class="ent-dot"></div>Volume discounts available</div>
             <div class="ent-feat"><div class="ent-dot"></div>Purchase order &amp; invoice billing</div>
           </div>
           <div class="ent-right">

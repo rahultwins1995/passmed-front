@@ -201,7 +201,7 @@ function resetForm () {
             </div>
 
             <div class="form-group">
-              <label for="inst-org">Institution / organization</label>
+              <label for="inst-org">{{ (region === 'UK' || region === 'SA') ? 'Institution / organisation' : 'Institution / organization' }}</label>
               <input
                 id="inst-org"
                 v-model="form.organization"
@@ -214,17 +214,20 @@ function resetForm () {
 
             <div class="form-row">
               <div class="form-group">
-                <label for="inst-type">{{ region === 'UK' ? 'Programme type' : 'Program type' }}</label>
+                <label for="inst-type">{{ (region === 'UK' || region === 'SA') ? 'Programme type' : 'Program type' }}</label>
                 <select
                   id="inst-type"
                   v-model="form.program_type"
                   @change="clearError('program_type')"
                 >
                   <option value="" disabled>Select one…</option>
-                  <option value="residency">{{ region === 'UK' ? 'Training programme' : 'Residency program' }}</option>
-                  <option value="fellowship">{{ region === 'UK' ? 'Fellowship programme' : 'Fellowship program' }}</option>
+                  <option value="residency">{{ region === 'SA' ? 'Registrar training programme' : (region === 'UK' ? 'Training programme' : 'Residency program') }}</option>
+                  <option value="fellowship">{{ (region === 'UK' || region === 'SA') ? 'Fellowship programme' : 'Fellowship program' }}</option>
                   <option value="medical-school">Medical school</option>
                   <option value="hospital-system">Hospital system</option>
+                  <option v-if="region === 'SA'" value="university-department">University department</option>
+                  <option v-if="region === 'SA'" value="provincial-health">Provincial health department</option>
+                  <option v-if="region === 'SA'" value="hospital-group">Hospital group</option>
                   <option value="other">Other</option>
                 </select>
                 <div v-if="errors.program_type" class="field-error">{{ errors.program_type }}</div>

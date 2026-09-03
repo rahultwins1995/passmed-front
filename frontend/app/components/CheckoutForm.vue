@@ -60,6 +60,8 @@ defineExpose({ cardEl })
       <strong>Logged in as:</strong> {{ user?.email }}
     </div>
 
+    <!-- Card details — hidden (kept mounted via v-show) when the total is $0 so
+         a 100%-off coupon needs no card. -->
     <!-- Bundle add-ons: buy related exams together (shown ABOVE card details) -->
     <div v-if="bundleOffers.length" class="checkout-addons">
       <div class="ca-head">
@@ -80,8 +82,6 @@ defineExpose({ cardEl })
       </div>
     </div>
 
-    <!-- Card details — hidden (kept mounted via v-show) when the total is $0 so
-         a 100%-off coupon needs no card. -->
     <div v-show="total > 0" class="checkout-section-label">
       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><rect x="2" y="5" width="20" height="14" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/></svg>
       Card details
@@ -198,8 +198,5 @@ defineExpose({ cardEl })
 .ca-chip.active { border-color: #0d9488; background: #ecfdf9; box-shadow: 0 0 0 1px #0d9488 inset; }
 .ca-chip-m { font-size: 0.68rem; font-weight: 700; color: #64748b; }
 .ca-chip-p { font-size: 0.78rem; font-weight: 800; color: #0f766e; }
-.ca-chip-o { font-size: 0.64rem;
-/* color: #b0b9c4;*/
-color: #5b5858;
-text-decoration: line-through; }
+.ca-chip-o { font-size: 0.64rem; color: #b0b9c4; text-decoration: line-through; }
 </style>

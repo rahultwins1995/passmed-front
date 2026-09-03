@@ -22,8 +22,26 @@ const CURRENCY_BY_REGION: Record<string, CurrencyInfo> = {
   PH: { symbol: '₱', code: 'PHP', usdRate: 58,   usdToggle: true },
 }
 
+// Locale used purely for thousand-grouping (no currency symbol — that's the
+// separate `symbol` above, rendered by the caller). Audit SA-47: prices were
+// rendered as raw numbers with no grouping at all ("R1499"), inconsistent
+// with SA convention (space-grouped, "R1 499"). One formatter for every
+// region keeps this from drifting again per-page.
+const LOCALE_BY_REGION: Record<string, string> = {
+  US: 'en-US', CA: 'en-CA', AU: 'en-AU', UK: 'en-GB', SA: 'en-ZA', PH: 'en-PH',
+}
+
 export function useCurrency () {
   const region = useRegion()
   const c = CURRENCY_BY_REGION[region] || CURRENCY_BY_REGION.US
-  return { symbol: c.symbol, code: c.code, usdRate: c.usdRate, usdToggle: c.usdToggle }
+  const locale = LOCALE_BY_REGION[region] || 'en-US'
+  // isUsd: true when displaying a converted USD figure (AU/CA/PH toggle) rather
+  // than the local currency — grouping should follow US convention then, not
+  // the local one.
+  const format = (n: number | string, isUsd = false): string => {
+    const num = Number(n)
+    if (!Number.isFinite(num)) return String(n ?? '')
+    return num.toLocaleString(isUsd ? 'en-US' : locale)
+  }
+  return { symbol: c.symbol, code: c.code, usdRate: c.usdRate, usdToggle: c.usdToggle, format }
 }

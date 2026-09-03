@@ -13,7 +13,7 @@
 // signal and a stale env var can no longer poison it.
 //
 // Keep in sync with REGION_BY_HOST in useRegion.ts and with SITE_URL_BY_HOST in
-// server/routes/robots.txt.ts.
+// server/routes/robots.txt.ts and server/plugins/site-config.ts.
 export const SITE_URL_BY_REGION: Record<string, string> = {
   US: 'https://www.passmed.com',
   SA: 'https://www.passmed.co.za',

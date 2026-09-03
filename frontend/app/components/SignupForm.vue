@@ -782,6 +782,9 @@ async function submitSignup (method = 'email') {
             plan: signupPlan.value,
             payment_intent_id: paymentIntentId,
             coupon_code: couponApplied.value?.code,
+            // Persona from the tab the user actually picked (Residents/Students),
+            // so onboarding pre-selects it instead of deriving from exam accent.
+            audience: signupTab.value === 'students' ? 'student' : 'resident',
             // Attribution — captured from the landing URL + browser referrer.
             utm_source: route.query.utm_source ?? null,
             utm_medium: route.query.utm_medium ?? null,
@@ -796,8 +799,19 @@ async function submitSignup (method = 'email') {
         if (signupPlan.value === 'trial') {
           trackSignUp({ method, exam: signupExamSlug.value || null })
         }
-        const loggedInUser = await login(signupEmail.value, signupPassword.value)
-        finalUserRole = loggedInUser?.user?.role
+        // Signup now logs a NEW account in directly: the signup proxy sets the auth
+        // cookie from the token the backend returns, and the user comes back on
+        // `signupResponse.user`. This replaces the old separate login() call, which
+        // hard-fails Turnstile (an auto-login after signup has no widget token).
+        // Attach-to-existing returns no user (must log in with its own password) —
+        // fall back to the explicit login there.
+        if (signupResponse?.user) {
+          user.value = signupResponse.user
+          finalUserRole = signupResponse.user?.role ?? null
+        } else {
+          const loggedInUser = await login(signupEmail.value, signupPassword.value)
+          finalUserRole = loggedInUser?.user?.role
+        }
       } catch (err) {
         const message = err?.data?.msg || err?.data?.errmsg || err?.data?.message || err?.message || 'Signup failed'
         throw new Error(message)

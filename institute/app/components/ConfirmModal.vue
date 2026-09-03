@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, watch } from 'vue'
+import { ref, watch, nextTick, onBeforeUnmount } from 'vue'
 
 // Styled replacement for native alert / confirm / prompt browser dialogs.
 // Fully self-contained: scoped styles + CSS-var fallbacks, so it cannot
@@ -16,7 +16,49 @@ const props = defineProps<{
 const emit = defineEmits<{ (e: 'confirm', value?: string): void; (e: 'cancel'): void }>()
 
 const promptValue = ref('')
-watch(() => props.open, (o) => { if (o) promptValue.value = '' })
+const boxRef = ref<HTMLElement | null>(null)
+let previouslyFocused: HTMLElement | null = null
+
+function focusableEls(): HTMLElement[] {
+  if (!boxRef.value) return []
+  return Array.from(boxRef.value.querySelectorAll<HTMLElement>(
+    'a[href], button:not([disabled]), textarea, input, select, [tabindex]:not([tabindex="-1"])'
+  )).filter(el => el.offsetParent !== null)
+}
+
+// Escape cancels; Tab is trapped inside the open dialog.
+function onDocKeydown(e: KeyboardEvent) {
+  if (!props.open) return
+  if (e.key === 'Escape') { e.preventDefault(); emit('cancel'); return }
+  if (e.key === 'Tab') {
+    const els = focusableEls()
+    if (!els.length) return
+    const first = els[0], last = els[els.length - 1]
+    const active = document.activeElement as HTMLElement
+    if (e.shiftKey && (active === first || !boxRef.value?.contains(active))) {
+      e.preventDefault(); last.focus()
+    } else if (!e.shiftKey && active === last) {
+      e.preventDefault(); first.focus()
+    }
+  }
+}
+
+// Open → remember trigger, trap + focus. Close → release + restore focus.
+watch(() => props.open, async (o) => {
+  if (o) {
+    promptValue.value = ''
+    previouslyFocused = (document.activeElement as HTMLElement) ?? null
+    document.addEventListener('keydown', onDocKeydown)
+    await nextTick()
+    focusableEls()[0]?.focus()
+  } else {
+    document.removeEventListener('keydown', onDocKeydown)
+    previouslyFocused?.focus?.()
+    previouslyFocused = null
+  }
+})
+
+onBeforeUnmount(() => document.removeEventListener('keydown', onDocKeydown))
 
 function onConfirm() {
   if (props.promptMode) {
@@ -31,7 +73,7 @@ function onConfirm() {
 <template>
   <Transition name="cfm">
     <div v-if="open" class="cfm-overlay" @click.self="emit('cancel')">
-      <div class="cfm-box" role="dialog" aria-modal="true" :aria-label="title || 'Confirm'">
+      <div ref="boxRef" class="cfm-box" role="dialog" aria-modal="true" :aria-label="title || 'Confirm'">
         <div class="cfm-title">{{ title || 'Confirm' }}</div>
         <div class="cfm-msg">{{ message }}</div>
         <input

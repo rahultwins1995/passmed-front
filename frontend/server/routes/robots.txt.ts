@@ -8,7 +8,8 @@
  * SITE_URL_BY_HOST duplicates the mapping in app/composables/useSiteUrl.ts
  * rather than importing it: that file relies on Nuxt auto-imports
  * (useRegion/useRuntimeConfig) which do not exist inside the Nitro bundle.
- * Keep the two in sync.
+ * Keep the two in sync, and server/plugins/site-config.ts (same mapping,
+ * for sitemap.xml's site.url) alongside them.
  *
  * Note we do NOT Disallow the *.vercel.app preview origins. Blocking them would
  * stop crawlers fetching the page at all, which means they would never see the

@@ -192,11 +192,17 @@ watch(() => current.value?.id, (newId, oldId) => {
   if (newId !== undefined && newId !== null) {
     qTimer.value = qTimerMap.value[newId] ?? timerPerQ.value
     qTimerStart.value = secs.value
+    // Re-anchor the wall-clock deadline for the newly shown question.
+    qDeadlineTs = Date.now() + qTimer.value * 1000
   }
 })
 
 let sessionInt: ReturnType<typeof setInterval> | null = null
 let qInt: ReturnType<typeof setInterval> | null = null
+// Wall-clock deadline (ms epoch) for the CURRENT question's countdown. qTimer is
+// DERIVED from this (deadline - now), so a throttled/backgrounded tab can't gain
+// time and the tick can't drift. Re-anchored on question switch and on resume.
+let qDeadlineTs = 0
 
 onMounted(async () => {
   // Resume path: route has ?session=<id>. loadSession() now also rebuilds
@@ -262,13 +268,26 @@ onMounted(async () => {
     qTimerMap.value[current.value.id] = qTimerMap.value[current.value.id] ?? timerPerQ.value
     qTimer.value = qTimerMap.value[current.value.id]
   }
+  // Anchor the current question's wall-clock deadline before the tick starts.
+  qDeadlineTs = Date.now() + qTimer.value * 1000
   sessionInt = setInterval(() => { if (!paused.value) secs.value++ }, 1000)
   qInt = setInterval(() => {
     if (!paused.value && current.value && !result.value[current.value.id]) {
-      qTimer.value--
+      // Derive remaining from wall-clock — resilient to tab throttling / drift.
+      qTimer.value = Math.max(0, Math.round((qDeadlineTs - Date.now()) / 1000))
       if (qTimer.value <= 0) autoSkip()
     }
-  }, 1000)
+  }, 500)
+})
+
+// On RESUME (paused → false, from Space, the timer button, the overlay, or an
+// option/dot click), re-anchor the deadline to now + whatever remained, so the
+// paused stretch isn't counted against the question. Pausing needs no handling —
+// the tick is gated on !paused, so qTimer simply holds until resume.
+watch(paused, (isPaused) => {
+  if (!isPaused && current.value) {
+    qDeadlineTs = Date.now() + qTimer.value * 1000
+  }
 })
 
 // ─── Backend sync watchers ─────────────────────────────────────────────────

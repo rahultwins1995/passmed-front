@@ -86,7 +86,7 @@ async function handleLogout () {
                 <div v-for="group in groupedTealExams" :key="group.category" class="dropdown-cat">
                   <div class="dropdown-cat-label">{{ group.category }}</div>
                   <div class="dropdown-links">
-                    <NuxtLink v-for="exam in group.exams" :key="exam.page" :to="`/exam/${exam.page}`">
+                    <NuxtLink v-for="exam in group.exams" :key="exam.page" :to="`/exam/${exam.page}`" prefetch-on="interaction">
                       {{ exam.name }}
                     </NuxtLink>
                   </div>
@@ -104,7 +104,7 @@ async function handleLogout () {
                 <div v-for="group in groupedAmberExams" :key="group.category" class="dropdown-cat">
                   <div class="dropdown-cat-label">{{ group.category }}</div>
                   <div class="dropdown-links">
-                    <NuxtLink v-for="exam in group.exams" :key="exam.page" :to="`/exam/${exam.page}`">
+                    <NuxtLink v-for="exam in group.exams" :key="exam.page" :to="`/exam/${exam.page}`" prefetch-on="interaction">
                       {{ exam.name }}
                     </NuxtLink>
                   </div>
@@ -166,6 +166,7 @@ async function handleLogout () {
                 :key="exam.page"
                 :to="`/exam/${exam.page}`"
                 class="mobile-sub-link"
+                prefetch-on="interaction"
                 @click="closeMenu"
               >
                 {{ exam.name }}
@@ -186,6 +187,7 @@ async function handleLogout () {
                   :key="exam.page"
                   :to="`/exam/${exam.page}`"
                   class="mobile-sub-link"
+                  prefetch-on="interaction"
                   @click="closeMenu"
                 >
                   {{ exam.name }}

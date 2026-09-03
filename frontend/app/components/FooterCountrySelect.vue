@@ -12,7 +12,7 @@ type Market = { code: string; name: string; url: string; flag: string }
 const markets: Market[] = [
   { code: 'CA', name: 'Canada',         url: 'https://passmed.ca' },
   { code: 'US', name: 'United States',  url: 'https://www.passmed.com' },
-  { code: 'GB', name: 'United Kingdom', url: 'https://passmed.uk' },
+  { code: 'GB', name: 'United Kingdom', url: 'https://www.passmed.uk' },
   { code: 'AU', name: 'Australia',      url: 'https://passamc.org' },
   { code: 'ZA', name: 'South Africa',   url: 'https://passmed.co.za' },
   { code: 'PH', name: 'Philippines',    url: 'https://passmed.ph' },

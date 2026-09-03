@@ -4,7 +4,8 @@
  *
  * Rules come from the Laravel backend (`/redirects/active`), matched by EXACT path.
  * The original query string is carried onto the target. The rule list is cached
- * in-memory for a short TTL so we don't hit the API on every request.
+ * in-memory (2min TTL, shared across concurrent cache misses) so we don't hit
+ * the API on every request.
  *
  * Scope: the public MARKETING site only. Portal paths (/student, /institute), the
  * /api proxy, Nuxt internals and static assets are skipped — and in any case only
@@ -14,20 +15,38 @@
 type Rule = { from_path: string; to_path: string; type: number }
 
 let cached: { at: number; rules: Rule[] } | null = null
-const TTL_MS = 15_000 // re-fetch the rule list at most every 15s (so pause/edit propagates fast)
+// 2min: this middleware runs on every marketing-page request, so a short TTL
+// means near-constant Laravel round-trips under real traffic — every visitor
+// with a cold cache pays that latency before their page can render. Rules
+// are admin-managed and change rarely, so 2 minutes to propagate an edit is
+// a fine trade for far fewer backend calls.
+const TTL_MS = 120_000
+
+// Concurrent requests landing while the cache is cold used to each fire their
+// own independent Laravel call (a thundering herd exactly when traffic is
+// high enough for it to matter). Share one in-flight fetch across them.
+let inflight: Promise<Rule[]> | null = null
 
 async function getRules(): Promise<Rule[]> {
   const now = Date.now()
   if (cached && now - cached.at < TTL_MS) return cached.rules
-  try {
-    const res: any = await callLaravel('/redirects/active', { method: 'GET', timeout: 2500 })
-    const rules: Rule[] = Array.isArray(res?.data) ? res.data : []
-    cached = { at: now, rules }
-  } catch {
-    // Never break the site if the fetch fails — keep the last good list (or empty).
-    cached = { at: now, rules: cached?.rules || [] }
-  }
-  return cached.rules
+  if (inflight) return inflight
+
+  inflight = (async () => {
+    try {
+      const res: any = await callLaravel('/redirects/active', { method: 'GET', timeout: 2500 })
+      const rules: Rule[] = Array.isArray(res?.data) ? res.data : []
+      cached = { at: now, rules }
+    } catch {
+      // Never break the site if the fetch fails — keep the last good list (or empty).
+      cached = { at: now, rules: cached?.rules || [] }
+    } finally {
+      inflight = null
+    }
+    return cached.rules
+  })()
+
+  return inflight
 }
 
 // Mirror the backend's normFrom(): strip query/hash, force one leading slash, drop a

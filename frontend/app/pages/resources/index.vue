@@ -47,9 +47,11 @@ function catVars (category) {
   return { '--cat-fg': t.fg, '--cat-bg': t.bg }
 }
 
+// en-US gives "Jul 29, 2026"; en-GB gives the day-month-year order "29 Jul
+// 2026" used elsewhere on the UK/SA builds — audit PM-56/SA-36. UTC keeps SSR
+// and client rendering identical (no hydration drift).
 function formatDate (iso) {
-  // Fixed locale + UTC so SSR and client render identically (no hydration drift).
-  return new Date(iso + 'T00:00:00Z').toLocaleDateString('en-US', {
+  return new Date(iso + 'T00:00:00Z').toLocaleDateString((region === 'UK' || region === 'SA') ? 'en-GB' : 'en-US', {
     year: 'numeric', month: 'short', day: 'numeric', timeZone: 'UTC',
   })
 }
@@ -94,6 +96,7 @@ function formatDate (iso) {
           :key="a.slug"
           :to="`/resources/${a.slug}`"
           class="res-card"
+          prefetch-on="interaction"
         >
           <span class="res-cat" :style="catVars(a.category)">{{ a.category }}</span>
           <h2 class="res-title">{{ a.title }}</h2>

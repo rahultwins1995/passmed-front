@@ -17,7 +17,7 @@ const cms = (html) => region === 'PH' ? americanize(sanitizeHtml(html)) : saniti
 const txt = (s) => region === 'PH' ? americanize(String(s ?? '')) : s
 
 const { openSignup, isLoginOpen } = useLoginModal()
-const { symbol } = useCurrency()
+const { symbol, format: formatAmount } = useCurrency()
 const rc = useRegionContent()
 
 // Price columns map 1:1 to real plan lengths in every market: price_1/2/3/6/12 =
@@ -26,7 +26,8 @@ const rc = useRegionContent()
 const monthLabel = (m) => (m === 1 ? '1 Month' : `${m} Months`)
 
 const guaranteeLabel = `${MARKETING.guaranteeDays}-day money-back guarantee`
-const practisingHeadline = computed(() => region === 'UK' ? 'Ready to start practising?' : 'Ready to start practicing?')
+const practisingHeadline = computed(() => (region === 'UK' || region === 'SA') ? 'Ready to start practising?' : 'Ready to start practicing?')
+const practicingCta = computed(() => (region === 'UK' || region === 'SA') ? 'Start practising' : 'Start practicing')
 
 // SSR-safe fetch — runs on the server during initial render
 const { data: exam, pending: loading, error: fetchError } = await useAsyncData(
@@ -73,6 +74,38 @@ usePageSeo({
 // elsewhere on the page — this just gives it a machine-readable form too.
 const { code: currencyCode } = useCurrency()
 const siteUrl = useSiteUrl()
+
+// The page sells whichever subset of price_1/2/3/6/12 is set (see monthLabel
+// above) — a single Offer pinned to price_1 told Google Shopping this exam
+// only has a 1-month plan (audit SA-32). Emit an AggregateOffer spanning the
+// real low/high across every priced tile, falling back to a plain Offer only
+// when there's just the one price point (an AggregateOffer needs a genuine
+// range to be meaningful).
+const examPrices = computed(() => [1, 2, 3, 6, 12]
+  .map(m => Number(exam.value?.exam_pricing?.[`price_${m}`]))
+  .filter(p => Number.isFinite(p) && p > 0))
+const examOffers = computed(() => {
+  const prices = examPrices.value
+  if (prices.length > 1) {
+    return {
+      '@type': 'AggregateOffer',
+      priceCurrency: currencyCode,
+      lowPrice: Math.min(...prices),
+      highPrice: Math.max(...prices),
+      offerCount: prices.length,
+      availability: 'https://schema.org/InStock',
+      url: `${siteUrl}/exam/${slug}`,
+    }
+  }
+  return {
+    '@type': 'Offer',
+    priceCurrency: currencyCode,
+    price: prices[0] ?? exam.value?.exam_pricing?.price_1,
+    availability: 'https://schema.org/InStock',
+    url: `${siteUrl}/exam/${slug}`,
+  }
+})
+
 useHead({
   script: [{
     type: 'application/ld+json',
@@ -82,13 +115,7 @@ useHead({
         '@type': 'Product',
         name: exam.value?.name,
         description: exam.value?.short_description,
-        offers: {
-          '@type': 'Offer',
-          priceCurrency: currencyCode,
-          price: exam.value?.exam_pricing?.price_1,
-          availability: 'https://schema.org/InStock',
-          url: `${siteUrl}/exam/${slug}`,
-        },
+        offers: examOffers.value,
       },
       {
         '@context': 'https://schema.org',
@@ -148,7 +175,7 @@ function onContentClick(e) {
 function planPerMonth(plan, total) {
   const months = parseInt(plan, 10)
   if (!months || !total) return ''
-  return `${symbol}${Math.round(total / months)}/mo`
+  return `${symbol}${formatAmount(Math.round(total / months))}/mo`
 }
 
 const calculateSavings = (monthlyPrice, months, planPrice) => {
@@ -214,7 +241,7 @@ const bestPlan = computed(() => {
           <h4>Question Bank</h4>
           <div v-if="exam.content_question_bank" v-html="cms(exam.content_question_bank)"></div>
           <a href="/signup" class="btn-start" @click.prevent="handlePlanClick('1', exam?.exam_pricing?.stripe_price_id_1)">
-            Start practicing
+            {{ practicingCta }}
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
           </a>
         </div>
@@ -236,7 +263,7 @@ const bestPlan = computed(() => {
       <div class="pricing-inner">
         <div class="pricing-header reveal">
           <div class="eyebrow">Pricing</div>
-          <h2>Start practicing <em>today</em></h2>
+          <h2>{{ practicingCta }} <em>today</em></h2>
         </div>
         <div class="pricing-grid reveal">
 
@@ -244,7 +271,7 @@ const bestPlan = computed(() => {
             <div class="price-period">{{ monthLabel(1) }}</div>
             <div class="price-amount">
               <span class="price-dollar">{{ symbol }}</span>
-              <span class="price-num">{{ exam.exam_pricing.price_1 }}</span>
+              <span class="price-num">{{ formatAmount(exam.exam_pricing.price_1) }}</span>
             </div>
             <div class="price-perunit">&nbsp;</div>
             <div class="price-total">&nbsp;</div>
@@ -260,7 +287,7 @@ const bestPlan = computed(() => {
             <div class="price-period">{{ monthLabel(2) }}</div>
             <div class="price-amount">
               <span class="price-dollar">{{ symbol }}</span>
-              <span class="price-num">{{ exam.exam_pricing.price_2 }}</span>
+              <span class="price-num">{{ formatAmount(exam.exam_pricing.price_2) }}</span>
             </div>
             <div class="price-perunit">{{ planPerMonth(2, exam.exam_pricing.price_2) }}</div>
             <div class="price-total">Save {{ calculateSavings(exam.exam_pricing.price_1, 2, exam.exam_pricing.price_2) }}% vs monthly</div>
@@ -276,7 +303,7 @@ const bestPlan = computed(() => {
             <div class="price-period">{{ monthLabel(3) }}</div>
             <div class="price-amount">
               <span class="price-dollar">{{ symbol }}</span>
-              <span class="price-num">{{ exam.exam_pricing.price_3 }}</span>
+              <span class="price-num">{{ formatAmount(exam.exam_pricing.price_3) }}</span>
             </div>
             <div class="price-perunit">{{ planPerMonth(3, exam.exam_pricing.price_3) }}</div>
             <div class="price-total">Save {{ calculateSavings(exam.exam_pricing.price_1, 3, exam.exam_pricing.price_3) }}% vs monthly</div>
@@ -293,7 +320,7 @@ const bestPlan = computed(() => {
             <div class="price-period">{{ monthLabel(6) }}</div>
             <div class="price-amount">
               <span class="price-dollar">{{ symbol }}</span>
-              <span class="price-num">{{ exam.exam_pricing.price_6 }}</span>
+              <span class="price-num">{{ formatAmount(exam.exam_pricing.price_6) }}</span>
             </div>
             <div class="price-perunit">{{ planPerMonth(6, exam.exam_pricing.price_6) }}</div>
             <div class="price-total">Save {{ calculateSavings(exam.exam_pricing.price_1, 6, exam.exam_pricing.price_6) }}% vs monthly</div>
@@ -310,7 +337,7 @@ const bestPlan = computed(() => {
             <div class="price-period">{{ monthLabel(12) }}</div>
             <div class="price-amount">
               <span class="price-dollar">{{ symbol }}</span>
-              <span class="price-num">{{ exam.exam_pricing.price_12 }}</span>
+              <span class="price-num">{{ formatAmount(exam.exam_pricing.price_12) }}</span>
             </div>
             <div class="price-perunit">{{ planPerMonth(12, exam.exam_pricing.price_12) }}</div>
             <div class="price-total">Save {{ calculateSavings(exam.exam_pricing.price_1, 12, exam.exam_pricing.price_12) }}% vs monthly</div>
@@ -344,6 +371,11 @@ const bestPlan = computed(() => {
           <span>
             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="20 6 9 17 4 12"/></svg>
             Works on all devices
+          </span>
+          <span>
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="20 6 9 17 4 12"/></svg>
+            Pass guarantee: attempt every question, average 65%+, still don't pass? Full refund —
+            <NuxtLink style="color:inherit;text-decoration:underline;text-underline-offset:2px;opacity:0.7;" to="/terms">read T&amp;Cs</NuxtLink>
           </span>
         </div>
       </div>

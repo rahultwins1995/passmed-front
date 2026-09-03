@@ -1151,6 +1151,14 @@ body.dark .dm-btn {
   transform: translateY(-1px);
 }
 
+/* Weak-area tile rendered as a NuxtLink (deep-link into qbank) — strip the
+   default anchor styling so it looks identical to the plain-div tiles. */
+.wc-link {
+  display: block;
+  text-decoration: none;
+  color: inherit;
+}
+
 .wc-name {
   font-size: 0.76rem;
   font-weight: 700;
