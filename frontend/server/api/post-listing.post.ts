@@ -78,10 +78,6 @@ export default defineEventHandler(async (event) => {
   if (dom) fields.Logo = [{ url: `https://www.google.com/s2/favicons?domain=${dom}&sz=128`, filename: dom.replace(/\W+/g, '_') + '.png' }]
   for (const k of Object.keys(fields)) if (fields[k] === '' || fields[k] == null) delete fields[k]
 
-
-  console.log(AIRTABLE(target.base), fields);
-
-  
   try {
     await $fetch(AIRTABLE(target.base), {
       method: 'POST',

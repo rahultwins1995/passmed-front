@@ -179,6 +179,10 @@ function captureElapsed(qid: number): number {
 // Swap qTimer when the displayed question changes — and sync BOTH the
 // outgoing question's remaining countdown AND its accumulated time-spent.
 watch(() => current.value?.id, (newId, oldId) => {
+  // Clear the countdown announcements so the next question's warning is a fresh
+  // change even if the wording repeats.
+  timerAnnounce.value = ''
+  timerAnnounceUrgent.value = ''
   if (oldId !== undefined && oldId !== null) {
     qTimerMap.value[oldId] = qTimer.value
     const spent = captureElapsed(oldId)
@@ -451,6 +455,21 @@ const timerColor = computed(() => {
 })
 const timerPct = computed(() => (qTimer.value / timerPerQ.value) * 100)
 
+// Screen-reader countdown warnings (a11y / WCAG 4.1.2). The visible timer ticks
+// every second; announcing each tick would spam, so we only push a message as
+// the countdown crosses key thresholds. The message carries the question number
+// so each threshold-crossing is a UNIQUE string (reliably re-announced on every
+// question, not swallowed as a no-change). 30s/10s are polite; the final 5s
+// uses an ASSERTIVE region so it interrupts and is heard immediately.
+const timerAnnounce = ref('')        // polite: 30s / 10s
+const timerAnnounceUrgent = ref('')  // assertive: 5s
+watch(qTimer, (v, prev) => {
+  const qn = idx.value + 1
+  if (prev > 30 && v <= 30)      timerAnnounce.value = `30 seconds remaining for question ${qn}`
+  else if (prev > 10 && v <= 10) timerAnnounce.value = `10 seconds remaining for question ${qn}`
+  else if (prev > 5  && v <= 5)  timerAnnounceUrgent.value = `5 seconds remaining for question ${qn}`
+})
+
 // ── Keyboard option highlight (ArrowUp / ArrowDown) ───────────────────────
 const highlightedOpt = ref<string | null>(null)
 watch(idx, () => { highlightedOpt.value = null })
@@ -588,6 +607,8 @@ function calcMemAct(a: string) {
        • `resuming` (loadSession in flight on Resume)
        • `saving`   (Save & Exit / Submit & Exit submitted — flushing
                      PATCHes + complete + navigation) -->
+  <!-- Bypass Blocks (WCAG 2.4.1): skip the runner topbar/progress to the question. -->
+  <a href="#main-content" class="skip-link">Skip to content</a>
   <div v-if="submitting" class="sk-runner" style="align-items:center;justify-content:center">
     <div style="display:flex;flex-direction:column;align-items:center;gap:14px;text-align:center;padding:24px;font-family:'Figtree',sans-serif">
       <div style="display:flex;gap:7px">
@@ -677,7 +698,7 @@ function calcMemAct(a: string) {
     </div>
     <!-- Dots -->
     <div class="tb-dots" ref="dotsRef" @wheel="onDotsWheel">
-      <button type="button" v-for="p in progress" :key="p.n" class="tb-dot" :class="dotClass(p.state)" :title="`Q${p.n}`" @click="goToQuestion(p.n)" :aria-label="`Question ${p.n}`">{{ p.n }}</button>
+      <button type="button" v-for="p in progress" :key="p.n" class="tb-dot" :class="dotClass(p.state)" :aria-current="p.state === 'current' ? 'true' : undefined" :title="`Q${p.n}`" @click="goToQuestion(p.n)" :aria-label="`Question ${p.n}`">{{ p.n }}</button>
     </div>
     <!-- Mobile-only collapse control: compact pill that toggles the question
          grid (the inline .tb-dots row is hidden on phones). -->
@@ -728,12 +749,12 @@ function calcMemAct(a: string) {
   <div v-if="navOpen" class="tb-navbackdrop" @click="navOpen = false"></div>
   <div v-if="navOpen" class="tb-navpanel" role="dialog" aria-label="Question navigator">
     <div class="tb-navgrid">
-      <button type="button" v-for="p in progress" :key="p.n" class="tb-dot" :class="dotClass(p.state)" @click="goToQuestion(p.n); navOpen = false" :aria-label="`Question ${p.n}`">{{ p.n }}</button>
+      <button type="button" v-for="p in progress" :key="p.n" class="tb-dot" :class="dotClass(p.state)" :aria-current="p.state === 'current' ? 'true' : undefined" @click="goToQuestion(p.n); navOpen = false" :aria-label="`Question ${p.n}`">{{ p.n }}</button>
     </div>
   </div>
 
   <!-- ══ SESSION BODY ══ -->
-  <div class="s-body">
+  <div class="s-body" id="main-content" tabindex="-1">
 
     <!-- ── PAUSE OVERLAY ────────────────────────────────────────────────────
          Added back — the "overlay removed" comment referred to an older
@@ -778,13 +799,20 @@ function calcMemAct(a: string) {
             </div>
             <!-- Per-question countdown -->
             <div style="display:flex;align-items:center;gap:6px;flex-shrink:0">
-              <div style="display:flex;align-items:center;gap:4px;font-family:'Figtree',sans-serif;font-variant-numeric:tabular-nums;font-size:0.72rem;font-weight:700;" :style="{ color: timerColor }">
-                <svg width="10" height="10" viewBox="0 0 24 24" fill="none" :stroke="timerColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+              <div style="display:flex;align-items:center;gap:4px;font-family:'Figtree',sans-serif;font-variant-numeric:tabular-nums;font-size:0.72rem;font-weight:700;" :style="{ color: timerColor }"
+                   role="timer" :aria-label="`${qTimer} seconds remaining for this question`">
+                <svg width="10" height="10" viewBox="0 0 24 24" fill="none" :stroke="timerColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
                 {{ qTimer }}s
               </div>
-              <div style="width:60px;height:4px;background:var(--border);border-radius:2px;overflow:hidden">
+              <div style="width:60px;height:4px;background:var(--border);border-radius:2px;overflow:hidden"
+                   role="progressbar" :aria-valuenow="qTimer" aria-valuemin="0" :aria-valuemax="timerPerQ" :aria-label="`Time remaining ${qTimer} of ${timerPerQ} seconds`">
                 <div style="height:100%;border-radius:2px;transition:width 1s linear" :style="{ width: timerPct+'%', background: timerColor }"></div>
               </div>
+              <!-- Screen-reader-only countdown warnings, announced at thresholds
+                   (30/10/5s) so the per-second timer doesn't spam the reader.
+                   Two regions: polite for 30/10s, assertive for the final 5s. -->
+              <span aria-live="polite" style="position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap">{{ timerAnnounce }}</span>
+              <span aria-live="assertive" style="position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap">{{ timerAnnounceUrgent }}</span>
             </div>
           </div>
           <div v-if="current.vig && current.vig !== current.q" class="stem-text" v-html="sanitizeHtml(current.vig)"></div>
@@ -801,7 +829,7 @@ function calcMemAct(a: string) {
           <template v-if="isSingle">
             <div style="padding:14px 18px;border-top:1px solid var(--border)">
               <div class="opts-label">Select your answer</div>
-              <button type="button" v-for="opt in current.opts" :key="opt.l" class="opt" :class="optClass(opt.l)" @click="pickOption(opt.l)">
+              <button type="button" v-for="opt in current.opts" :key="opt.l" class="opt" :class="optClass(opt.l)" @click="pickOption(opt.l)" :aria-pressed="chosen[current.id] === opt.l">
                 <div class="opt-fill"></div>
                 <div class="opt-content">
                   <div class="oltr">{{ opt.l }}</div>
@@ -809,7 +837,7 @@ function calcMemAct(a: string) {
                 </div>
                 <template v-if="isGraded(result[current.id])">
                   <div class="opt-stat">
-                    <div class="opt-pct">{{ current.optionStats?.[opt.l] ?? '—' }}</div>
+                    <div class="opt-pct">{{ current.optionStats?.[opt.id] ?? '—' }}</div>
                     <div class="opt-n">peers</div>
                   </div>
                 </template>
@@ -857,7 +885,7 @@ function calcMemAct(a: string) {
     <div v-if="!isSingle" class="a-panel">
       <div class="a-scroll">
         <div class="opts-label">Select your answer</div>
-        <button type="button" v-for="opt in current.opts" :key="opt.l" class="opt anim-o" :class="optClass(opt.l)" @click="pickOption(opt.l)">
+        <button type="button" v-for="opt in current.opts" :key="opt.l" class="opt anim-o" :class="optClass(opt.l)" @click="pickOption(opt.l)" :aria-pressed="chosen[current.id] === opt.l">
           <div class="opt-fill"></div>
           <div class="opt-content">
             <div class="oltr">{{ opt.l }}</div>
@@ -865,7 +893,7 @@ function calcMemAct(a: string) {
           </div>
           <template v-if="isGraded(result[current.id])">
             <div class="opt-stat">
-              <div class="opt-pct">{{ current.optionStats?.[opt.l] ?? '—' }}</div>
+              <div class="opt-pct">{{ current.optionStats?.[opt.id] ?? '—' }}</div>
               <div class="opt-n">peers</div>
             </div>
           </template>

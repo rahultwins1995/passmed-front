@@ -12,6 +12,7 @@ const { openMobile } = useSidebar()
 const { toggle: toggleDark } = useDarkMode()
 
 interface ReviewOption {
+  id: number
   letter: string
   text: string
   correct: boolean
@@ -77,11 +78,20 @@ function mapApiQ(row: any, idx: number): ReviewQuestion {
   const options: ReviewOption[] = rawOpts.map((o: any, i: number) => {
     const letter = String.fromCharCode(65 + i)
     const isCorrect = o.is_correct === true || String(o.is_correct).toLowerCase() === 'true'
+    // "Your answer" is matched by the STABLE option id (not the positional letter),
+    // so it stays correct now that options are shuffled. Falls back to the snapshotted
+    // option TEXT, then the letter, for old rows that predate chosen_option_id.
+    const userSelected = row.chosen_option_id != null
+      ? Number(row.chosen_option_id) === Number(o.id)
+      : (row.chosen_option_text
+          ? row.chosen_option_text === (o.option_text || '')
+          : row.chosen_answer === letter)
     return {
+      id: Number(o.id),
       letter,
       text: o.option_text || '',
       correct: isCorrect,
-      userSelected: row.chosen_answer === letter,
+      userSelected,
     }
   })
   const secs = row.q_time_spent || 0

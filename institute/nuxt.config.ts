@@ -57,7 +57,11 @@ export default defineNuxtConfig({
       // directApi=true  → dev browser hits Laravel DIRECTLY (real URL in Network)
       // directApi=false → dev uses the '/api/institute' proxy (like prod).
       // Production ALWAYS uses the proxy (import.meta.dev guard in the code).
-      directApi: true,   // ← flip: true = direct (real URL in Network), false = proxy
+      // Safe default: PROXY. Opt into direct API hits only in dev by setting
+      // NUXT_PUBLIC_DIRECT_API=true in local .env. Even if set, every call site
+      // still gates on import.meta.dev, so production ALWAYS uses the proxy — this
+      // default just removes the footgun if a guard is ever dropped in a refactor.
+      directApi: process.env.NUXT_PUBLIC_DIRECT_API === 'true',   // dev-only opt-in; default false = proxy
       // Unique key per layer — Nuxt merges all layers' public config into ONE object,
       // so a shared 'directApiBase' key would collide (frontend would win).
       directInstituteApiBase: `${API_ALL}/api-institute/v1`,

@@ -49,6 +49,9 @@ const exitImpersonation = async () => {
 </script>
 
 <template>
+  <!-- Bypass Blocks (WCAG 2.4.1): jump past the sidebar + topbar straight to the
+       page content. Visible only when keyboard-focused. -->
+  <a href="#main-content" class="skip-link">Skip to content</a>
   <!-- Impersonation banner (admin "Log as") — mirrors the student portal. -->
   <div v-if="isImpersonating"
        style="position:sticky;top:0;z-index:1000;display:flex;align-items:center;gap:10px;padding:8px 16px;background:#b45309;color:#fff;font-size:0.82rem;font-weight:600">
@@ -75,15 +78,17 @@ const exitImpersonation = async () => {
              </div>
              <DarkToggle />
            </div>
-           <div v-if="noInstitution" class="inst-no-link">
-             <h2>No institution linked</h2>
-             <p>{{ noInstitution }}</p>
-             <p class="inst-no-link-hint">
-               A Passmed admin can fix this in <strong>Admin&nbsp;→ Settings → Admin Users</strong>
-               by editing your account and choosing an institution.
-             </p>
-           </div>
-           <slot v-else />
+           <main id="main-content" tabindex="-1">
+             <div v-if="noInstitution" class="inst-no-link">
+               <h2>No institution linked</h2>
+               <p>{{ noInstitution }}</p>
+               <p class="inst-no-link-hint">
+                 A Passmed admin can fix this in <strong>Admin&nbsp;→ Settings → Admin Users</strong>
+                 by editing your account and choosing an institution.
+               </p>
+             </div>
+             <slot v-else />
+           </main>
         </div>
     </div>
 

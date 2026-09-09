@@ -30,7 +30,9 @@ async function submitOtp () {
       closeLogin()
       // Honor ?redirect= (used by the /login page); else role-based home.
       const redirect = typeof route.query.redirect === 'string' ? route.query.redirect : null
-      if (redirect && redirect.startsWith('/')) {
+      // Only same-site paths. startsWith('/') alone lets `//evil.com` and `/\evil.com`
+      // (protocol-relative / backslash-normalised) through — reject a 2nd / or \.
+      if (redirect && redirect.startsWith('/') && !/^\/[/\\]/.test(redirect)) {
         await router.push(redirect)
       } else {
         await usePortalPicker().routeAfterLogin(res?.user, router)

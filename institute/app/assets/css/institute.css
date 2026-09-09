@@ -2163,3 +2163,31 @@ body.dark .sidebar { background: var(--dm-card); }
 .sb-nav::-webkit-scrollbar-thumb:hover {
   background: rgba(255,255,255,0.28);
 }
+
+/* ── Skip link (WCAG 2.4.1 Bypass Blocks) ──────────────────────────────────
+   Off-screen until it receives keyboard focus, then slides into the top-left.
+   Lets keyboard / screen-reader users jump past the sidebar+topbar to #main-content. */
+.skip-link {
+  position: fixed;
+  top: -60px;
+  left: 12px;
+  z-index: 2000;
+  background: #06b6d4;
+  color: #fff;
+  font-weight: 700;
+  font-size: 0.9rem;
+  padding: 10px 16px;
+  border-radius: 0 0 8px 8px;
+  text-decoration: none;
+  transition: top 0.18s ease;
+}
+.skip-link:focus {
+  top: 0;
+  outline: 2px solid #fff;
+  outline-offset: 2px;
+}
+main:focus { outline: none; }
+@media (prefers-reduced-motion: reduce) {
+  .skip-link { transition: none; }
+}
+

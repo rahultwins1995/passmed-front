@@ -41,6 +41,16 @@ export const useStudentApi = (opts?: { silent401?: boolean }) => {
       'X-Requested-With': 'XMLHttpRequest',
     },
     onResponseError({ response }) {
+      // 402 = server-side subscription boundary (qbank questions / session start
+      // refused for a lapsed / unentitled exam). Open the in-panel subscribe
+      // modal instead of failing silently. The request still rejects, so the
+      // caller's own catch runs too (it just won't have data). Client-only.
+      if (import.meta.client
+          && (response?.status === 402
+              || (response?._data as any)?.status === 'subscription_required')) {
+        try { useSubscribeModal().openAdd() } catch (_) { /* modal not mounted */ }
+        return
+      }
       if (silent401) return
       if (response?.status === 401) {
         // Clear shared auth state so any component reading user.value sees null.

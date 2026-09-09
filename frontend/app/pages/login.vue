@@ -87,7 +87,9 @@ async function submitLogin () {
     closeLogin()
     // Redirect honors ?redirect= query if present, otherwise role-based default
     const redirect = typeof route.query.redirect === 'string' ? route.query.redirect : null
-    if (redirect && redirect.startsWith('/')) {
+    // Only same-site paths. startsWith('/') alone lets `//evil.com` and `/\evil.com`
+    // (protocol-relative / backslash-normalised) through — reject a 2nd / or \.
+    if (redirect && redirect.startsWith('/') && !/^\/[/\\]/.test(redirect)) {
       await router.push(redirect)
     } else {
       // Multi-role users get the "Login as" popup; a single-portal user goes straight in.

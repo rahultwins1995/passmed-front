@@ -1,5 +1,5 @@
 <script setup>
-import { useResourceArticles, resourceBySlug, categoryTheme } from '~/data/resources'
+import { useResourceArticles, categoryTheme } from '~/data/resources'
 
 const route = useRoute()
 const { openSignup } = useLoginModal()
@@ -11,7 +11,15 @@ const ctaHeading = computed(() => region === 'UK'
   ? 'Start practising with questions reviewed by UK doctors'
   : 'Start practicing with physician-reviewed questions')
 
-const article = computed(() => resourceBySlug(String(route.params.slug)))
+// Resolve the region-specific article list once, synchronously, rather than
+// inside the computed below. Sentry PASSMED-7: unhead can re-evaluate a
+// computed read by useHead() outside the request's Nuxt context (e.g. during
+// ISR head serialization), and resourceBySlug()/useResourceArticles() call
+// useRegion() -> useRuntimeConfig() -> useNuxtApp(), which throws
+// "[nuxt] instance unavailable" when run outside that context. Deriving from
+// a plain array here keeps the computed's re-evaluation composable-free.
+const articles = useResourceArticles()
+const article = computed(() => articles.find(a => a.slug === String(route.params.slug)) ?? null)
 
 // 404 for unknown slugs (matches the exam-detail page's behaviour).
 if (!article.value) {

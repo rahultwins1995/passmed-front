@@ -24,6 +24,13 @@ DOMPurify.addHook('afterSanitizeAttributes', (node: any) => {
   if (tag === 'a' && node.getAttribute('target') === '_blank') {
     node.setAttribute('rel', 'noopener noreferrer')
   }
+
+  // Accessibility: an image with no author alt text gets an empty alt so screen
+  // readers treat it as decorative (skip) instead of announcing the src URL. Safety
+  // net — authors should still supply meaningful alt in the CMS editor.
+  if (tag === 'img' && !node.getAttribute('alt')) {
+    node.setAttribute('alt', '')
+  }
 })
 
 /**

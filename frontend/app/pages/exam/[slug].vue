@@ -37,11 +37,25 @@ const { data: exam, pending: loading, error: fetchError } = await useAsyncData(
     if (res.status === 'success') {
       return res.data
     }
+    // Backend responded but says this slug genuinely doesn't exist.
     throw createError({ statusCode: 404, statusMessage: 'Exam not found' })
   }
 )
 
-// 404 if API said exam not found
+// Sentry PASSMED-B/G: a failed/erroring fetch (network blip, upstream 5xx —
+// e.g. the missing exam_bundle_offers table incident) used to fall through to
+// the generic "Exam not found" 404 below, same as a slug that truly doesn't
+// exist. That masked a real backend outage as a routine not-found page for
+// weeks. Surface the real failure instead of relabeling it.
+if (fetchError.value) {
+  throw createError({
+    statusCode: fetchError.value.statusCode || 500,
+    statusMessage: fetchError.value.statusCode === 404 ? 'Exam not found' : 'Unable to load this exam right now',
+    fatal: false,
+  })
+}
+
+// 404 if the backend somehow returned no data without an error.
 if (!exam.value) {
   throw createError({ statusCode: 404, statusMessage: 'Exam not found' })
 }

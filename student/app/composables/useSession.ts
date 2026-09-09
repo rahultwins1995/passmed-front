@@ -17,7 +17,7 @@ export interface Question {
   vig: string
   q: string
   img: string          // question_image_ids — image URL shown under the stem (may be '')
-  opts: { l: string; t: string }[]
+  opts: { l: string; t: string; id: number }[]
   ans: string
   exp: string
   kp: string
@@ -77,6 +77,7 @@ function mapApiRow(row: ApiQuestionRow): Question {
   const opts = rawOpts.map((o, i) => ({
     l: String.fromCharCode(65 + i),  // 0 → 'A', 1 → 'B', etc.
     t: o.option_text || '',
+    id: Number((o as any).id),       // stable option id — peer % is keyed by this
   }))
 
   // Find the correct letter. `is_correct` is a string "true"/"false" today;

@@ -38,6 +38,9 @@ watch(() => route.fullPath, () => closeMobile())
 </script>
 
 <template>
+  <!-- Bypass Blocks (WCAG 2.4.1): jump past the sidebar straight to the page
+       content. Visible only when keyboard-focused. -->
+  <a href="#main-content" class="skip-link">Skip to content</a>
   <div v-if="isImpersonating" class="imp-banner">
     <span class="imp-dot"></span>
     <span class="imp-text">Viewing as <strong>{{ user?.name || user?.email }}</strong> · impersonated by {{ impersonatedBy }}</span>
@@ -48,9 +51,9 @@ watch(() => route.fullPath, () => closeMobile())
   <div class="sidebar-backdrop" :class="{ active: isMobileOpen }" @click="closeMobile" />
   <div class="app" :class="{ 'has-imp-banner': isImpersonating }">
     <StudentSidebar />
-    <div class="main">
+    <main class="main" id="main-content" tabindex="-1">
       <slot />
-    </div>
+    </main>
   </div>
   <!-- In-panel Add / Extend subscription popup (opened from the sidebar and
        Settings → Subscription via useSubscribeModal). Mounted once here so it's

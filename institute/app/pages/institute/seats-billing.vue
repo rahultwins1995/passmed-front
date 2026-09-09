@@ -667,8 +667,42 @@ async function confirmRemoveStudent() {
 }
 
 // ── Bulk CSV (inline invite panel) ────────────────────────────────────────────
+// Minimal RFC-4180-style field parser: splits on commas but respects double-quoted
+// fields, so a quoted name containing a comma ("Smith, Jr") stays one column instead
+// of shifting the rest. "" inside a quoted field is an escaped quote. Behaves exactly
+// like split(',') for plain unquoted rows. The export/SheetJS side already quotes.
+function parseCsvLine(line: string): string[] {
+  const out: string[] = []
+  let cur = ''
+  let inQ = false
+  for (let i = 0; i < line.length; i++) {
+    const ch = line[i]
+    if (inQ) {
+      if (ch === '"') {
+        if (line[i + 1] === '"') { cur += '"'; i++ } // escaped quote ""
+        else inQ = false
+      } else cur += ch
+    } else if (ch === '"') inQ = true
+    else if (ch === ',') { out.push(cur); cur = '' }
+    else cur += ch
+  }
+  out.push(cur)
+  return out.map(s => s.trim())
+}
+
 const csvText     = ref('First name, Last name, Email\nJane, Smith, jane.smith@example.com')
 const csvDragging = ref(false)
+
+// Open the hidden <input type="file"> that sits INSIDE the clicked drop-zone.
+// Ref-free (both $refs and a script-setup ref proved unreliable here): find the
+// child input from the click's currentTarget. The e.target === input guard stops
+// the programmatic .click() from bubbling back and re-firing this handler.
+function triggerFilePicker(e: MouseEvent) {
+  const zone  = e.currentTarget as HTMLElement | null
+  const input = zone?.querySelector('input[type="file"]') as HTMLInputElement | null
+  if (!input || e.target === input) return
+  input.click()
+}
 
 type CsvRow = { firstName: string; lastName: string; email: string; valid: boolean }
 const csvParsed = computed<CsvRow[]>(() => {
@@ -677,7 +711,7 @@ const csvParsed = computed<CsvRow[]>(() => {
   const first = allLines[0]?.toLowerCase() ?? ''
   const lines = (first.includes('name') || first.includes('email')) ? allLines.slice(1) : allLines
   return lines.map(l => l.trim()).filter(Boolean).map(l => {
-    const [firstName = '', lastName = '', email = ''] = l.split(',').map(s => s.trim())
+    const [firstName = '', lastName = '', email = ''] = parseCsvLine(l)
     return { firstName, lastName, email, valid: !!firstName && /.+@.+\..+/.test(email) }
   })
 })
@@ -726,20 +760,32 @@ function downloadCohortTemplate() {
 async function importCsv(cohortId: number) {
   const cohort = cohorts.value.find(c => c.id === cohortId)
   if (!cohort) return
-  const valid    = csvParsed.value.filter(r => r.valid)
-  const toInvite = valid.slice(0, Math.max(0, seatsAvailable.value))
-  let added = 0
-  let skipped = valid.length - toInvite.length
-  for (const r of toInvite) {
-    try {
-      const resp: any = await api(`/cohorts/${cohortId}/students`, { method: 'POST', body: { first_name: r.firstName, last_name: r.lastName, email: r.email } })
-      cohort.students.push(mapStudent(resp.data))
-      added++
-    } catch (e) { logError('[seats-billing] importCsv invite failed', r.email, e); skipped++ }
+  const rows = csvParsed.value
+  if (!rows.length) { showToast('No rows to invite', 'var(--rose)'); return }
+
+  // ONE bulk POST (was N sequential). Send ALL parsed rows — the backend
+  // classifies each (invited / duplicate / invalid / no_seats) and returns a
+  // reason-keyed summary, so partial failures no longer collapse to "skipped".
+  try {
+    const resp: any = await api(`/cohorts/${cohortId}/students/bulk`, {
+      method: 'POST',
+      body: { students: rows.map(r => ({ first_name: r.firstName, last_name: r.lastName, email: r.email })) },
+    })
+    const s = resp?.summary || {}
+    const parts: string[] = []
+    if (s.invited)   parts.push(`${s.invited} invited`)
+    if (s.duplicate) parts.push(`${s.duplicate} duplicate`)
+    if (s.invalid)   parts.push(`${s.invalid} invalid`)
+    if (s.no_seats)  parts.push(`${s.no_seats} seat-full`)
+    showToast(parts.join(' · ') || 'Nothing to invite', s.invited ? 'var(--teal)' : 'var(--rose)')
+  } catch (e) {
+    logError('[seats-billing] bulk importCsv failed', e)
+    showToast('Bulk invite failed — please try again', 'var(--rose)')
   }
   closeInvite()
+  // Refresh cohort rosters + the existing-students picker so new invites appear.
+  await fetchCohorts()
   fetchExistingStudents()
-  showToast(`${added} invite${added !== 1 ? 's' : ''} sent${skipped ? ` (${skipped} skipped)` : ''}`, 'var(--teal)')
 }
 
 // ── New cohort modal ──────────────────────────────────────────────────────────
@@ -816,7 +862,7 @@ const ncBulkParsed = computed(() => {
   const first = lines[0]?.toLowerCase() ?? ''
   const data = (first.includes('name') || first.includes('email')) ? lines.slice(1) : lines
   return data.map(l => l.trim()).filter(Boolean).map(l => {
-    const [firstName = '', lastName = '', email = ''] = l.split(',').map(s => s.trim())
+    const [firstName = '', lastName = '', email = ''] = parseCsvLine(l)
     return { firstName, lastName, email, valid: !!firstName && /.+@.+\..+/.test(email) }
   })
 })
@@ -1193,12 +1239,12 @@ function showToast(msg: string, _color = '') {
                     @dragover.prevent="csvDragging = true"
                     @dragleave="csvDragging = false"
                     @drop="handleDrop"
-                    @click="($refs.csvFileInput as HTMLInputElement).click()"
+                    @click="triggerFilePicker"
                   >
                     <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="var(--teal-mid)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="margin:0 auto 10px;display:block;"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="12" y1="18" x2="12" y2="12"/><line x1="9" y1="15" x2="15" y2="15"/></svg>
                     <div class="drop-title">Drop CSV or spreadsheet here</div>
                     <div class="drop-sub">or click to browse · .csv, .xlsx, .xls accepted</div>
-                    <input ref="csvFileInput" type="file" accept=".csv,.xlsx,.xls" style="display:none" @change="handleCsvFile" />
+                    <input type="file" accept=".csv,.xlsx,.xls" style="display:none" @change="handleCsvFile" />
                   </div>
 
                   <div v-if="csvParsed.length" class="csv-preview">
@@ -1516,12 +1562,12 @@ function showToast(msg: string, _color = '') {
                   class="drop-zone"
                   @dragover.prevent
                   @drop="handleNcDrop"
-                  @click="($refs.ncCsvInput as HTMLInputElement).click()"
+                  @click="triggerFilePicker"
                 >
                   <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="var(--ink-dim)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="margin:0 auto 8px;display:block;"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="12" y1="18" x2="12" y2="12"/><line x1="9" y1="15" x2="15" y2="15"/></svg>
                   <div class="drop-title">Drop CSV or spreadsheet here</div>
                   <div class="drop-sub">or click to browse · .csv, .xlsx accepted</div>
-                  <input ref="ncCsvInput" type="file" accept=".csv,.xlsx,.xls" style="display:none" @change="handleNcCsvFile" />
+                  <input type="file" accept=".csv,.xlsx,.xls" style="display:none" @change="handleNcCsvFile" />
                 </div>
                 <div v-if="ncBulkParsed.length" class="nc-bulk-summary" :class="ncBulkParsed.filter(r=>r.valid).length < ncBulkParsed.length ? 'amber' : 'green'">
                   {{ ncBulkParsed.filter(r => r.valid).length }} residents found ·

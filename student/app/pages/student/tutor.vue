@@ -520,6 +520,8 @@ function diffLabel(d: string): string {
                      PATCHes + complete + navigation)
        Without these flags, "No questions available" would briefly flash, or
        the runner UI would appear frozen during the save/exit pause. -->
+  <!-- Bypass Blocks (WCAG 2.4.1): skip the runner topbar/progress to the question. -->
+  <a href="#main-content" class="skip-link">Skip to content</a>
   <div v-if="submitting" class="sk-runner" style="align-items:center;justify-content:center">
     <div style="display:flex;flex-direction:column;align-items:center;gap:14px;text-align:center;padding:24px;font-family:'Figtree',sans-serif">
       <div style="display:flex;gap:7px">
@@ -607,7 +609,7 @@ function diffLabel(d: string): string {
       <div class="tb-track"><div class="tb-fill" :style="{ width: ((idx+1)/total*100)+'%' }"></div></div>
     </div>
     <div class="tb-dots" ref="dotsRef" @wheel="onDotsWheel">
-      <button type="button" v-for="p in progress" :key="p.n" class="tb-dot" :class="[dotClass(p.state), { 'd-here': idx === p.n - 1 }]" :title="`Q${p.n}`" @click="goToQuestion(p.n)" :aria-label="`Question ${p.n}`">{{ p.n }}</button>
+      <button type="button" v-for="p in progress" :key="p.n" class="tb-dot" :class="[dotClass(p.state), { 'd-here': idx === p.n - 1 }]" :aria-current="idx === p.n - 1 ? 'true' : undefined" :title="`Q${p.n}`" @click="goToQuestion(p.n)" :aria-label="`Question ${p.n}`">{{ p.n }}</button>
     </div>
     <!-- Mobile-only collapse control: compact pill that toggles the question
          grid (the inline .tb-dots row is hidden on phones). -->
@@ -653,12 +655,12 @@ function diffLabel(d: string): string {
   <div v-if="navOpen" class="tb-navbackdrop" @click="navOpen = false"></div>
   <div v-if="navOpen" class="tb-navpanel" role="dialog" aria-label="Question navigator">
     <div class="tb-navgrid">
-      <button type="button" v-for="p in progress" :key="p.n" class="tb-dot" :class="[dotClass(p.state), { 'd-here': idx === p.n - 1 }]" @click="goToQuestion(p.n); navOpen = false" :aria-label="`Question ${p.n}`">{{ p.n }}</button>
+      <button type="button" v-for="p in progress" :key="p.n" class="tb-dot" :class="[dotClass(p.state), { 'd-here': idx === p.n - 1 }]" :aria-current="idx === p.n - 1 ? 'true' : undefined" @click="goToQuestion(p.n); navOpen = false" :aria-label="`Question ${p.n}`">{{ p.n }}</button>
     </div>
   </div>
 
   <!-- ══ SESSION BODY ══ -->
-  <div class="s-body">
+  <div class="s-body" id="main-content" tabindex="-1">
 
     <!-- ── PAUSE OVERLAY ────────────────────────────────────────────────────
          Covers the entire session area when paused=true.
@@ -723,8 +725,8 @@ function diffLabel(d: string): string {
           <template v-if="isSingle">
             <div style="padding:14px 18px;border-top:1px solid var(--border)">
               <div class="opts-label">Select your answer</div>
-              <button type="button" v-for="opt in current.opts" :key="opt.l" class="opt" :class="optClass(opt.l)" @click="pickOption(opt.l)">
-                <div class="opt-fill"  :style="{ width: (parseFloat(current.optionStats?.[opt.l]) || 0) + '%' }"></div>
+              <button type="button" v-for="opt in current.opts" :key="opt.l" class="opt" :class="optClass(opt.l)" @click="pickOption(opt.l)" :aria-pressed="chosen[current.id] === opt.l">
+                <div class="opt-fill"  :style="{ width: (parseFloat(current.optionStats?.[opt.id]) || 0) + '%' }"></div>
                 <div class="opt-content" :style="{ fontSize: `calc(${stemFontSize} - 0.04rem)` }">
                   <div class="oltr">{{ opt.l }}</div>
                   <span>{{ opt.t }}</span>
@@ -734,7 +736,7 @@ function diffLabel(d: string): string {
                 <svg v-else-if="result[current.id] && optClass(opt.l) === 'bad'" class="opt-mark bad" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
                 <template v-if="isGraded(result[current.id])">
                   <div class="opt-stat">
-                    <div class="opt-pct">{{ current.optionStats?.[opt.l] ?? '—' }}</div>
+                    <div class="opt-pct">{{ current.optionStats?.[opt.id] ?? '—' }}</div>
                     <div class="opt-n">peers</div>
                   </div>
                 </template>
@@ -822,8 +824,8 @@ function diffLabel(d: string): string {
     <div v-if="!isSingle" class="a-panel">
       <div class="a-scroll">
         <div class="opts-label">Select your answer</div>
-        <button type="button" v-for="opt in current.opts" :key="opt.l" class="opt anim-o" :class="optClass(opt.l)" @click="pickOption(opt.l)">
-          <div class="opt-fill" :style="{ width: (parseFloat(current.optionStats?.[opt.l]) || 0) + '%' }"></div>
+        <button type="button" v-for="opt in current.opts" :key="opt.l" class="opt anim-o" :class="optClass(opt.l)" @click="pickOption(opt.l)" :aria-pressed="chosen[current.id] === opt.l">
+          <div class="opt-fill" :style="{ width: (parseFloat(current.optionStats?.[opt.id]) || 0) + '%' }"></div>
           <div class="opt-content" :style="{ fontSize: `calc(${stemFontSize} - 0.04rem)` }">
             <div class="oltr">{{ opt.l }}</div>
             <span>{{ opt.t }}</span>
@@ -832,7 +834,7 @@ function diffLabel(d: string): string {
           <svg v-else-if="submitted && result[current.id] && optClass(opt.l) === 'bad'" class="opt-mark bad" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
           <template v-if="submitted && result[current.id]">
             <div class="opt-stat">
-              <div class="opt-pct">{{ current.optionStats?.[opt.l] ?? '—' }}</div>
+              <div class="opt-pct">{{ current.optionStats?.[opt.id] ?? '—' }}</div>
               <div class="opt-n">peers</div>
             </div>
           </template>

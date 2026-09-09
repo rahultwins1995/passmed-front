@@ -498,7 +498,9 @@ const heatmapThisWeek = computed(() => {
             <div class="trend-wrap">
               <!-- Width + viewBox are set in real pixels by renderTrend (fixed
                    144px height) so the chart never zooms with the container. -->
-              <svg class="trend-svg" viewBox="0 0 440 144" id="tSvg" style="height:144px;display:block">
+              <svg class="trend-svg" viewBox="0 0 440 144" id="tSvg" style="height:144px;display:block"
+                   role="img"
+                   :aria-label="`Score trend line chart across your last ${trendSessions} timed session${trendSessions === 1 ? '' : 's'}, pass mark ${passThreshold}%`">
                 <defs><linearGradient id="tg" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#06b6d4" stop-opacity="0.2"/><stop offset="100%" stop-color="#06b6d4" stop-opacity="0"/></linearGradient></defs>
                 <line class="t-grid" x1="0" y1="26" x2="440" y2="26"/><line class="t-grid" x1="0" y1="52" x2="440" y2="52"/>
                 <line class="t-grid" x1="0" y1="78" x2="440" y2="78"/><line class="t-grid" x1="0" y1="104" x2="440" y2="104"/>
@@ -573,7 +575,9 @@ const heatmapThisWeek = computed(() => {
               </div>
             </template>
           </div>
-          <svg class="bell-svg" viewBox="0 0 700 175" id="bellSvg" preserveAspectRatio="xMidYMid meet" style="width:100%;height:auto;max-height:210px;display:block">
+          <svg class="bell-svg" viewBox="0 0 700 175" id="bellSvg" preserveAspectRatio="xMidYMid meet" style="width:100%;height:auto;max-height:210px;display:block"
+               role="img"
+               :aria-label="`Cohort score bell curve. Your average ${cohort?.your_avg ?? '—'}%, cohort median ${cohort?.cohort_median ?? '—'}%, you are at the ${cohort?.percentile ?? '—'}th percentile`">
             <defs>
               <linearGradient id="bg1" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#94a3b8" stop-opacity="0.35"/><stop offset="100%" stop-color="#94a3b8" stop-opacity="0"/></linearGradient>
               <linearGradient id="bg2" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#06b6d4" stop-opacity="0.45"/><stop offset="100%" stop-color="#06b6d4" stop-opacity="0"/></linearGradient>
@@ -652,7 +656,9 @@ const heatmapThisWeek = computed(() => {
               <div class="hm-dl" style="height:12px">F</div><div class="hm-dl" style="height:12px"></div>
               <div class="hm-dl" style="height:12px">S</div>
             </div>
-            <div class="hmap-cols" id="hmap"></div>
+            <div class="hmap-cols" id="hmap"
+                 role="img"
+                 :aria-label="`Study activity heatmap over the last ${heatmapWeeks} week${heatmapWeeks === 1 ? '' : 's'}. ${heatmapTotal} questions answered, ${heatmapThisWeek} this week`"></div>
           </div>
           <div style="margin-top:10px;padding-top:10px;border-top:1px solid var(--border);display:flex;gap:18px">
             <div>

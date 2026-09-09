@@ -48,6 +48,38 @@ export default defineEventHandler(async (event) => {
   const m = await getMaintenance()
   if (!m.on) return
 
+  // ── On-call staff bypass ────────────────────────────────────────────────
+  // Maintenance is ON. A staff member who visits any portal URL with
+  // ?maint_bypass=<token> (matching the MAINTENANCE_BYPASS_TOKEN env secret) is
+  // let through and given a cookie so subsequent navigations skip the gate too;
+  // everyone else still gets the maintenance page. DISABLED entirely when the env
+  // secret is unset (fail closed — no bypass exists), so this can never widen
+  // access by accident. Covers /, /student and /institute since they all pass
+  // through this one middleware.
+  const bypassSecret = useRuntimeConfig(event).maintenanceBypassToken || ''
+  if (bypassSecret) {
+    // Already carrying a valid bypass cookie → let the real portal through.
+    if (getCookie(event, 'maint_bypass') === bypassSecret) return
+
+    // Fresh bypass via the secret query param → set the cookie, then redirect to
+    // the same path WITHOUT the token so the secret isn't left in the URL/history.
+    const q = getQuery(event)
+    const qToken = typeof q.maint_bypass === 'string' ? q.maint_bypass : ''
+    if (qToken && qToken === bypassSecret) {
+      setCookie(event, 'maint_bypass', bypassSecret, {
+        httpOnly: true,
+        // https-only in production; off in dev so the cookie is stored over
+        // http://localhost while testing the bypass.
+        secure: !import.meta.dev,
+        sameSite: 'lax',
+        path: '/',
+        maxAge: 60 * 60 * 4, // 4 hours
+      })
+      await sendRedirect(event, path.split('?')[0], 302)
+      return
+    }
+  }
+
   const message =
     m.message || "We are currently conducting maintenance on the site. We'll be back shortly."
 

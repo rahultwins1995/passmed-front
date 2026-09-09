@@ -36,6 +36,13 @@ DOMPurify.addHook('afterSanitizeAttributes', (node: any) => {
     node.setAttribute('loading', 'lazy')
     if (!node.getAttribute('decoding')) node.setAttribute('decoding', 'async')
   }
+
+  // Accessibility: an image with no author alt text gets an empty alt so screen
+  // readers treat it as decorative (skip) instead of announcing the src URL. This
+  // is a safety net — authors should still supply meaningful alt in the CMS editor.
+  if (tag === 'img' && !node.getAttribute('alt')) {
+    node.setAttribute('alt', '')
+  }
 })
 
 /**

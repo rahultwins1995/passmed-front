@@ -148,6 +148,11 @@ export default defineNuxtConfig({
     // back to a host map when they're unset. The token needs data.records:read +
     // data.records:write on the base(s) this project serves. Never exposed to the browser.
     airtableToken: process.env.NUXT_AIRTABLE_TOKEN || '',
+
+    // On-call staff maintenance-mode bypass secret (server-only). Read in
+    // server/middleware/maintenance.ts. Set NUXT_MAINTENANCE_BYPASS_TOKEN per
+    // deployment (Vercel) and in local .env; empty disables the bypass.
+    maintenanceBypassToken: process.env.NUXT_MAINTENANCE_BYPASS_TOKEN || '',
     opportunitiesBase: process.env.NUXT_OPPORTUNITIES_BASE || '',
     defaultRegion: process.env.NUXT_DEFAULT_REGION || '',
     opportunitiesRegions: process.env.NUXT_OPPORTUNITIES_REGIONS || '',
@@ -164,7 +169,11 @@ export default defineNuxtConfig({
       // directApi=false → dev uses the '/api' proxy (like prod).
       // Production ALWAYS uses the proxy (import.meta.dev guard in the code).
       // Override at runtime via NUXT_PUBLIC_DIRECT_API=false if needed.
-      directApi: true,   // ← flip: true = direct (real URL in Network), false = proxy
+      // Safe default: PROXY. Opt into direct API hits only in dev by setting
+      // NUXT_PUBLIC_DIRECT_API=true in local .env. Even if set, every call site
+      // still gates on import.meta.dev, so production ALWAYS uses the proxy — this
+      // default just removes the footgun if a guard is ever dropped in a refactor.
+      directApi: process.env.NUXT_PUBLIC_DIRECT_API === 'true',   // dev-only opt-in; default false = proxy
       directApiBase:  process.env.NUXT_PUBLIC_API_BASE,
       stripePublishableKey: process.env.NUXT_PUBLIC_STRIPE_PUBLISHABLE_KEY,
       siteUrl: process.env.NUXT_PUBLIC_SITE_URL,
