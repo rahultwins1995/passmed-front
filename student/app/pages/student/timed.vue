@@ -147,9 +147,23 @@ function onDotsWheel(e: WheelEvent) {
 watch(() => idx.value, scrollActiveDotIntoView)
 onMounted(() => { setTimeout(scrollActiveDotIntoView, 150) })
 
-// Per-question timer — pulled from useSession (set by qbank.vue).
-// Falls back to 90s if the session state didn't carry a value.
-const timerPerQ = computed(() => sharedTimerPerQ.value || 90)
+// Extended-time accommodation (WCAG 2.2.1 / SC 2.2.1 "Timing Adjustable"). A
+// per-candidate multiplier (users.extra_time_multiplier, default 1.0) that an admin
+// sets on the student's profile scales the per-question countdown — e.g. 1.5 gives
+// a candidate 50% more time on EVERY question. Read from the shared auth_user state
+// (populated at login / from /me). Falls back to 1 for everyone without an
+// accommodation, and clamps out any non-positive/garbage value.
+const authUser = useState<any | null>('auth_user', () => null)
+const extraTimeMult = computed(() => {
+  const m = Number(authUser.value?.extra_time_multiplier)
+  return Number.isFinite(m) && m > 0 ? m : 1
+})
+
+// Per-question timer — base pulled from useSession (set by qbank.vue), then scaled
+// by the accommodation multiplier. Scaling HERE means every downstream consumer
+// (seed, question-switch reset, colour, progress bar, wall-clock deadline) uses the
+// scaled value automatically — no other change needed. Falls back to 90s base.
+const timerPerQ = computed(() => Math.round((sharedTimerPerQ.value || 90) * extraTimeMult.value))
 const qTimer    = ref(timerPerQ.value)
 // Set when the final question's countdown hits 0 → drives the auto-submit and
 // the "run out of time" notice on the results overlay.
@@ -209,6 +223,15 @@ let qInt: ReturnType<typeof setInterval> | null = null
 let qDeadlineTs = 0
 
 onMounted(async () => {
+  // Ensure the extended-time accommodation multiplier is loaded BEFORE we seed the
+  // per-question timer. This page is layout:false, so the student layout (which
+  // normally hydrates /me into auth_user) never wraps it — on a hard refresh /
+  // direct link, auth_user can still be null when we mount, which would seed the
+  // timer from the UN-scaled base. Await /me once if it hasn't landed yet.
+  if (!authUser.value?.extra_time_multiplier) {
+    try { await useAuth().fetchMe() } catch (e) { /* fall back to 1x */ }
+  }
+
   // Resume path: route has ?session=<id>. loadSession() now also rebuilds
   // questions[]/chosen[]/result[]/flagged[] from the saved session_questions
   // rows — so we MUST NOT call fetchQuestions afterwards (that would replace
@@ -234,11 +257,20 @@ onMounted(async () => {
         // continues correctly across multiple Save & Resume cycles.
         const rows = data.session_questions || data.questions || []
         for (const row of rows) {
-          if (typeof row.q_timer_remaining === 'number') {
+          const spent = typeof row.q_time_spent === 'number' ? row.q_time_spent : 0
+          // Only restore a saved per-question countdown for questions the candidate
+          // ACTUALLY worked on (spent > 0). A never-touched question's saved
+          // q_timer_remaining is just the backend's base pre-seed (un-scaled =
+          // timer_per_q), and restoring it here would override the extended-time
+          // multiplier — the question would start at the base (e.g. 90) instead of
+          // base × multiplier (135). Skipping it lets the seed fall through to the
+          // scaled timerPerQ. Genuinely in-progress questions (spent > 0) keep their
+          // real saved remaining, which was already scaled while they were played.
+          if (typeof row.q_timer_remaining === 'number' && spent > 0) {
             qTimerMap.value[row.question_id] = row.q_timer_remaining
           }
-          if (typeof row.q_time_spent === 'number' && row.q_time_spent > 0) {
-            qTimeMap.value[row.question_id] = row.q_time_spent
+          if (spent > 0) {
+            qTimeMap.value[row.question_id] = spent
           }
         }
         resumed = true
@@ -291,6 +323,25 @@ onMounted(async () => {
 watch(paused, (isPaused) => {
   if (!isPaused && current.value) {
     qDeadlineTs = Date.now() + qTimer.value * 1000
+  }
+})
+
+// Late-arriving accommodation multiplier. On a hard refresh the timed page can mount
+// BEFORE /me hydrates auth_user, so the first question is seeded from the UN-scaled
+// base (e.g. 90s) and — because the seed + wall-clock deadline are imperative — never
+// picks up the multiplier when it arrives. This watch re-anchors the CURRENT question
+// when timerPerQ changes (auth_user resolving 1 → 1.5 recomputes it), but ONLY if the
+// question is still fresh: unanswered AND its countdown is still at (or within 1s of)
+// the OLD full seed. That guard means we never shorten a countdown the candidate is
+// already part-way through — we only correct an untouched full timer. Subsequent
+// questions already read the correct timerPerQ via the current-question watch.
+watch(timerPerQ, (next, prev) => {
+  const q = current.value
+  if (!q || result.value[q.id]) return
+  if (qTimer.value >= prev - 1) {
+    qTimer.value = next
+    qTimerMap.value[q.id] = next
+    qDeadlineTs = Date.now() + next * 1000
   }
 })
 
@@ -454,6 +505,13 @@ const timerColor = computed(() => {
   return 'var(--rose)'
 })
 const timerPct = computed(() => (qTimer.value / timerPerQ.value) * 100)
+
+// Prominent visible expiry warning (WCAG 2.2.1). The colour shift + SR
+// announcements already cue the countdown; this adds an unmissable, animated visual
+// flag in the final 10 seconds so a sighted user isn't caught out by the
+// auto-advance. Hidden while paused — the countdown is frozen then, so "time almost
+// up" would be misleading.
+const showTimeWarning = computed(() => qTimer.value > 0 && qTimer.value <= 10 && !paused.value)
 
 // Screen-reader countdown warnings (a11y / WCAG 4.1.2). The visible timer ticks
 // every second; announcing each tick would spam, so we only push a message as
@@ -808,6 +866,13 @@ function calcMemAct(a: string) {
                    role="progressbar" :aria-valuenow="qTimer" aria-valuemin="0" :aria-valuemax="timerPerQ" :aria-label="`Time remaining ${qTimer} of ${timerPerQ} seconds`">
                 <div style="height:100%;border-radius:2px;transition:width 1s linear" :style="{ width: timerPct+'%', background: timerColor }"></div>
               </div>
+              <!-- Final-10s expiry warning (WCAG 2.2.1): unmissable animated cue
+                   before the per-question timer auto-advances. Respects
+                   prefers-reduced-motion (pulse disabled) via the scoped class. -->
+              <span v-if="showTimeWarning" class="q-expiry-warn" role="status">
+                <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                Time almost up!
+              </span>
               <!-- Screen-reader-only countdown warnings, announced at thresholds
                    (30/10/5s) so the per-second timer doesn't spam the reader.
                    Two regions: polite for 30/10s, assertive for the final 5s. -->
@@ -1158,6 +1223,14 @@ function calcMemAct(a: string) {
 .sk-q-panel,.sk-a-panel{background:var(--white, #fff);border:1px solid var(--border, #e5e7eb);border-radius:10px;padding:20px;overflow:hidden}
 .sk-pulse{background:var(--surface-2, #e5e7eb);animation:skPulse 1.2s ease-in-out infinite;display:block}
 @keyframes skPulse{0%,100%{opacity:0.85}50%{opacity:0.5}}
+/* Final-10s per-question expiry warning (WCAG 2.2.1). Pulses to draw the eye; the
+   pulse is disabled under prefers-reduced-motion so it stays a static, readable
+   cue for motion-sensitive users. */
+.q-expiry-warn{display:inline-flex;align-items:center;gap:3px;flex-shrink:0;
+  font-family:'Figtree',sans-serif;font-size:0.66rem;font-weight:800;line-height:1;
+  white-space:nowrap;color:var(--rose, #e11d48);animation:qExpiryPulse 1s ease-in-out infinite}
+@keyframes qExpiryPulse{0%,100%{opacity:1}50%{opacity:0.35}}
+@media (prefers-reduced-motion: reduce){.q-expiry-warn{animation:none}}
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 :root {
   /* Navy palette (admin-aligned) */

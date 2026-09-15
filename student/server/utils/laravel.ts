@@ -12,7 +12,7 @@ const AUTH_COOKIE = 'auth_token'
 export function studentLaravelBase(): string {
   // DEV-ONLY server override: point this layer at any backend for local testing.
   // Set NUXT_DEV_API_STUDENT to a FULL base URL, e.g.
-  //   NUXT_DEV_API_STUDENT=https://api-uk.passmed.com/api-student/v1
+  //   NUXT_DEV_API_STUDENT=https://apitest.passmed.com/api-student/v1
   // Leave it unset/commented to fall back to the normal config. Guarded by
   // NODE_ENV so production per-region builds can NEVER pick this up.
   const devOverride = process.env.NUXT_DEV_API_STUDENT

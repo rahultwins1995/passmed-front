@@ -45,14 +45,22 @@ export const useSocialAuth = () => {
   }
 
   async function signupWithGoogle (credential: string) {
+    const { get: getAttribution } = useAttribution()
+    const attribution = getAttribution()
     const res = await api<any>('/googleauthsignup', {
       method: 'POST',
       body: {
         credential,
-        // Attribution — same params as the email/password signup.
-        utm_source: route.query.utm_source ?? null,
-        utm_medium: route.query.utm_medium ?? null,
-        utm_campaign: route.query.utm_campaign ?? null,
+        // Attribution — first-touch params stashed by attribution.client.ts,
+        // same params as the email/password signup.
+        utm_source: attribution.utm_source ?? route.query.utm_source ?? null,
+        utm_medium: attribution.utm_medium ?? route.query.utm_medium ?? null,
+        utm_campaign: attribution.utm_campaign ?? route.query.utm_campaign ?? null,
+        utm_term: attribution.utm_term ?? null,
+        utm_content: attribution.utm_content ?? null,
+        gclid: attribution.gclid ?? null,
+        gbraid: attribution.gbraid ?? null,
+        wbraid: attribution.wbraid ?? null,
         referrer: import.meta.client ? document.referrer : '',
       },
     })

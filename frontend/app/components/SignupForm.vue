@@ -771,6 +771,7 @@ async function submitSignup (method = 'email') {
       finalUserRole = user.value?.role
     } else {    // not logged in
       try {
+        const attribution = useAttribution().get()
         const signupResponse = await $fetch(getApiPath('signup'), {
           method: 'POST',
           body: {
@@ -785,10 +786,16 @@ async function submitSignup (method = 'email') {
             // Persona from the tab the user actually picked (Residents/Students),
             // so onboarding pre-selects it instead of deriving from exam accent.
             audience: signupTab.value === 'students' ? 'student' : 'resident',
-            // Attribution — captured from the landing URL + browser referrer.
-            utm_source: route.query.utm_source ?? null,
-            utm_medium: route.query.utm_medium ?? null,
-            utm_campaign: route.query.utm_campaign ?? null,
+            // Attribution — first-touch params stashed by attribution.client.ts,
+            // captured from the landing URL + browser referrer.
+            utm_source: attribution.utm_source ?? route.query.utm_source ?? null,
+            utm_medium: attribution.utm_medium ?? route.query.utm_medium ?? null,
+            utm_campaign: attribution.utm_campaign ?? route.query.utm_campaign ?? null,
+            utm_term: attribution.utm_term ?? null,
+            utm_content: attribution.utm_content ?? null,
+            gclid: attribution.gclid ?? null,
+            gbraid: attribution.gbraid ?? null,
+            wbraid: attribution.wbraid ?? null,
             referrer: import.meta.client ? document.referrer : '',
           },
         })
