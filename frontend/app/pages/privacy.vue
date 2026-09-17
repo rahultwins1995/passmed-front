@@ -14,8 +14,8 @@ function onResetCookies () {
 <template>
   <CmsPage
     page-id="page-privacy"
-    seo-title="Privacy Policy — Passmed US"
-    seo-description="How Passmed US collects, uses, and protects your personal information."
+    seo-title="Privacy Policy — Passmed"
+    seo-description="How Passmed collects, uses, and protects your personal information."
   >
     <template #fallback>
       <!-- PLACEHOLDER LEGAL COPY — replace with final approved text -->
@@ -23,7 +23,7 @@ function onResetCookies () {
       <p class="legal-updated">Last updated: June 11, 2026</p>
 
       <p>
-        This Privacy Policy explains how Passmed US ("Passmed", "we", "us") collects,
+        This Privacy Policy explains how Passmed ("Passmed", "we", "us") collects,
         uses, and protects your personal information when you use our website and
         services. By using Passmed, you agree to the practices described here.
       </p>

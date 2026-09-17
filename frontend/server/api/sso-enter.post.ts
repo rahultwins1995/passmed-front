@@ -11,7 +11,10 @@ import { callLaravel, setAuthCookie } from '../utils/laravel'
  */
 export default defineEventHandler(async (event) => {
   const body    = await readBody(event).catch(() => ({} as any))
-  const handoff = String(body?.token || getQuery(event)?.token || '')
+  // Body-only: the handoff token is form-POSTed in the body. The URL-query fallback
+  // was dropped so a token can never arrive in a URL (which would leak via server
+  // logs, the Referer header, and browser history). Mirrors impersonate-enter.
+  const handoff = String(body?.token || '')
 
   if (!handoff) return sendRedirect(event, '/login', 302)
 

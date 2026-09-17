@@ -58,7 +58,7 @@ useHead({
       '@type': 'Organization',
       name: 'Passmed',
       url: siteUrl,
-      logo: `${siteUrl}/favicon-32x32.png`,
+      logo: `${siteUrl}/android-chrome-512x512.png`,
       sameAs: [],
     }),
   }],

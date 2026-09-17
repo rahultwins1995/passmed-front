@@ -47,6 +47,17 @@ export function useAttribution () {
     if (typeof window === 'undefined') return
     if (readCookie(COOKIE_NAME)) return
 
+    // Consent gate for prior-consent regimes: pm_attr is an ad-attribution cookie
+    // (gclid/utm), so it may only be written AFTER the user grants MARKETING consent
+    // in every market EXCEPT the US. The US uses an opt-out regime; UK/EU (GDPR /
+    // ePrivacy), SA (POPIA), CA (PIPEDA), AU and PH all require prior consent — so we
+    // gate ALL non-US markets (and any future non-US market auto-inherits this).
+    // attribution.client.ts re-runs persist() on consent-grant, so the landing URL's
+    // first-touch is still captured at that moment for users who do consent.
+    if (useRegion() !== 'US' && !useCookieConsent().marketingGranted.value) {
+      return
+    }
+
     const fromUrl = readFromUrl()
     if (Object.keys(fromUrl).length === 0) return
 

@@ -69,7 +69,11 @@ function catVars (category) {
 // NUXT_PUBLIC_SITE_URL env var, which has shipped wrong (pointing at a
 // pm-frontend-*.vercel.app preview origin) on several markets before. See the
 // comment at the top of useSiteUrl.ts. Audit PM-32.
-const shareUrl = computed(() => `${useSiteUrl()}/resources/${article.value.slug}`)
+// Reuse the siteUrl resolved once above — NOT useSiteUrl() inside the computed.
+// useSiteUrl()->useRegion()->useRuntimeConfig()->useNuxtApp() throws "[nuxt]
+// instance unavailable" when the computed re-evaluates outside the request's
+// Nuxt context (Sentry PASSMED-7). Same fix as `articles`/`article` above.
+const shareUrl = computed(() => `${siteUrl}/resources/${article.value.slug}`)
 const emailHref = computed(() =>
   `mailto:?subject=${encodeURIComponent(article.value.title)}` +
   `&body=${encodeURIComponent(`${article.value.title}\n\n${shareUrl.value}`)}`
@@ -91,8 +95,11 @@ async function copyLink () {
 }
 
 // Up to three other guides for internal linking at the foot of the article.
+// Reuse the `articles` array resolved once above — NOT useResourceArticles()
+// inside the computed, which calls useRegion()->useNuxtApp() and throws "[nuxt]
+// instance unavailable" outside the request's Nuxt context (Sentry PASSMED-7).
 const more = computed(() =>
-  useResourceArticles().filter(a => a.slug !== article.value.slug).slice(0, 3)
+  articles.filter(a => a.slug !== article.value.slug).slice(0, 3)
 )
 </script>
 

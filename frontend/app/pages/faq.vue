@@ -211,11 +211,16 @@ const hasResults = computed(() => filteredSections.value.length > 0)
           :class="{ open: openItems.has(item.id) }"
           :data-cat="item.cat"
         >
-          <div class="faq-q" @click="toggleItem(item.id)">
+          <div class="faq-q" role="button" tabindex="0"
+            :aria-expanded="openItems.has(item.id)"
+            :aria-controls="`faq-a-${item.id}`"
+            @click="toggleItem(item.id)"
+            @keydown.enter="toggleItem(item.id)"
+            @keydown.space.prevent="toggleItem(item.id)">
             <span v-html="sanitizeHtml(item.q)"></span>
-            <div class="faq-icon">+</div>
+            <div class="faq-icon" aria-hidden="true">+</div>
           </div>
-          <div class="faq-a" v-html="sanitizeHtml(item.a)"></div>
+          <div class="faq-a" :id="`faq-a-${item.id}`" v-html="sanitizeHtml(item.a)"></div>
         </div>
       </div>
 

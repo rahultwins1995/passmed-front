@@ -5,8 +5,8 @@ const rc = useRegionContent()
 <template>
   <CmsPage
     page-id="page-terms"
-    seo-title="Terms of Service — Passmed US"
-    seo-description="The terms and conditions governing your use of Passmed US."
+    seo-title="Terms of Service — Passmed"
+    seo-description="The terms and conditions governing your use of Passmed."
   >
     <template #fallback>
       <!-- PLACEHOLDER LEGAL COPY — replace with final approved text -->
@@ -14,7 +14,7 @@ const rc = useRegionContent()
       <p class="legal-updated">Last updated: June 11, 2026</p>
 
       <p>
-        These Terms of Service ("Terms") govern your access to and use of the Passmed US
+        These Terms of Service ("Terms") govern your access to and use of the Passmed
         ("Passmed", "we", "us") website and services. By creating an account or using
         Passmed, you agree to these Terms.
       </p>

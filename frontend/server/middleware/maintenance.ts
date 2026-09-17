@@ -11,6 +11,21 @@
  * API on every single request.
  */
 
+import { createHash, timingSafeEqual } from 'node:crypto'
+
+/**
+ * Constant-time secret compare. Hash both sides to a fixed 32-byte length first so
+ * timingSafeEqual never sees mismatched lengths (which would throw AND leak the length),
+ * and the comparison time can't reveal the secret char-by-char.
+ */
+function safeEqual(a: string, b: string): boolean {
+  if (!a || !b) return false
+  return timingSafeEqual(
+    createHash('sha256').update(a).digest(),
+    createHash('sha256').update(b).digest(),
+  )
+}
+
 let cached: { at: number; on: boolean; message: string } | null = null
 const TTL_MS = 15_000 // re-check the flag at most every 15s
 
@@ -59,13 +74,13 @@ export default defineEventHandler(async (event) => {
   const bypassSecret = useRuntimeConfig(event).maintenanceBypassToken || ''
   if (bypassSecret) {
     // Already carrying a valid bypass cookie → let the real portal through.
-    if (getCookie(event, 'maint_bypass') === bypassSecret) return
+    if (safeEqual(getCookie(event, 'maint_bypass') || '', bypassSecret)) return
 
     // Fresh bypass via the secret query param → set the cookie, then redirect to
     // the same path WITHOUT the token so the secret isn't left in the URL/history.
     const q = getQuery(event)
     const qToken = typeof q.maint_bypass === 'string' ? q.maint_bypass : ''
-    if (qToken && qToken === bypassSecret) {
+    if (safeEqual(qToken, bypassSecret)) {
       setCookie(event, 'maint_bypass', bypassSecret, {
         httpOnly: true,
         // https-only in production; off in dev so the cookie is stored over

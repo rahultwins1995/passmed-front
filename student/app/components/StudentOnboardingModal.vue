@@ -169,13 +169,43 @@ async function submit() {
     submitting.value = false
   }
 }
+
+// ── Accessibility: focus trap ────────────────────────────────────────────────
+// This is a REQUIRED intake gate (no overlay-click / no X close), so we do NOT
+// add Escape-to-close — that would let a keyboard user bypass a mandatory step.
+// We only keep keyboard focus inside the dialog (WCAG 2.4.3 / 2.1.2) so Tab can't
+// wander onto the (inert) page behind it. Focus the first field on open.
+const obBox = ref<HTMLElement | null>(null)
+
+function obFocusables(): HTMLElement[] {
+  if (!obBox.value) return []
+  return Array.from(obBox.value.querySelectorAll<HTMLElement>(
+    'a[href], button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])'
+  )).filter(el => el.offsetParent !== null)
+}
+
+function onObKeydown(e: KeyboardEvent) {
+  if (e.key !== 'Tab') return
+  const els = obFocusables()
+  if (!els.length) return
+  const first = els[0]
+  const last = els[els.length - 1]
+  const active = document.activeElement as HTMLElement | null
+  if (e.shiftKey) {
+    if (active === first || !obBox.value?.contains(active)) { e.preventDefault(); last.focus() }
+  } else {
+    if (active === last || !obBox.value?.contains(active)) { e.preventDefault(); first.focus() }
+  }
+}
+
+onMounted(() => { nextTick(() => obFocusables()[0]?.focus()) })
 </script>
 
 <template>
   <Teleport to="body">
     <!-- No overlay-click / X close: this is a required intake gate. -->
     <div class="ob-overlay">
-      <div class="ob-box" role="dialog" aria-modal="true" aria-label="Complete your profile">
+      <div class="ob-box" ref="obBox" role="dialog" aria-modal="true" aria-label="Complete your profile" @keydown="onObKeydown">
         <div class="ob-hero">
           <div class="ob-badge">
             <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2l2.4 7.4H22l-6 4.6 2.3 7.4L12 17l-6.3 4.4L8 14 2 9.4h7.6z"/></svg>

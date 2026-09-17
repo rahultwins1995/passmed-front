@@ -998,11 +998,11 @@ async function launchSession() {
             v-model="taxSearch" />
 
           <div class="tax-actions">
-            <span class="tax-link" @click="selectAllTax(true)">Select all</span>
-            <span class="tax-divider">·</span>
-            <span class="tax-link" @click="selectAllTax(false)">Deselect all</span>
-            <span class="tax-divider">·</span>
-            <span class="tax-link" @click="selectWeakOnly">Select my weak topics</span>
+            <span class="tax-link" role="button" tabindex="0" @click="selectAllTax(true)" @keydown.enter="selectAllTax(true)" @keydown.space.prevent="selectAllTax(true)">Select all</span>
+            <span class="tax-divider" aria-hidden="true">·</span>
+            <span class="tax-link" role="button" tabindex="0" @click="selectAllTax(false)" @keydown.enter="selectAllTax(false)" @keydown.space.prevent="selectAllTax(false)">Deselect all</span>
+            <span class="tax-divider" aria-hidden="true">·</span>
+            <span class="tax-link" role="button" tabindex="0" @click="selectWeakOnly" @keydown.enter="selectWeakOnly" @keydown.space.prevent="selectWeakOnly">Select my weak topics</span>
           </div>
 
           <div class="tax-tree">

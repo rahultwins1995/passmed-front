@@ -260,12 +260,14 @@ onMounted(async () => {
           const spent = typeof row.q_time_spent === 'number' ? row.q_time_spent : 0
           // Only restore a saved per-question countdown for questions the candidate
           // ACTUALLY worked on (spent > 0). A never-touched question's saved
-          // q_timer_remaining is just the backend's base pre-seed (un-scaled =
-          // timer_per_q), and restoring it here would override the extended-time
-          // multiplier — the question would start at the base (e.g. 90) instead of
-          // base × multiplier (135). Skipping it lets the seed fall through to the
-          // scaled timerPerQ. Genuinely in-progress questions (spent > 0) keep their
-          // real saved remaining, which was already scaled while they were played.
+          // q_timer_remaining is just the create-time seed; we skip it and let the seed
+          // fall through to the locally-computed scaled timerPerQ (base × multiplier,
+          // e.g. 135). NOTE: the backend now ALSO scales that seed server-side (extended
+          // time is enforced authoritatively there), so the stored seed and the local
+          // scaled value agree — but we still skip untouched questions so a mid-session
+          // multiplier change can't pin a question to a stale seed. Genuinely in-progress
+          // questions (spent > 0) keep their real saved remaining, already scaled while
+          // they were played.
           if (typeof row.q_timer_remaining === 'number' && spent > 0) {
             qTimerMap.value[row.question_id] = row.q_timer_remaining
           }

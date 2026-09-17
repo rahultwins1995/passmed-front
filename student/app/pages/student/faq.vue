@@ -212,14 +212,16 @@ async function sendMessage() {
           <button type="button"
             class="help-faq-q"
             :class="{ open: openId === idx }"
+            :aria-expanded="openId === idx"
+            :aria-controls="`help-faq-a-${idx}`"
             @click="toggle(idx)"
           >
             <span>{{ faq.q }}</span>
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
               <polyline points="6 9 12 15 18 9"/>
             </svg>
           </button>
-          <div v-if="faq.a" class="help-faq-a" :class="{ open: openId === idx }" v-html="sanitizeHtml(faq.a)"></div>
+          <div v-if="faq.a" :id="`help-faq-a-${idx}`" class="help-faq-a" :class="{ open: openId === idx }" v-html="sanitizeHtml(faq.a)"></div>
         </div>
       </template>
     </div>

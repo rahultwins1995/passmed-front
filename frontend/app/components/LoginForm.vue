@@ -114,17 +114,21 @@ async function submitLogin () {
         <!-- Real <form> so password managers fire autofill/save and Enter submits. -->
         <form @submit.prevent="submitLogin">
           <div class="login-field">
-            <label>Email address</label>
-            <input v-model="loginEmail" type="email"
-              placeholder="you@example.com" autocomplete="email" @input="loginEmailError = ''" />
-            <p v-if="loginEmailError" class="error-msg">{{ loginEmailError }}</p>
+            <label for="loginEmail">Email address</label>
+            <input id="loginEmail" v-model="loginEmail" type="email"
+              placeholder="you@example.com" autocomplete="email" @input="loginEmailError = ''"
+              :aria-invalid="loginEmailError ? 'true' : undefined"
+              :aria-describedby="loginEmailError ? 'loginEmailError' : undefined" />
+            <p v-if="loginEmailError" id="loginEmailError" class="error-msg" role="alert">{{ loginEmailError }}</p>
           </div>
           <div class="login-field">
-            <label>Password</label>
-            <input
+            <label for="loginPassword">Password</label>
+            <input id="loginPassword"
               v-model="loginPassword" type="password" placeholder="Your password" autocomplete="current-password"
-               @input="loginPasswordError = ''" />
-            <p v-if="loginPasswordError" class="error-msg">{{ loginPasswordError }}</p>
+               @input="loginPasswordError = ''"
+               :aria-invalid="loginPasswordError ? 'true' : undefined"
+               :aria-describedby="loginPasswordError ? 'loginPasswordError' : undefined" />
+            <p v-if="loginPasswordError" id="loginPasswordError" class="error-msg" role="alert">{{ loginPasswordError }}</p>
           </div>
           <a href="#" class="login-forgot" @click="loginView = 'forgot'">Forgot password?</a>
           <!-- Cloudflare Turnstile — renders + requires a token only once a site key is set. -->

@@ -1048,24 +1048,32 @@ async function submitSignup (method = 'email') {
           <!-- ── Email signup form ── -->
           <div class="signup-name-row">
             <div class="signup-field">
-              <label>First name</label>
-              <input v-model="signupFirstName" type="text" placeholder="Jane" autocomplete="given-name" @input="signupFirstNameError = ''" />
-              <p v-if="signupFirstNameError" class="error-msg">{{ signupFirstNameError }}</p>
+              <label for="signupFirstName">First name</label>
+              <input id="signupFirstName" v-model="signupFirstName" type="text" placeholder="Jane" autocomplete="given-name" @input="signupFirstNameError = ''"
+                :aria-invalid="signupFirstNameError ? 'true' : undefined"
+                :aria-describedby="signupFirstNameError ? 'signupFirstNameError' : undefined" />
+              <p v-if="signupFirstNameError" id="signupFirstNameError" class="error-msg" role="alert">{{ signupFirstNameError }}</p>
             </div>
             <div class="signup-field">
-              <label>Last name</label>
-              <input v-model="signupLastName" type="text" placeholder="Smith" autocomplete="family-name" @input="signupLastNameError = ''" />
-              <p v-if="signupLastNameError" class="error-msg">{{ signupLastNameError }}</p>
+              <label for="signupLastName">Last name</label>
+              <input id="signupLastName" v-model="signupLastName" type="text" placeholder="Smith" autocomplete="family-name" @input="signupLastNameError = ''"
+                :aria-invalid="signupLastNameError ? 'true' : undefined"
+                :aria-describedby="signupLastNameError ? 'signupLastNameError' : undefined" />
+              <p v-if="signupLastNameError" id="signupLastNameError" class="error-msg" role="alert">{{ signupLastNameError }}</p>
             </div>
           </div>
           <div class="signup-field">
-            <label>Email address</label>
-            <input v-model="signupEmail" type="email" placeholder="you@example.com" autocomplete="email" @input="signupEmailError = ''" />
-            <p v-if="signupEmailError" class="error-msg">{{ signupEmailError }}</p>
+            <label for="signupEmail">Email address</label>
+            <input id="signupEmail" v-model="signupEmail" type="email" placeholder="you@example.com" autocomplete="email" @input="signupEmailError = ''"
+              :aria-invalid="signupEmailError ? 'true' : undefined"
+              :aria-describedby="signupEmailError ? 'signupEmailError' : undefined" />
+            <p v-if="signupEmailError" id="signupEmailError" class="error-msg" role="alert">{{ signupEmailError }}</p>
           </div>
           <div class="signup-field">
-            <label>Password</label>
-            <input v-model="signupPassword" type="password" placeholder="At least 8 characters" autocomplete="new-password" aria-describedby="signup-pw-strength" @input="signupPasswordError = ''" />
+            <label for="signupPassword">Password</label>
+            <input id="signupPassword" v-model="signupPassword" type="password" placeholder="At least 8 characters" autocomplete="new-password"
+              :aria-invalid="signupPasswordError ? 'true' : undefined"
+              :aria-describedby="signupPasswordError ? 'signup-pw-strength signupPasswordError' : 'signup-pw-strength'" @input="signupPasswordError = ''" />
             <!-- Strength meter — advisory only, appears once typing starts. -->
             <div v-if="signupPassword" id="signup-pw-strength" class="pw-strength" aria-live="polite">
               <div class="pw-bar" role="img" :aria-label="`Password strength: ${signupPwStrength.label}`">
@@ -1081,7 +1089,7 @@ async function submitSignup (method = 'email') {
                 <span v-if="signupPwStrength.suggestions.length" class="pw-tip">{{ signupPwStrength.suggestions[0] }}</span>
               </div>
             </div>
-            <p v-if="signupPasswordError" class="error-msg">{{ signupPasswordError }}</p>
+            <p v-if="signupPasswordError" id="signupPasswordError" class="error-msg" role="alert">{{ signupPasswordError }}</p>
           </div>
 
           <div v-if="signupError" class="login-error-msg" style="display:block;">{{ signupError }}</div>

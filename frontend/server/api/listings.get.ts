@@ -14,7 +14,16 @@ export default defineEventHandler(async (event) => {
   const cfg = useRuntimeConfig()
   const token = cfg.airtableToken as string
   const target = resolveTarget(event)
-  if (!token || !target) throw createError({ statusCode: 500, statusMessage: 'Board not configured for this site' })
+  // Graceful degradation: the /opportunities page reads this route and renders
+  // `listings ?? []`, so an EMPTY board is a valid, non-broken state. If the board
+  // isn't configured on this market (no Airtable token/base), return an empty board
+  // (200) instead of throwing — a missing config must NOT 500 the whole page
+  // (Sentry PASSMED-D "Upstream error"/"Board not configured"). Short cache so it
+  // recovers on its own the moment config is added, without a 1-day empty cache.
+  if (!token || !target) {
+    setResponseHeader(event, 'Cache-Control', 'public, max-age=0, s-maxage=60')
+    return { count: 0, regions: target?.regions ?? [], listings: [] as Listing[], degraded: 'not-configured' }
+  }
 
   const status = (cfg.listingsStatus as string) || 'Published'
   const st = `{Status}='${esc(status)}'`
@@ -37,8 +46,14 @@ export default defineEventHandler(async (event) => {
       offset = res.offset
     } while (offset)
   } catch (e: any) {
+    // Airtable upstream failed (down / rate-limited / transient / bad token). Don't
+    // 502 the whole /opportunities page — return an empty board (200) so the page
+    // still renders, and use a SHORT cache (not the 1-day success cache) so a
+    // transient Airtable blip isn't stuck as an empty board for a day; the next
+    // request retries and recovers automatically. Logged for Sentry visibility.
     console.error('listings error', e?.data || e?.message || e)
-    throw createError({ statusCode: 502, statusMessage: 'Upstream error' })
+    setResponseHeader(event, 'Cache-Control', 'public, max-age=0, s-maxage=60')
+    return { count: 0, regions: target.regions, listings: [] as Listing[], degraded: 'upstream' }
   }
 
   // Cache at the CDN. The board only changes at the monthly ingest+approval (a
