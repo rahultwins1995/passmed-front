@@ -474,7 +474,7 @@ watch(postOpen, open => open ? lock('opps-post') : unlock('opps-post'))
     <section class="ob-hero">
       <div class="ob-hero-inner">
         <span class="eyebrow">Passmed Community</span>
-        <h1>Courses, jobs &amp; events <span>— all in one place.</span></h1>
+        <h1>Courses, jobs &amp; <span>events</span></h1>
         <p class="sub">A curated board of courses, jobs and events, hand-picked for {{ audienceWord }} and medical students. Free to browse. Free to list.</p>
         <div class="searchbar">
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true"><circle cx="11" cy="11" r="7" stroke="#7a95ad" stroke-width="2" /><path d="M20 20l-3-3" stroke="#7a95ad" stroke-width="2" stroke-linecap="round" /></svg>
@@ -795,8 +795,8 @@ watch(postOpen, open => open ? lock('opps-post') : unlock('opps-post'))
 .opps .ob-hero{padding:60px 5% 38px;background:var(--surface);border-bottom:1px solid var(--border);position:relative;overflow:hidden}
 .opps .ob-hero::before{content:"";position:absolute;inset:0;background-image:radial-gradient(circle,#67e8f9 1px,transparent 1px);background-size:30px 30px;opacity:.18;-webkit-mask-image:radial-gradient(ellipse 60% 80% at 85% 40%,#000 10%,transparent 75%);mask-image:radial-gradient(ellipse 60% 80% at 85% 40%,#000 10%,transparent 75%)}
 .opps .ob-hero-inner{max-width:1100px;margin:0 auto;position:relative;z-index:1}
-.opps .eyebrow{display:inline-flex;align-items:center;gap:12px;color:var(--teal);font-weight:700;font-size:13px;letter-spacing:.14em;text-transform:uppercase;margin-bottom:18px}
-.opps .eyebrow::before{content:"";width:26px;height:2px;background:var(--teal);border-radius:2px;flex-shrink:0}
+.opps .eyebrow{display:inline-flex;align-items:center;gap:7px;color:var(--ink);font-weight:800;font-size:0.67rem;letter-spacing:2.5px;text-transform:uppercase;margin-bottom:18px}
+.opps .eyebrow::before{content:"";width:14px;height:2px;background:currentColor;border-radius:1px;flex-shrink:0}
 .opps .ob-hero h1{font-family:'Figtree',sans-serif;font-size:clamp(2.2rem,3.5vw,3.2rem);line-height:1.05;letter-spacing:-1.2px;font-weight:800;max-width:820px}
 .opps .ob-hero h1 span{color:var(--teal)}
 .opps .sub{margin-top:16px;font-size:18px;color:var(--ink-mid);max-width:640px}

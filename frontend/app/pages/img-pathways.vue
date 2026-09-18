@@ -610,8 +610,8 @@ watch(reqModalOpen, open => open ? lock('img-req') : unlock('img-req'))
 .img-pathways .ip-hero{padding:60px 0 40px;background:var(--surface);border-bottom:1px solid var(--border);position:relative}
 .img-pathways .ip-hero::before{content:"";position:absolute;inset:0;background-image:radial-gradient(circle,#67e8f9 1px,transparent 1px);background-size:30px 30px;opacity:.18;-webkit-mask-image:radial-gradient(ellipse 60% 80% at 85% 30%,#000 10%,transparent 75%);mask-image:radial-gradient(ellipse 60% 80% at 85% 30%,#000 10%,transparent 75%)}
 .img-pathways .ip-hero-inner{max-width:1100px;margin:0 auto;padding:0 24px;position:relative;z-index:1}
-.img-pathways .ip-eyebrow{display:inline-flex;align-items:center;gap:12px;color:var(--teal);font-weight:700;font-size:13px;letter-spacing:.14em;text-transform:uppercase;margin-bottom:18px}
-.img-pathways .ip-eyebrow::before{content:"";width:26px;height:2px;background:var(--teal);border-radius:2px;flex-shrink:0}
+.img-pathways .ip-eyebrow{display:inline-flex;align-items:center;gap:7px;color:var(--ink);font-weight:800;font-size:0.67rem;letter-spacing:2.5px;text-transform:uppercase;margin-bottom:18px}
+.img-pathways .ip-eyebrow::before{content:"";width:14px;height:2px;background:currentColor;border-radius:1px;flex-shrink:0}
 .img-pathways .ip-hero h1{font-family:'Figtree',sans-serif;font-size:clamp(2.2rem,3.5vw,3.2rem);line-height:1.05;letter-spacing:-1.2px;font-weight:800;max-width:820px}
 .img-pathways .ip-hero h1 span{color:var(--teal)}
 .img-pathways .sub{margin-top:16px;font-size:18px;color:var(--ink-mid);max-width:660px}

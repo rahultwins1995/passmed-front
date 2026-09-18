@@ -5,8 +5,8 @@ const rc = useRegionContent()
 <template>
   <CmsPage
     page-id="page-terms"
-    seo-title="Terms of Service — Passmed"
-    seo-description="The terms and conditions governing your use of Passmed."
+    :seo-title="`Terms of Service — ${rc.brandName}`"
+    :seo-description="`The terms and conditions governing your use of ${rc.brandName}.`"
   >
     <template #fallback>
       <!-- PLACEHOLDER LEGAL COPY — replace with final approved text -->

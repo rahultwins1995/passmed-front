@@ -59,7 +59,10 @@ useHead({
       name: 'Passmed',
       url: siteUrl,
       logo: `${siteUrl}/android-chrome-512x512.png`,
-      sameAs: [],
+      sameAs: [
+        'https://www.linkedin.com/company/passmed/',
+        'https://www.instagram.com/_passmed',
+      ],
     }),
   }],
 })

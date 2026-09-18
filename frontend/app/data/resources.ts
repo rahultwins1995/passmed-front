@@ -382,7 +382,10 @@ const US_ARTICLES: ResourceArticle[] = [
 ]
 
 // Guides per market. Add UK/CA/AU/PH the same way (own file → import → map).
-const BY_REGION: Record<string, ResourceArticle[]> = {
+// Exported so server/api/__sitemap__/urls.ts can source each market's resource
+// URLs directly from the same data, instead of the hand-duplicated slug list
+// that used to live in the root nuxt.config.ts (which drifted — see PM-31).
+export const BY_REGION: Record<string, ResourceArticle[]> = {
   US: US_ARTICLES,
   SA: SA_ARTICLES,
   UK: UK_ARTICLES,

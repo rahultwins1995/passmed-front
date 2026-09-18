@@ -231,8 +231,8 @@ onMounted(() => { nextTick(() => obFocusables()[0]?.focus()) })
           <!-- Fields -->
           <div class="ob-fields">
             <div class="ob-field">
-              <label>Country of {{ isStudent ? 'study / work' : 'work' }}</label>
-              <select v-model="form.country" autocomplete="country-name">
+              <label for="obCountry">Country of {{ isStudent ? 'study / work' : 'work' }}</label>
+              <select id="obCountry" v-model="form.country" autocomplete="country-name">
                 <option v-for="c in COUNTRIES" :key="c" :value="c">{{ c }}</option>
               </select>
             </div>
@@ -242,8 +242,8 @@ onMounted(() => { nextTick(() => obFocusables()[0]?.focus()) })
                  dropdown; any other country shows a free-text field. -->
             <template v-if="isStudent">
               <div v-if="hasSchoolList" class="ob-field">
-                <label>Medical school</label>
-                <select v-model="form.medicalSchool">
+                <label for="obMedicalSchool">Medical school</label>
+                <select id="obMedicalSchool" v-model="form.medicalSchool">
                   <option value="" disabled>— Select your school —</option>
                   <optgroup v-for="grp in schoolGroups" :key="grp.group" :label="grp.group">
                     <option v-for="s in grp.schools" :key="s" :value="s">{{ s }}</option>
@@ -252,41 +252,41 @@ onMounted(() => { nextTick(() => obFocusables()[0]?.focus()) })
                 </select>
               </div>
               <div v-if="hasSchoolList && form.medicalSchool === OTHER" class="ob-field">
-                <label>School name</label>
-                <input type="text" v-model="form.medicalSchoolOther" placeholder="Type your medical school" />
+                <label for="obMedicalSchoolOther">School name</label>
+                <input id="obMedicalSchoolOther" type="text" v-model="form.medicalSchoolOther" placeholder="Type your medical school" />
               </div>
               <div v-if="!hasSchoolList" class="ob-field">
-                <label>Medical school</label>
-                <input type="text" v-model="form.medicalSchoolOther" placeholder="Your medical school" />
+                <label for="obMedicalSchoolFree">Medical school</label>
+                <input id="obMedicalSchoolFree" type="text" v-model="form.medicalSchoolOther" placeholder="Your medical school" />
               </div>
             </template>
 
             <!-- Resident-only -->
             <template v-else>
               <div class="ob-field">
-                <label>Where you work / study <span class="ob-opt">(optional)</span></label>
-                <input type="text" v-model="form.workStudy" placeholder="Institution or program" />
+                <label for="obWorkStudy">Where you work / study <span class="ob-opt">(optional)</span></label>
+                <input id="obWorkStudy" type="text" v-model="form.workStudy" placeholder="Institution or program" />
               </div>
               <div class="ob-field">
-                <label>Specialty <span class="ob-opt">(optional)</span></label>
-                <input type="text" v-model="form.specialty" placeholder="e.g. Internal Medicine" />
+                <label for="obSpecialty">Specialty <span class="ob-opt">(optional)</span></label>
+                <input id="obSpecialty" type="text" v-model="form.specialty" placeholder="e.g. Internal Medicine" />
               </div>
             </template>
 
             <div class="ob-field-row">
               <div class="ob-field">
-                <label>
+                <label for="obGradYear">
                   {{ isStudent ? 'Year of graduation' : 'Year of med-school graduation' }}
                   <span v-if="!isStudent" class="ob-opt">(optional)</span>
                 </label>
-                <select v-model="form.gradYear">
+                <select id="obGradYear" v-model="form.gradYear">
                   <option value="" :disabled="isStudent">— Select —</option>
                   <option v-for="y in years" :key="y" :value="String(y)">{{ y }}</option>
                 </select>
               </div>
               <div class="ob-field">
-                <label>Exam date <span v-if="isStudent" class="ob-opt">(optional)</span></label>
-                <input type="date" v-model="form.examDate" />
+                <label for="obExamDate">Exam date <span v-if="isStudent" class="ob-opt">(optional)</span></label>
+                <input id="obExamDate" type="date" v-model="form.examDate" />
               </div>
             </div>
           </div>

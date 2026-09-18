@@ -14,8 +14,8 @@ function onResetCookies () {
 <template>
   <CmsPage
     page-id="page-privacy"
-    seo-title="Privacy Policy — Passmed"
-    seo-description="How Passmed collects, uses, and protects your personal information."
+    :seo-title="`Privacy Policy — ${rc.brandName}`"
+    :seo-description="`How ${rc.brandName} collects, uses, and protects your personal information.`"
   >
     <template #fallback>
       <!-- PLACEHOLDER LEGAL COPY — replace with final approved text -->

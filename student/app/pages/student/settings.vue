@@ -282,6 +282,7 @@ const resetDone      = ref(false)
 const showResetModal = ref(false)
 const resetConfirmText = ref('')
 const resetting      = ref(false)
+const resetModalEl = ref<HTMLElement | null>(null)
 
 async function loadResetStatus() {
   try {
@@ -327,6 +328,7 @@ const showDeleteModal   = ref(false)
 const deletePassword    = ref('')
 const deleteConfirmText = ref('')
 const deleting          = ref(false)
+const deleteModalEl = ref<HTMLElement | null>(null)
 
 function openDeleteModal() {
   deletePassword.value = ''
@@ -651,6 +653,12 @@ function onConnectGoogleError() {
 const showDisconnectModal = ref(false)
 const disconnecting       = ref(false)
 const discPw              = reactive({ newPw: '', confirmPw: '' })
+const disconnectModalEl = ref<HTMLElement | null>(null)
+
+// Accessible modals: focus trap (Esc + Tab-cycle + focus restore)
+useFocusTrap(resetModalEl, showResetModal, { onEscape: () => { closeResetModal() } })
+useFocusTrap(deleteModalEl, showDeleteModal, { onEscape: () => { closeDeleteModal() } })
+useFocusTrap(disconnectModalEl, showDisconnectModal, { onEscape: () => { closeDisconnectModal() } })
 
 function openDisconnectModal() {
   if (linkedBusy.value) return
@@ -1209,7 +1217,7 @@ async function submitSetPassword() {
   <!-- Reset-progress confirm modal (requires typing RESET) -->
   <Teleport to="body">
     <div v-if="showResetModal" class="overlay open" @click.self="closeResetModal">
-      <div class="modal-box" style="max-width:420px;width:94vw">
+      <div ref="resetModalEl" class="modal-box" role="dialog" aria-modal="true" aria-label="Reset all progress?" style="max-width:420px;width:94vw">
         <div class="m-head">
           <div class="m-title">Reset all progress?</div>
           <button type="button" class="m-close" @click="closeResetModal" aria-label="Close">
@@ -1236,7 +1244,7 @@ async function submitSetPassword() {
 
     <!-- Delete-account confirm modal (password + type DELETE) -->
     <div v-if="showDeleteModal" class="overlay open" @click.self="closeDeleteModal">
-      <div class="modal-box" style="max-width:440px;width:94vw">
+      <div ref="deleteModalEl" class="modal-box" role="dialog" aria-modal="true" aria-label="Delete your account?" style="max-width:440px;width:94vw">
         <div class="m-head">
           <div class="m-title">Delete your account?</div>
           <button type="button" class="m-close" @click="closeDeleteModal" aria-label="Close">
@@ -1267,7 +1275,7 @@ async function submitSetPassword() {
 
     <!-- Disconnect Google confirm modal (collects a password first if needed) -->
     <div v-if="showDisconnectModal" class="overlay open" @click.self="closeDisconnectModal">
-      <div class="modal-box" style="max-width:440px;width:94vw">
+      <div ref="disconnectModalEl" class="modal-box" role="dialog" aria-modal="true" aria-label="Disconnect Google?" style="max-width:440px;width:94vw">
         <div class="m-head">
           <div class="m-title">Disconnect Google?</div>
           <button type="button" class="m-close" @click="closeDisconnectModal" aria-label="Close">

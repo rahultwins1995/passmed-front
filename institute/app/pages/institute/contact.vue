@@ -147,17 +147,17 @@ async function sendMessage() {
           <div style="display:flex;flex-direction:column;gap:14px;">
             <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;">
               <div>
-                <label class="fld-label">Your name</label>
-                <input v-model="form.name" type="text" class="fld" />
+                <label class="fld-label" for="instContactName">Your name</label>
+                <input id="instContactName" v-model="form.name" type="text" class="fld" />
               </div>
               <div>
-                <label class="fld-label">Email</label>
-                <input v-model="form.email" type="email" class="fld" />
+                <label class="fld-label" for="instContactEmail">Email</label>
+                <input id="instContactEmail" v-model="form.email" type="email" class="fld" />
               </div>
             </div>
             <div>
-              <label class="fld-label">Category</label>
-              <select v-model="form.category" class="fld" style="background:var(--white);">
+              <label class="fld-label" for="instContactCategory">Category</label>
+              <select id="instContactCategory" v-model="form.category" class="fld" style="background:var(--white);">
                 <option>Technical issue</option>
                 <option>Billing enquiry</option>
                 <option>Question bank / content</option>
@@ -167,8 +167,8 @@ async function sendMessage() {
               </select>
             </div>
             <div>
-              <label class="fld-label">Message</label>
-              <textarea ref="msgRef" v-model="form.message" rows="5" placeholder="Describe your issue or question in detail…" class="fld" style="resize:none;line-height:1.6;"></textarea>
+              <label class="fld-label" for="instContactMessage">Message</label>
+              <textarea id="instContactMessage" ref="msgRef" v-model="form.message" rows="5" placeholder="Describe your issue or question in detail…" class="fld" style="resize:none;line-height:1.6;"></textarea>
             </div>
             <div style="display:flex;justify-content:flex-end;">
               <button type="button" @click="sendMessage" class="btn-primary" :disabled="sending || !form.message.trim()" :style="sending || !form.message.trim() ? 'opacity:0.6;cursor:default' : ''">

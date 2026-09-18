@@ -55,6 +55,10 @@ const navOpen     = ref(false)
 const showExit    = ref(false)
 const expSingleEl = ref<HTMLElement | null>(null)
 
+// Accessible modals: focus trap (Esc + Tab-cycle + focus restore)
+const exitModalEl = ref<HTMLElement | null>(null)
+useFocusTrap(exitModalEl, showExit, { onEscape: () => { showExit.value = false } })
+
 // Single-column: scroll explanation into view after submit.
 // submitted flips true inside useSession.submit() — we can't call scrollIntoView
 // from there (no DOM access). Watch here and let nextTick ensure the v-if
@@ -83,6 +87,9 @@ const fbComment      = ref('')
 const fbSubmitting   = ref(false)
 const fbDone         = ref(false)
 const fbError        = ref('')
+
+const feedbackModalEl = ref<HTMLElement | null>(null)
+useFocusTrap(feedbackModalEl, showFeedback, { onEscape: () => { closeFeedback() } })
 
 function openFeedback() { showFeedback.value = true; fbSelected.value = []; fbComment.value = ''; fbDone.value = false; fbError.value = '' }
 function closeFeedback() { showFeedback.value = false }
@@ -878,7 +885,7 @@ function diffLabel(d: string): string {
   <!-- ══ EXIT MODAL ══ -->
   <Teleport to="body">
     <div v-if="showExit" class="overlay open" @click.self="showExit=false">
-      <div class="modal-box" style="width:420px;max-width:94vw">
+      <div ref="exitModalEl" class="modal-box" role="dialog" aria-modal="true" aria-label="Save & Exit Session" style="width:420px;max-width:94vw">
         <div class="m-head">
           <div class="m-title">Save &amp; Exit Session</div>
           <button type="button" class="m-close" @click="showExit=false" aria-label="Close">
@@ -942,7 +949,7 @@ function diffLabel(d: string): string {
   <!-- ══ QUESTION FEEDBACK MODAL ══ -->
   <Teleport to="body">
     <div v-if="showFeedback" id="feedbackOverlay" class="overlay open" @click.self="closeFeedback">
-      <div class="modal-box">
+      <div ref="feedbackModalEl" class="modal-box" role="dialog" aria-modal="true" aria-label="Question Feedback">
         <div class="m-head">
           <div class="m-title">Question Feedback</div>
           <button type="button" class="m-close" @click="closeFeedback" aria-label="Close">

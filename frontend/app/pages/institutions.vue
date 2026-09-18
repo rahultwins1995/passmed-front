@@ -135,7 +135,7 @@ function resetForm () {
     <section class="contact-wrap" id="contact-form" v-if="!loading">
       <div class="contact-inner">
         <div class="contact-left">
-          <div class="eyebrow" style="color:var(--teal);">Get in touch</div>
+          <div class="eyebrow" style="color:#fff;">Get in touch</div>
           <h2 style="color:#fff;margin-bottom:16px;">Let's talk about<br><em>your {{ programWord }}</em></h2>
           <p class="lead">Fill in the form and we'll get back to you within one business day with a custom quote tailored to your cohort size and exam needs.</p>
           <div class="contact-detail">

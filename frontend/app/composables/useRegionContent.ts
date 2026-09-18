@@ -13,6 +13,9 @@
 // Spelling note: SA/UK use British English; US uses American.
 
 export interface RegionContent {
+  /** Short market-specific brand name (e.g. "Passmed UK") for titles that need
+   *  just the brand, not the full seoTitle line — e.g. legal page titles. */
+  brandName: string
   /** Default <title>/OG title when a page doesn't provide its own. */
   seoTitle: string
   /** One-line platform description, used as the default SEO description and the footer tagline. */
@@ -31,6 +34,7 @@ export interface RegionContent {
 
 const REGIONS: Record<string, RegionContent> = {
   US: {
+    brandName: 'Passmed US',
     seoTitle: 'Passmed, US medical board & shelf exam prep',
     platformTagline: 'The ultimate study platform for US medical board and shelf exams.',
     builtForLine: 'Built for US physicians and medical students.',
@@ -41,6 +45,7 @@ const REGIONS: Record<string, RegionContent> = {
     supportTz: 'ET',
   },
   SA: {
+    brandName: 'Passmed',
     seoTitle: 'Passmed, CMSA, HPCSA & SA dentistry exam prep',
     platformTagline: 'The focused revision platform for CMSA Fellowship, HPCSA Board and South African dentistry exams.',
     builtForLine: 'Built for South African doctors and medical students.',
@@ -51,6 +56,7 @@ const REGIONS: Record<string, RegionContent> = {
     supportTz: 'SAST',
   },
   UK: {
+    brandName: 'Passmed UK',
     seoTitle: 'Passmed, UK Royal College, UKMLA & finals exam prep',
     platformTagline: 'The focused revision platform for UK Royal College exams, the UKMLA, and medical school finals.',
     builtForLine: 'Built for UK doctors in training and medical students.',
@@ -61,6 +67,7 @@ const REGIONS: Record<string, RegionContent> = {
     supportTz: 'UK time',
   },
   AU: {
+    brandName: 'Passmed Australia',
     seoTitle: 'Passmed, AMC MCQ (CAT) exam prep',
     platformTagline: 'The focused revision platform for the AMC CAT MCQ, built for international medical graduates seeking AHPRA registration.',
     builtForLine: 'Built for international medical graduates sitting the AMC MCQ.',
@@ -71,6 +78,7 @@ const REGIONS: Record<string, RegionContent> = {
     supportTz: 'AEST',
   },
   CA: {
+    brandName: 'Passmed Canada',
     seoTitle: 'Passmed, MCCQE Part 1 exam prep',
     platformTagline: 'The focused revision platform for the Medical Council of Canada Qualifying Examination (MCCQE) Part 1.',
     builtForLine: 'Built for IMGs and Canadian graduates sitting the MCCQE Part 1.',
@@ -81,6 +89,7 @@ const REGIONS: Record<string, RegionContent> = {
     supportTz: 'ET',
   },
   PH: {
+    brandName: 'Passmed',
     seoTitle: 'Passmed, PLE (Physician Licensure Exam) prep',
     platformTagline: 'The focused revision platform for the Philippine Physician Licensure Examination (PLE).',
     builtForLine: 'Built for Philippine medical graduates sitting the PLE.',

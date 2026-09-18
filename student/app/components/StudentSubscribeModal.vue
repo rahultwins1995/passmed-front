@@ -273,12 +273,16 @@ function onOverlayClick(e: MouseEvent) { if (e.target === e.currentTarget && !su
 function pickExam(slug: string) { selectedSlug.value = slug; removeCoupon() }
 
 onBeforeUnmount(() => unmountCard())
+
+// Accessible modal: focus trap (Esc + Tab-cycle + focus restore)
+const submBoxEl = ref<HTMLElement | null>(null)
+useFocusTrap(submBoxEl, isOpen, { onEscape: () => { if (!submitting.value) close() } })
 </script>
 
 <template>
   <Teleport to="body">
     <div v-if="isOpen" class="subm-overlay" @click="onOverlayClick">
-      <div class="subm-box" role="dialog" aria-modal="true" aria-label="Subscription checkout">
+      <div ref="submBoxEl" class="subm-box" role="dialog" aria-modal="true" aria-label="Subscription checkout">
         <button type="button" class="subm-close" :disabled="submitting" aria-label="Close" @click="close">
           <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
         </button>

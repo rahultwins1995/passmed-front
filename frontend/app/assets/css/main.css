@@ -19,6 +19,7 @@ a {
   /* Palette */
   --teal: #06b6d4;
   --teal-mid: #0891b2;
+  --teal-dark: #0369a1;
   --teal-light: #e0f9fd;
   --teal-pale: #f0feff;
   --teal-border: #67e8f9;
@@ -41,7 +42,7 @@ a {
   /* Neutrals */
   --ink: #0f1f2e;
   --ink-mid: #374f65;
-  --ink-dim: #7a95ad;
+  --ink-dim: #5c7488;
   --border: #e2edf4;
   --border-hi: #c8dce8;
   --surface: #f7fbfd;
@@ -362,7 +363,7 @@ a.dropdown-waitlist:hover { text-decoration: underline; }
 
 .dropdown a:hover {
   background: var(--teal-pale) !important;
-  color: var(--teal) !important;
+  color: var(--ink) !important;
 }
 
 /* Nav dropdown: exams grouped by category (Medicine, Surgery, …), mirroring the
@@ -411,7 +412,7 @@ a.dropdown-waitlist:hover { text-decoration: underline; }
 
 .btn-try {
   background: var(--teal) !important;
-  color: #fff !important;
+  color: var(--ink) !important;
   font-weight: 700 !important;
   border-radius: 9px !important;
   padding: 8px 18px !important;
@@ -538,7 +539,7 @@ a.dropdown-waitlist:hover { text-decoration: underline; }
 
 .path-btn.active {
   background: var(--teal);
-  color: #fff;
+  color: var(--ink);
   box-shadow: 0 2px 8px rgba(8, 145, 178, 0.3);
 }
 
@@ -562,7 +563,7 @@ a.dropdown-waitlist:hover { text-decoration: underline; }
   font-weight: 800;
   text-transform: uppercase;
   letter-spacing: 2px;
-  color: var(--teal);
+  color: var(--ink);
   margin-bottom: 16px;
 }
 
@@ -570,7 +571,7 @@ a.dropdown-waitlist:hover { text-decoration: underline; }
   content: '';
   width: 16px;
   height: 2px;
-  background: var(--teal);
+  background: currentColor;
   border-radius: 1px;
 }
 
@@ -619,7 +620,7 @@ h1 .h1-light {
   align-items: center;
   gap: 8px;
   background: var(--teal);
-  color: #fff;
+  color: var(--ink);
   font-weight: 700;
   font-size: 0.94rem;
   padding: 13px 26px;
@@ -660,7 +661,7 @@ h1 .h1-light {
 }
 
 .btn-secondary:hover {
-  color: var(--teal);
+  color: var(--ink);
   border-color: var(--teal-border);
   background: var(--teal-pale);
 }
@@ -855,7 +856,7 @@ h1 .h1-light {
 }
 
 .url-lock {
-  color: var(--teal);
+  color: var(--ink);
   font-size: 0.65rem;
 }
 
@@ -889,7 +890,7 @@ h1 .h1-light {
 .score-pct {
   font-size: 0.72rem;
   font-weight: 800;
-  color: var(--teal);
+  color: var(--ink);
   flex-shrink: 0;
 }
 
@@ -1030,7 +1031,7 @@ h1 .h1-light {
   font-weight: 800;
   text-transform: uppercase;
   letter-spacing: 1.5px;
-  color: var(--teal);
+  color: var(--ink);
   margin-bottom: 5px;
 }
 
@@ -1140,7 +1141,7 @@ h1 .h1-light {
   font-weight: 800;
   text-transform: uppercase;
   letter-spacing: 2.5px;
-  color: var(--teal);
+  color: var(--ink);
   margin-bottom: 12px;
 }
 
@@ -1148,7 +1149,7 @@ h1 .h1-light {
   content: '';
   width: 14px;
   height: 2px;
-  background: var(--teal);
+  background: currentColor;
   border-radius: 1px;
 }
 
@@ -1342,7 +1343,7 @@ h2 em {
   gap: 6px;
   font-size: 0.86rem;
   font-weight: 700;
-  color: var(--teal);
+  color: var(--ink);
 }
 
 .path-cta-yellow {
@@ -1395,7 +1396,7 @@ h2 em {
   font-variant-numeric: tabular-nums;
   font-size: 0.67rem;
   font-weight: 500;
-  color: var(--teal);
+  color: var(--ink);
   letter-spacing: 2px;
   margin-bottom: 16px;
   display: block;
@@ -1590,7 +1591,7 @@ h2 em {
 
 .proof-quote::before {
   content: '\201C';
-  color: var(--teal);
+  color: var(--ink);
   font-size: 1.3rem;
   line-height: 0;
   vertical-align: -6px;
@@ -1621,7 +1622,7 @@ h2 em {
   justify-content: center;
   font-size: 0.7rem;
   font-weight: 800;
-  color: var(--teal);
+  color: var(--ink);
   flex-shrink: 0;
 }
 
@@ -1643,7 +1644,7 @@ h2 em {
   font-weight: 800;
   text-transform: uppercase;
   letter-spacing: 1px;
-  color: var(--teal);
+  color: var(--ink);
   background: var(--teal-light);
   border: 1px solid #67e8f9;
   padding: 2px 7px;
@@ -1694,11 +1695,11 @@ button.faq-q {
 }
 
 .faq-q:hover {
-  color: var(--teal);
+  color: var(--ink);
 }
 
 .faq-q.open {
-  color: var(--teal);
+  color: var(--ink);
 }
 
 .faq-icon {
@@ -1737,7 +1738,7 @@ button.faq-q {
 }
 
 .faq-a a {
-  color: var(--teal);
+  color: var(--ink);
 }
 
 /* ── CTA ── */
@@ -2168,7 +2169,7 @@ footer {
   font-weight: 800;
   text-transform: uppercase;
   letter-spacing: 2.5px;
-  color: var(--teal);
+  color: var(--ink);
   margin-bottom: 12px;
 }
 
@@ -2176,7 +2177,7 @@ footer {
   content: '';
   width: 14px;
   height: 2px;
-  background: var(--teal);
+  background: currentColor;
   border-radius: 1px;
 }
 
@@ -2235,7 +2236,7 @@ footer {
 }
 
 #page-exams .aud-tab.active {
-  color: var(--teal);
+  color: var(--ink);
   border-bottom-color: var(--teal);
 }
 
@@ -2467,7 +2468,7 @@ footer {
   gap: 5px;
   font-size: 0.83rem;
   font-weight: 700;
-  color: var(--teal);
+  color: var(--ink);
   margin-top: 16px;
   transition: gap 0.2s;
 }
@@ -2597,7 +2598,7 @@ footer {
 }
 
 #page-exams .check {
-  color: var(--teal);
+  color: var(--ink);
   font-size: 1rem;
 }
 
@@ -2670,7 +2671,7 @@ footer {
   align-items: center;
   gap: 8px;
   background: var(--teal);
-  color: #fff;
+  color: var(--ink);
   font-weight: 700;
   font-size: 0.94rem;
   padding: 13px 26px;
@@ -2846,7 +2847,7 @@ footer {
 
 #page-faq .faq-cat.active {
   background: var(--teal);
-  color: #fff;
+  color: var(--ink);
   border-color: var(--teal);
 }
 
@@ -2899,7 +2900,7 @@ footer {
 
 #page-faq .faq-q:hover,
 #page-faq .faq-q.open {
-  color: var(--teal);
+  color: var(--ink);
 }
 
 #page-faq .faq-icon {
@@ -2938,7 +2939,7 @@ footer {
 }
 
 #page-faq .faq-a a {
-  color: var(--teal);
+  color: var(--ink);
 }
 
 #page-faq .faq-a ul {
@@ -3148,7 +3149,7 @@ footer {
 
 #page-institutions .faq-cat.active {
   background: var(--teal);
-  color: #fff;
+  color: var(--ink);
   border-color: var(--teal);
 }
 
@@ -3201,7 +3202,7 @@ footer {
 
 #page-institutions .faq-q:hover,
 #page-institutions .faq-q.open {
-  color: var(--teal);
+  color: var(--ink);
 }
 
 #page-institutions .faq-icon {
@@ -3240,7 +3241,7 @@ footer {
 }
 
 #page-institutions .faq-a a {
-  color: var(--teal);
+  color: var(--ink);
 }
 
 #page-institutions .faq-a ul {
@@ -3398,7 +3399,7 @@ footer {
   font-weight: 800;
   text-transform: uppercase;
   letter-spacing: 2.5px;
-  color: var(--teal);
+  color: #fff;
   margin-bottom: 14px;
 }
 
@@ -3406,7 +3407,7 @@ footer {
   content: '';
   width: 14px;
   height: 2px;
-  background: var(--teal);
+  background: currentColor;
   border-radius: 1px;
 }
 
@@ -3501,7 +3502,7 @@ footer {
   font-weight: 800;
   text-transform: uppercase;
   letter-spacing: 2.5px;
-  color: var(--teal);
+  color: var(--ink);
   margin-bottom: 14px;
   display: flex;
   align-items: center;
@@ -3571,7 +3572,7 @@ footer {
   left: 50%;
   transform: translateX(-50%);
   background: var(--teal);
-  color: #fff;
+  color: var(--ink);
   font-size: 0.62rem;
   font-weight: 800;
   text-transform: uppercase;
@@ -3661,7 +3662,7 @@ footer {
 
 #page-institutions .plan-cta.outline {
   border: 1.5px solid var(--teal-border);
-  color: var(--teal);
+  color: var(--ink);
   background: transparent;
 }
 
@@ -3671,7 +3672,7 @@ footer {
 
 #page-institutions .plan-cta.filled {
   background: var(--teal);
-  color: #fff;
+  color: var(--ink);
   box-shadow: 0 2px 0 var(--teal-mid);
 }
 
@@ -3799,7 +3800,7 @@ footer {
 }
 
 #page-institutions .contact-detail-val a {
-  color: var(--teal);
+  color: #fff;
   text-decoration: none;
 }
 
@@ -3890,7 +3891,7 @@ footer {
   width: 100%;
   padding: 14px;
   background: var(--teal);
-  color: #fff;
+  color: var(--ink);
   font-weight: 700;
   font-size: 0.94rem;
   font-family: 'Figtree', sans-serif;
@@ -8299,7 +8300,7 @@ footer {
 
 :is(#page-exam-shelf-em, #page-exam-shelf-fm, #page-exam-shelf-im, #page-exam-shelf-neuro, #page-exam-shelf-obgyn, #page-exam-shelf-peds, #page-exam-shelf-psych, #page-exam-shelf-surgery, .exam-shelf) .dropdown a:hover {
   background: var(--teal-pale) !important;
-  color: var(--teal) !important;
+  color: var(--ink) !important;
 }
 
 /* ── LOGIN MODAL ── */
@@ -8398,14 +8399,14 @@ footer {
 }
 
 .login-forgot:hover {
-  color: var(--teal);
+  color: var(--ink);
 }
 
 .login-submit {
   width: 100%;
   padding: 13px;
   background: var(--teal);
-  color: #fff;
+  color: var(--ink);
   font-weight: 700;
   font-size: 0.94rem;
   font-family: 'Figtree', sans-serif;
@@ -8454,7 +8455,7 @@ footer {
 }
 
 .login-footer a {
-  color: var(--teal);
+  color: var(--ink);
   font-weight: 700;
   text-decoration: none;
 }
@@ -8728,7 +8729,7 @@ footer {
   width: 100%;
   padding: 13px;
   background: var(--teal);
-  color: #fff;
+  color: var(--ink);
   font-weight: 700;
   font-size: 0.94rem;
   font-family: 'Figtree', sans-serif;
@@ -8767,7 +8768,7 @@ footer {
 }
 
 .signup-footer a {
-  color: var(--teal);
+  color: var(--ink);
   font-weight: 700;
   text-decoration: none;
 }
@@ -8889,6 +8890,7 @@ footer {
 #page-pricing :root {
   --teal: #06b6d4;
   --teal-mid: #0891b2;
+  --teal-dark: #0369a1;
   --teal-light: #e0f9fd;
   --teal-pale: #f0feff;
   --teal-border: #67e8f9;
@@ -8899,7 +8901,7 @@ footer {
   --amber-pale: #fff7ed;
   --ink: #0f1f2e;
   --ink-mid: #374f65;
-  --ink-dim: #7a95ad;
+  --ink-dim: #5c7488;
   --border: #e2edf4;
   --border-hi: #c8dce8;
   --surface: #f7fbfd;
@@ -9042,7 +9044,7 @@ footer {
 }
 
 #page-pricing .nav-links a.active {
-  color: var(--teal);
+  color: var(--ink);
 }
 
 #page-pricing .btn-login {
@@ -9058,7 +9060,7 @@ footer {
 
 #page-pricing .btn-try {
   background: var(--teal) !important;
-  color: #fff !important;
+  color: var(--ink) !important;
   font-weight: 700 !important;
   border-radius: 9px !important;
   padding: 8px 18px !important;
@@ -9107,7 +9109,7 @@ footer {
   font-weight: 800;
   text-transform: uppercase;
   letter-spacing: 2.5px;
-  color: var(--teal);
+  color: var(--ink);
   margin-bottom: 12px;
 }
 
@@ -9115,7 +9117,7 @@ footer {
   content: '';
   width: 14px;
   height: 2px;
-  background: var(--teal);
+  background: currentColor;
   border-radius: 1px;
 }
 
@@ -9178,7 +9180,7 @@ footer {
 
 #page-pricing .aud-btn.active {
   background: var(--teal);
-  color: #fff;
+  color: var(--ink);
   box-shadow: 0 2px 8px rgba(6, 182, 212, 0.3);
 }
 
@@ -9217,7 +9219,7 @@ footer {
 }
 #page-pricing .curr-btn.active {
   background: var(--teal);
-  color: #fff;
+  color: var(--ink);
 }
 @media (max-width: 760px) {
   #page-pricing .curr-switch { margin: 0 auto 28px; }
@@ -9246,12 +9248,12 @@ footer {
 
 #page-pricing .dur-tab:hover {
   border-color: var(--teal-border);
-  color: var(--teal);
+  color: var(--ink);
 }
 
 #page-pricing .dur-tab.active {
   background: var(--teal);
-  color: #fff;
+  color: var(--ink);
   border-color: var(--teal);
   box-shadow: 0 2px 8px rgba(6, 182, 212, 0.3);
 }
@@ -9391,7 +9393,7 @@ footer {
   justify-content: center;
   padding: 9px 18px;
   background: var(--teal);
-  color: #fff;
+  color: var(--ink);
   font-size: 0.82rem;
   font-weight: 700;
   border-radius: 8px;
@@ -9538,7 +9540,7 @@ footer {
   align-items: center;
   gap: 8px;
   background: var(--teal);
-  color: #fff;
+  color: var(--ink);
   font-weight: 700;
   font-size: 0.94rem;
   padding: 13px 28px;
@@ -9649,11 +9651,11 @@ footer {
 }
 
 #page-pricing .faq-q:hover {
-  color: var(--teal);
+  color: var(--ink);
 }
 
 #page-pricing .faq-q.open {
-  color: var(--teal);
+  color: var(--ink);
 }
 
 #page-pricing .faq-icon {
@@ -9692,7 +9694,7 @@ footer {
 }
 
 #page-pricing .faq-a a {
-  color: var(--teal);
+  color: var(--ink);
 }
 
 #page-pricing .cta-section {
@@ -10032,7 +10034,7 @@ a {
   width: 100%;
   padding: 13px;
   background: var(--teal);
-  color: #fff;
+  color: var(--ink);
   font-weight: 700;
   font-size: 0.94rem;
   font-family: 'Figtree', sans-serif;
@@ -10059,6 +10061,12 @@ a {
   color: var(--ink);
   outline: none;
   transition: all 0.18s;
+}
+
+#inviteModal .form-input:focus {
+  border-color: var(--teal);
+  background: var(--teal-pale);
+  box-shadow: 0 0 0 3px rgba(6, 182, 212, 0.1);
 }
 
 #inviteModal .field-label {
@@ -10094,7 +10102,7 @@ a {
 }
 
 #inviteModal .modal-footnote a {
-  color: var(--teal);
+  color: var(--ink);
   font-weight: 700;
   text-decoration: none;
 }
@@ -10306,7 +10314,7 @@ p.additionl-disc {
 
 .passmed-terms-summary a,
 .passmed-terms-content a{
- color:var(--teal);
+ color: var(--ink);
  font-weight:600;
 }
 
@@ -10437,7 +10445,7 @@ p.additionl-disc {
 }
 
 .passmed-privacy-contact-link{
- color:var(--teal) !important;
+ color: var(--ink) !important;
  font-weight:600 !important;
 }
 .ab-mission-section{
@@ -10483,7 +10491,7 @@ p.additionl-disc {
 .ab-mission-section .mission-card-number{
  font-size: 2rem;
  font-weight: 800;
- color: var(--teal);
+ color: var(--ink);
  font-family: 'Figtree', sans-serif;
  line-height: 1;
 }
@@ -10969,7 +10977,7 @@ p.additionl-disc {
  font-weight: 800;
  letter-spacing: 0.18em;
  text-transform: uppercase;
- color: var(--teal);
+ color: var(--ink);
  margin-bottom: 14px;
 }
 .pathway-header h2 {
@@ -11030,7 +11038,7 @@ p.additionl-disc {
  left: 50%;
  transform: translateX(-50%);
  background: var(--teal);
- color: #fff;
+ color: var(--ink);
  font-size: 0.62rem;
  font-weight: 800;
  letter-spacing: 0.12em;
@@ -11049,7 +11057,7 @@ p.additionl-disc {
  height: 26px;
  border-radius: 50%;
  background: rgba(6, 182, 212, 0.10);
- color: var(--teal);
+ color: var(--ink);
  display: flex;
  align-items: center;
  justify-content: center;
@@ -11059,7 +11067,7 @@ p.additionl-disc {
 }
 .pathway-step.active .pathway-step-num {
  background: var(--teal);
- color: #fff;
+ color: var(--ink);
 }
 .pathway-step-icon {
  width: 22px;
@@ -11089,7 +11097,7 @@ p.additionl-disc {
  color: var(--ink-faint);
 }
 .pathway-step.active .pathway-step-tag {
- color: var(--teal);
+ color: var(--ink);
 }
 .pathway-arrow {
  position: absolute;
@@ -11107,7 +11115,7 @@ p.additionl-disc {
  color: var(--ink-dim);
 }
 .pathway-foot a {
- color: var(--teal);
+ color: var(--ink);
  font-weight: 600;
  text-decoration: none;
  border-bottom: 1px solid rgba(6,182,212,0.3);

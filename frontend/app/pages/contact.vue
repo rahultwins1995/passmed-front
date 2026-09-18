@@ -215,54 +215,66 @@ function resetForm () {
         <!-- Form view -->
         <form v-if="!submitted" @submit.prevent="submit" novalidate>
           <div class="cf-group">
-            <label class="cf-label">Your name</label>
+            <label class="cf-label" for="contactName">Your name</label>
             <input
+              id="contactName"
               v-model="form.name"
               type="text"
               placeholder="Jane Smith"
               autocomplete="name"
               :disabled="submitting"
               class="cf-input"
+              :aria-invalid="errors.name ? 'true' : undefined"
+              :aria-describedby="errors.name ? 'contactNameError' : undefined"
             />
-            <p v-if="errors.name" class="cf-error">{{ errors.name }}</p>
+            <p v-if="errors.name" id="contactNameError" class="cf-error" role="alert">{{ errors.name }}</p>
           </div>
 
           <div class="cf-group">
-            <label class="cf-label">Email address</label>
+            <label class="cf-label" for="contactEmail">Email address</label>
             <input
+              id="contactEmail"
               v-model="form.email"
               type="email"
               placeholder="you@example.com"
               autocomplete="email"
               :disabled="submitting"
               class="cf-input"
+              :aria-invalid="errors.email ? 'true' : undefined"
+              :aria-describedby="errors.email ? 'contactEmailError' : undefined"
             />
-            <p v-if="errors.email" class="cf-error">{{ errors.email }}</p>
+            <p v-if="errors.email" id="contactEmailError" class="cf-error" role="alert">{{ errors.email }}</p>
           </div>
 
           <div class="cf-group">
-            <label class="cf-label">Subject</label>
+            <label class="cf-label" for="contactSubject">Subject</label>
             <select
+              id="contactSubject"
               v-model="form.subject"
               :disabled="submitting"
               class="cf-input cf-input--select"
+              :aria-invalid="errors.subject ? 'true' : undefined"
+              :aria-describedby="errors.subject ? 'contactSubjectError' : undefined"
             >
               <option value="">Select a subject…</option>
               <option v-for="s in subjects" :key="s.value" :value="s.value">{{ s.label }}</option>
             </select>
-            <p v-if="errors.subject" class="cf-error">{{ errors.subject }}</p>
+            <p v-if="errors.subject" id="contactSubjectError" class="cf-error" role="alert">{{ errors.subject }}</p>
           </div>
 
           <div class="cf-group cf-group--last">
-            <label class="cf-label">Message</label>
+            <label class="cf-label" for="contactMessage">Message</label>
             <textarea
+              id="contactMessage"
               v-model="form.message"
               placeholder="Tell us how we can help…"
               rows="5"
               :disabled="submitting"
               class="cf-input cf-input--textarea"
+              :aria-invalid="errors.message ? 'true' : undefined"
+              :aria-describedby="errors.message ? 'contactMessageError' : undefined"
             ></textarea>
-            <p v-if="errors.message" class="cf-error">{{ errors.message }}</p>
+            <p v-if="errors.message" id="contactMessageError" class="cf-error" role="alert">{{ errors.message }}</p>
           </div>
 
           <!-- Honeypot: hidden from humans; bots fill it. Not a real field. -->
