@@ -21,6 +21,13 @@ const route = useRoute()
 // topbar; the dashboard page populates the list and re-fetches on change. Shown
 // only on the dashboard route (the only page that consumes the filter).
 const { selectedCohortId, cohortList } = useCohortFilter()
+
+// Notifications unread indicator for the topbar. Reads the same shared count the
+// sidebar badge uses (the sidebar already refreshes it on navigation), so the
+// topbar dot and the sidebar badge can never drift. Gated by the notifications
+// permission so it isn't shown to users who can't open the page.
+const { can } = useInstitutePermissions()
+const { unreadCount: notifUnread } = useInstituteNotifs()
 const showCohortFilter = computed(() =>
   route.path.replace(/\/$/, '') === '/institute' && cohortList.value.length > 0)
 
@@ -90,6 +97,11 @@ const exitImpersonation = async () => {
                  <option :value="null">All cohorts</option>
                  <option v-for="c in cohortList" :key="c.id" :value="c.id">{{ c.name }}</option>
                </select>
+               <!-- Notifications bell with unread dot — same shared count as the sidebar badge. -->
+               <NuxtLink v-if="can('notifications')" to="/institute/notifications" class="tib" title="Notifications" aria-label="Notifications">
+                 <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+                 <span v-if="notifUnread > 0" class="tib-dot" />
+               </NuxtLink>
                <DarkToggle />
              </div>
            </div>
