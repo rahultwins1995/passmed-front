@@ -255,6 +255,8 @@ const lbMyBest           = ref<number | null>(null)
 const lbMyAttemptsCount  = ref<number>(0)
 const lbOthersCount      = ref<number>(0)
 const lbTotalPeers       = ref<number>(0)
+const lbMyPercentile     = ref<number | null>(null)
+const lbTotalStudents    = ref<number>(0)
 
 function lbColor(idx: number): string {
   return LB_COLORS[idx % LB_COLORS.length]
@@ -276,6 +278,8 @@ async function openLeaderboard(exam: MockExam) {
   lbMyAttemptsCount.value = 0
   lbOthersCount.value     = 0
   lbTotalPeers.value      = exam.totalAttemptsCount ?? 0
+  lbMyPercentile.value    = null
+  lbTotalStudents.value   = 0
 
   try {
     const res = await studentApi<any>(`/mock-exams/${exam.id}/leaderboard`)
@@ -284,6 +288,8 @@ async function openLeaderboard(exam: MockExam) {
       lbMyAttemptsCount.value = res.data?.my_attempts_count ?? 0
       lbOthersCount.value     = res.data?.others_count      ?? 0
       lbTotalPeers.value      = res.data?.total_attempts    ?? lbTotalPeers.value
+      lbMyPercentile.value    = res.data?.my_percentile     ?? null
+      lbTotalStudents.value   = res.data?.total_students    ?? 0
       lbEntries.value = (res.data?.entries ?? []).map((e: any, i: number): LeaderboardEntry => ({
         rank:          e.rank          ?? i + 1,
         name:          e.name          ?? 'Anonymous',
@@ -861,6 +867,7 @@ watch(() => activeExam.value?.examId, (newId, oldId) => {
                   <template v-if="lbMyBest === null">Not attempted yet</template>
                   <template v-else>Your personal best · {{ lbMyAttemptsCount }} {{ lbMyAttemptsCount === 1 ? 'attempt' : 'attempts' }}</template>
                   <template v-if="lbOthersCount"> · {{ lbOthersCount }} others</template>
+                  <template v-if="lbMyBest !== null && lbMyPercentile !== null"> · <strong class="lb-pctl">Top {{ lbMyPercentile }}%</strong></template>
                 </div>
               </div>
             </div>
@@ -882,7 +889,11 @@ watch(() => activeExam.value?.examId, (newId, oldId) => {
                 </div>
                 <div v-for="entry in lbEntries" :key="`${entry.name}-${entry.attemptNumber}`"
                      class="lb-row" :class="{ 'lb-row-me': entry.isMe }">
-                  <div class="lb-col-rank lb-rank-num" :class="{ 'lb-rank-me': entry.isMe }">{{ entry.rank }}</div>
+                  <div class="lb-col-rank" :class="{ 'lb-rank-me': entry.isMe }">
+                    <span v-if="entry.rank <= 3" class="lb-medal" :class="`lb-medal-${entry.rank}`"
+                          :aria-label="`Rank ${entry.rank}`" :title="`Rank ${entry.rank}`">{{ entry.rank }}</span>
+                    <span v-else class="lb-rank-num">{{ entry.rank }}</span>
+                  </div>
                   <div class="lb-col-name lb-name-cell">
                     <div class="lb-av-md" :style="{ background: entry.color }">{{ entry.initials }}</div>
                     <div style="min-width:0">
@@ -1635,6 +1646,24 @@ watch(() => activeExam.value?.examId, (newId, oldId) => {
   font-weight: 700;
   color: var(--ink-dim, #64748b);
 }
+/* Gold / silver / bronze medal disc for the top-3 ranks. */
+.lb-medal {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  font-size: 0.72rem;
+  font-weight: 800;
+  color: #fff;
+  text-shadow: 0 1px 1px rgba(0, 0, 0, 0.28);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.2), inset 0 1px 1px rgba(255, 255, 255, 0.45);
+}
+.lb-medal-1 { background: linear-gradient(145deg, #fde68a 0%, #f59e0b 55%, #b45309 100%); }
+.lb-medal-2 { background: linear-gradient(145deg, #f1f5f9 0%, #cbd5e1 55%, #94a3b8 100%); }
+.lb-medal-3 { background: linear-gradient(145deg, #e8b98a 0%, #cd7f32 55%, #8b5a2b 100%); }
+.lb-pctl { color: var(--brand, #0891b2); font-weight: 700; }
 .lb-name-cell {
   display: flex;
   align-items: center;

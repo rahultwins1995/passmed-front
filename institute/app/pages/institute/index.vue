@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, watch } from 'vue'
 const { instName } = useInstitution()
 
 // Permission matrix — the dashboard is visible to every portal user, but the
@@ -170,7 +170,9 @@ const spTrend = computed(() => {
 
 // Dashboard cohort filter — null = whole institution. Performance stats scope to
 // the chosen cohort server-side; licence/mock/activity widgets stay institution-wide.
-const selectedCohortId = ref<number | null>(null)
+// State is shared with the topbar selector (institute layout) via useCohortFilter,
+// so changing the topbar dropdown re-runs this fetch.
+const { selectedCohortId, cohortList } = useCohortFilter()
 async function fetchDashboard() {
   loading.value = true
   error.value   = false
@@ -178,11 +180,17 @@ async function fetchDashboard() {
     const query: Record<string, any> = {}
     if (selectedCohortId.value) query.cohort_id = selectedCohortId.value
     const res = await api<any>('/dashboard', { query })
-    if (res?.status === 'success') data.value = res.data
+    if (res?.status === 'success') {
+      data.value = res.data
+      // Feed the shared list so the topbar selector can render the cohorts.
+      cohortList.value = res.data?.cohorts ?? []
+    }
     else error.value = true
   } catch { error.value = true }
   finally { loading.value = false }
 }
+// Re-fetch whenever the cohort changes (from the topbar or elsewhere).
+watch(selectedCohortId, () => { fetchDashboard() })
 onMounted(fetchDashboard)
 
 // ── Derived helpers ────────────────────────────────────────────────────────────
@@ -275,11 +283,7 @@ async function exportReport() {
         </div>
       </div>
       <div class="dash-head-actions">
-        <!-- Cohort filter — scopes the performance stats to one cohort (All = whole institution). -->
-        <select v-if="data?.cohorts && data.cohorts.length" v-model="selectedCohortId" class="cohort-filter" :disabled="loading" @change="fetchDashboard">
-          <option :value="null">All cohorts</option>
-          <option v-for="c in data.cohorts" :key="c.id" :value="c.id">{{ c.name }}</option>
-        </select>
+        <!-- Cohort filter now lives in the shared topbar (institute layout). -->
         <!-- Export moved here from the topbar (topbar is now shared in the layout). -->
         <button type="button" class="export-btn" :disabled="exporting" :style="exporting ? 'opacity:0.6;cursor:default' : ''" @click="exportReport">
           <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>

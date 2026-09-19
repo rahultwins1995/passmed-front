@@ -426,6 +426,10 @@ function handleNext() {
 }
 
 async function submitAll() {
+  // Idempotency guard: a manual Submit racing the timer's 0-second auto-submit
+  // could otherwise both enter here and POST /complete twice. `saving` is set
+  // synchronously below (before any await), so the second caller returns here.
+  if (saving.value) return
   // Close modal + show saving skeleton immediately so user gets feedback.
   showExit.value = false
   saving.value   = true

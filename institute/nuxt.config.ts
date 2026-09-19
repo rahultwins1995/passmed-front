@@ -9,7 +9,20 @@ const { resolve } = createResolver(import.meta.url)
 const API_ALL = (process.env.NUXT_PUBLIC_API_BASE_ALL || '').replace(/\/+$/, '')
 // No hardcoded default — a missing value fails the build here instead of silently
 // shipping "undefined/..." URLs. Set NUXT_PUBLIC_API_BASE_ALL in .env / Vercel (per-region).
-if (!API_ALL) throw new Error('NUXT_PUBLIC_API_BASE_ALL is not set — set it in .env / Vercel env before building the institute layer.') 
+if (!API_ALL) throw new Error('NUXT_PUBLIC_API_BASE_ALL is not set — set it in .env / Vercel env before building the institute layer.')
+
+// Static hardening headers (mirror the marketing layer), applied to every route in
+// production. This authenticated dashboard renders sanitized CMS/user HTML and exposes
+// account-deletion, and must NEVER be framable (clickjacking). A stricter script-src CSP
+// is deliberately avoided here — it would break Nuxt hydration / Stripe / Google; the
+// clickjacking + defense-in-depth directives below are the safe, high-value part.
+const securityHeaders = {
+  'X-Content-Type-Options': 'nosniff',
+  'X-Frame-Options': 'DENY',
+  'Referrer-Policy': 'strict-origin-when-cross-origin',
+  'Permissions-Policy': 'camera=(), microphone=(), geolocation=()',
+  'Content-Security-Policy': "frame-ancestors 'none'; base-uri 'self'; object-src 'none'",
+};
 
 export default defineNuxtConfig({
   // NOTE: When used as a layer (extended from frontend/), app.baseURL must
@@ -33,6 +46,9 @@ export default defineNuxtConfig({
   // banner rendered).
   routeRules: {
     '/institute/**': { ssr: false },
+    // Security headers on every route (production only). Added HERE (not just the
+    // marketing layer) because this dashboard was otherwise framable with no CSP.
+    ...(process.env.NODE_ENV === 'production' ? { '/**': { headers: securityHeaders } } : {}),
   },
 
   // IMPORTANT: CSS path fix

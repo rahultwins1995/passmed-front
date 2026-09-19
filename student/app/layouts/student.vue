@@ -12,7 +12,7 @@ useHead({
   ]
 })
 
-const { isMobileOpen, closeMobile } = useSidebar()
+const { isMobileOpen, closeMobile, initResponsive } = useSidebar()
 const { init } = useDarkMode()
 const route = useRoute()
 
@@ -33,7 +33,7 @@ const exitImpersonation = async () => {
 // Never let the mobile sidebar backdrop stay stuck open. Its full-screen
 // overlay (z-index 40, blur) silently swallows every click on the main
 // content — so always close it on first mount and on any navigation.
-onMounted(() => { init(); closeMobile() })
+onMounted(() => { init(); closeMobile(); initResponsive() })
 watch(() => route.fullPath, () => closeMobile())
 </script>
 

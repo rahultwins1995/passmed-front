@@ -346,6 +346,10 @@ function handleNext() {
 
 // ─── Submit all & complete mock exam ──────────────────────────────────────
 async function submitAll() {
+  // Idempotency guard: a manual Submit racing the timer's 0-second auto-submit
+  // could otherwise both enter here and POST /complete twice. `saving` is set
+  // synchronously below (before any await), so the second caller returns here.
+  if (saving.value) return
   showExit.value = false
   saving.value   = true
   try {
@@ -1062,6 +1066,9 @@ html,body{height:100%;width:100%;font-family:'Figtree',sans-serif;background:var
 .tb-dot.d-cur{background:var(--teal);border-color:var(--teal);color:#fff;box-shadow:0 2px 7px rgba(6,182,212,0.3)}
 .tb-dot.d-skip{background:var(--amber-light);border-color:var(--amber);color:var(--amber)}
 .tb-dot.d-answered{background:#dbeafe;border-color:#60a5fa;color:#2563eb}
+/* Dark mode: the light-blue "answered" fill above doesn't flip with the other
+   navigator states — give it a dark-appropriate blue so it stays consistent. */
+body.dark .tb-dot.d-answered{background:rgba(37,99,235,0.18);border-color:rgba(96,165,250,0.45);color:#93c5fd}
 .tb-right{display:flex;align-items:center;gap:6px;flex-shrink:0}
 .ib{width:32px;height:32px;border-radius:7px;border:1.5px solid var(--border);background:var(--white);display:flex;align-items:center;justify-content:center;cursor:pointer;color:var(--ink-dim);transition:all 0.14s;flex-shrink:0;font-family:'Figtree',sans-serif;font-size:0.64rem;font-weight:800;gap:4px;padding:0 8px;width:auto}
 .ib:hover{border-color:var(--teal-border);color:var(--teal);background:var(--teal-pale)}

@@ -17,6 +17,13 @@ const { init } = useDarkMode()
 const { closeMobile } = useSidebar()
 const route = useRoute()
 
+// Cohort filter for the Program Dashboard. The selector lives here in the shared
+// topbar; the dashboard page populates the list and re-fetches on change. Shown
+// only on the dashboard route (the only page that consumes the filter).
+const { selectedCohortId, cohortList } = useCohortFilter()
+const showCohortFilter = computed(() =>
+  route.path.replace(/\/$/, '') === '/institute' && cohortList.value.length > 0)
+
 // Idle-session countdown. Lives on the layout so it covers every portal page —
 // the session can expire while you're anywhere, not just on Settings.
 //
@@ -76,7 +83,15 @@ const exitImpersonation = async () => {
              <div class="tb-left">
                <MobileMenuBtn />
              </div>
-             <DarkToggle />
+             <div class="tb-right">
+               <!-- Cohort filter for the dashboard (All / each cohort). Scopes the
+                    whole Program Dashboard's performance stats server-side. -->
+               <select v-if="showCohortFilter" v-model="selectedCohortId" class="tb-cohort-select" aria-label="Filter dashboard by cohort">
+                 <option :value="null">All cohorts</option>
+                 <option v-for="c in cohortList" :key="c.id" :value="c.id">{{ c.name }}</option>
+               </select>
+               <DarkToggle />
+             </div>
            </div>
            <main id="main-content" tabindex="-1">
              <div v-if="noInstitution" class="inst-no-link">

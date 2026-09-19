@@ -34,7 +34,7 @@
   --ink-mid: #374f65;
   --ink-dim: #5c7488;
   --ink-faint: #b8cdd9;
-  --placeholder: #64788a;
+  --placeholder: #5f7284; /* nudged from #64788a for WCAG AA (4.5:1) on tinted --surface-hi inputs */
   /* Teal */
   --teal: #06b6d4;
   --teal-mid: #0891b2;
