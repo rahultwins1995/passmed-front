@@ -20,6 +20,14 @@ usePageSeo({
   description: page.value?.seo_description || page.value?.short_description,
 })
 
+/* === Page-view tracking (client-only) — increments the Contact page's `views`
+   counter, the denominator for the admin conversion-rate stat. Fire-and-forget,
+   mirrors the exams list. */
+onMounted(() => {
+  const slug = route.path.replace(/^\/+/, '') || 'contact'
+  $fetch(getApiPath(`pages/save-view/${slug}`), { method: 'POST' }).catch(() => {})
+})
+
 /* === Form state === */
 const form = reactive({
   name: '',
