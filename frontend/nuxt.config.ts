@@ -95,13 +95,11 @@ export default defineNuxtConfig({
         { rel: 'icon',             type: 'image/png', sizes: '192x192', href: '/android-chrome-192x192.png' },
         { rel: 'icon',             type: 'image/png', sizes: '512x512', href: '/android-chrome-512x512.png' },
         { rel: 'manifest', href: '/site.webmanifest' },
-        // Resource hints: warm up the font + analytics origins so their
-        // DNS+TCP+TLS handshake is done before the request is needed — cuts the
-        // render-blocking latency of the font stylesheet (Lighthouse perf).
+        // Preconnect ONLY to the two font origins (the critical, render-blocking
+        // ones). Keep preconnects to <=2–3 — too many hurts. gtag is async/low
+        // priority, so a dns-prefetch is enough for it.
         { rel: 'preconnect', href: 'https://fonts.googleapis.com' },
         { rel: 'preconnect', href: 'https://fonts.gstatic.com', crossorigin: '' },
-        { rel: 'dns-prefetch', href: 'https://fonts.gstatic.com' },
-        { rel: 'preconnect', href: 'https://www.googletagmanager.com' },
         { rel: 'dns-prefetch', href: 'https://www.googletagmanager.com' },
         {
           // Weights trimmed to the ones actually used in CSS (dropped normal

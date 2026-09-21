@@ -1,38 +1,38 @@
-import { loadStripe } from '@stripe/stripe-js'
+export default defineNuxtPlugin(() => {
+  // LAZY Stripe loader — nothing runs at boot.
+  //
+  // Previously this plugin eagerly fetched /stripe/config AND loaded Stripe.js on
+  // EVERY page (marketing + portals included), pulling @stripe/stripe-js and the
+  // external js.stripe.com script onto pages that never touch payments — a large
+  // perf cost (bundle + render/TBT). Now $stripe is a memoized function: the
+  // @stripe/stripe-js chunk + Stripe.js load ONLY the first time a checkout path
+  // actually calls $stripe().
+  //
+  // The key here is only the build-time env FALLBACK. Checkout (SignupForm) still
+  // re-loads Stripe with the LIVE publishable key from /stripe/config at pay time,
+  // so a Test/Live switch after boot is always honoured; $stripe() is just the
+  // resilient fallback for the rare case that config fetch fails.
+  let cached: any = null
+  let inflight: Promise<any> | null = null
 
-export default defineNuxtPlugin(async () => {
-  const config = useRuntimeConfig()
-
-  // Single source of truth: the publishable key + mode come from the backend,
-  // which reads them from admin → Payments (Integration record, mode-aware). This
-  // is why the key isn't configured here — switch mode / rotate keys in admin and
-  // the site follows, with no redeploy. The build-time env key is only a fallback
-  // for the rare case the config request fails, so checkout still loads.
-  let publishableKey = ''
-  try {
-    const res: any = await $fetch(getApiPath('stripe/config'))
-    if (res?.status === 'success' && res?.publishable_key) {
-      publishableKey = res.publishable_key as string
-    }
-  } catch {
-    // ignore — fall back to the env key below
-  }
-  if (!publishableKey) {
-    publishableKey = (config.public.stripePublishableKey as string) || ''
+  const $stripe = (): Promise<any> => {
+    if (cached) return Promise.resolve(cached)
+    if (inflight) return inflight
+    inflight = (async () => {
+      const key = (useRuntimeConfig().public.stripePublishableKey as string) || ''
+      if (!key) { inflight = null; return null }
+      try {
+        const { loadStripe } = await import('@stripe/stripe-js')
+        cached = await loadStripe(key)
+      } catch (e) {
+        console.warn('[stripe] Stripe.js failed to load — checkout will retry on demand:', e)
+        cached = null
+      }
+      inflight = null
+      return cached
+    })()
+    return inflight
   }
 
-  // loadStripe() fetches the external https://js.stripe.com/v3 script. If that load
-  // fails (ad blocker, offline, CSP, CDN hiccup) it REJECTS — and because this plugin
-  // runs at boot on EVERY page, an unhandled rejection here crashes the whole app with
-  // a 500 "Failed to load Stripe.js", even on pages that never touch Stripe. Swallow it:
-  // leave stripe = null and let the checkout page (SignupForm) re-load Stripe on demand.
-  let stripe = null
-  if (publishableKey) {
-    try {
-      stripe = await loadStripe(publishableKey)
-    } catch (e) {
-      console.warn('[stripe] Stripe.js failed to load — checkout will retry on demand:', e)
-    }
-  }
-  return { provide: { stripe } }
+  return { provide: { stripe: $stripe } }
 })

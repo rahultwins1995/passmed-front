@@ -57,12 +57,12 @@ async function currentStripe () {
     const res = await $fetch(getApiPath('stripe/config'))
     if (res?.status === 'success' && res?.publishable_key) key = res.publishable_key
   } catch { /* fall back to the boot-time instance below */ }
-  if (!key) return $stripe
+  if (!key) return await $stripe()
   if (_stripeInstance && _stripeKey === key) return _stripeInstance
   const { loadStripe } = await import('@stripe/stripe-js')
   _stripeInstance = await loadStripe(key)
   _stripeKey = key
-  return _stripeInstance || $stripe
+  return _stripeInstance || await $stripe()
 }
 // The instance the current card Element was mounted with; confirm must reuse it.
 const activeStripe = ref(null)
@@ -709,7 +709,7 @@ async function submitSignup (method = 'email') {
       const clientSecret = piResponse.clientSecret || piResponse.client_secret
       if (!clientSecret) throw new Error('No clientSecret received')
 
-      const stripe = activeStripe.value || $stripe
+      const stripe = activeStripe.value || await $stripe()
       let { paymentIntent, error } = await stripe.confirmCardPayment(piResponse.clientSecret, {
         payment_method: {
           card: cardElement.value,
