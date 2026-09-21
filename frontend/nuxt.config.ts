@@ -95,15 +95,9 @@ export default defineNuxtConfig({
         { rel: 'icon',             type: 'image/png', sizes: '192x192', href: '/android-chrome-192x192.png' },
         { rel: 'icon',             type: 'image/png', sizes: '512x512', href: '/android-chrome-512x512.png' },
         { rel: 'manifest', href: '/site.webmanifest' },
-        // Preconnect to the font origins so the DNS+TCP+TLS handshake happens up
-        // front — cuts the font's render-blocking latency (Lighthouse perf).
-        { rel: 'preconnect', href: 'https://fonts.googleapis.com' },
-        { rel: 'preconnect', href: 'https://fonts.gstatic.com', crossorigin: '' },
         {
-          // Weights trimmed to the ones actually used in CSS (dropped normal 300/900
-          // and italic 300 — zero usages) to reduce font download + render-blocking.
           rel: 'stylesheet',
-          href: 'https://fonts.googleapis.com/css2?family=Figtree:ital,wght@0,400;0,500;0,600;0,700;0,800;1,400;1,600;1,800&family=JetBrains+Mono:wght@400;500&display=swap',
+          href: 'https://fonts.googleapis.com/css2?family=Figtree:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,300;1,400;1,600;1,800&family=JetBrains+Mono:wght@400;500&display=swap',
         },
       ],
       script: [
