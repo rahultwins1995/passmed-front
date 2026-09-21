@@ -913,6 +913,7 @@ async function submitNewCohort() {
     // students already occupy seats, so no seat check is needed here.
     let added = 0
     let skipped = 0
+    let bulkSummary: any = null
     if (newCohortModal.value.inviteMode === 'existing' && newCohortModal.value.selIds.length) {
       for (const uid of newCohortModal.value.selIds) {
         try {
@@ -923,28 +924,44 @@ async function submitNewCohort() {
       }
     }
 
-    // Bulk upload tab — invite each valid parsed row by name+email (Mode B),
-    // capped to available seats. Reuses the same /cohorts/{id}/students endpoint.
+    // Bulk upload tab — ONE bulk POST (was N sequential) so the backend classifies
+    // each row and returns a reason-keyed summary (invited/duplicate/invalid/no_seats),
+    // matching the per-cohort Invite modal. Seat-capping is the backend's job now, so
+    // we send every parsed row (invalid ones included) and let it count them.
     if (newCohortModal.value.inviteMode === 'bulk') {
-      const valid    = ncBulkParsed.value.filter(r => r.valid)
-      const toInvite = valid.slice(0, Math.max(0, seatsAvailable.value))
-      skipped = valid.length - toInvite.length
-      for (const row of toInvite) {
+      const rows = ncBulkParsed.value
+      if (rows.length) {
         try {
-          const r: any = await api(`/cohorts/${created.id}/students`, { method: 'POST', body: { first_name: row.firstName, last_name: row.lastName, email: row.email } })
-          created.students.push(mapStudent(r.data))
-          added++
-        } catch (e) { logError('[seats-billing] bulk invite failed', row.email, e); skipped++ }
+          const resp: any = await api(`/cohorts/${created.id}/students/bulk`, {
+            method: 'POST',
+            body: { students: rows.map(r => ({ first_name: r.firstName, last_name: r.lastName, email: r.email })) },
+          })
+          bulkSummary = resp?.summary || {}
+        } catch (e) { logError('[seats-billing] new-cohort bulk invite failed', e) }
       }
     }
 
     cohorts.value.push(created)
     closeNewCohort()
     fetchExistingStudents()
-    const skipMsg = skipped ? ` (${skipped} skipped)` : ''
-    showToast(added
-      ? `Cohort "${name}" created · ${added} student${added !== 1 ? 's' : ''} invited${skipMsg}`
-      : `Cohort "${name}" created`, 'var(--teal)')
+    if (bulkSummary) {
+      // The bulk endpoint returns a summary, not the created rows — refresh so the
+      // new cohort's roster shows the freshly invited students.
+      await fetchCohorts()
+      const s = bulkSummary
+      const parts: string[] = []
+      if (s.invited)   parts.push(`${s.invited} invited`)
+      if (s.duplicate) parts.push(`${s.duplicate} duplicate`)
+      if (s.invalid)   parts.push(`${s.invalid} invalid`)
+      if (s.no_seats)  parts.push(`${s.no_seats} seat-full`)
+      showToast(`Cohort "${name}" created${parts.length ? ' · ' + parts.join(' · ') : ''}`,
+        s.invited ? 'var(--teal)' : 'var(--amber)')
+    } else {
+      const skipMsg = skipped ? ` (${skipped} skipped)` : ''
+      showToast(added
+        ? `Cohort "${name}" created · ${added} student${added !== 1 ? 's' : ''} invited${skipMsg}`
+        : `Cohort "${name}" created`, 'var(--teal)')
+    }
   } catch (e: any) {
     // Surface the real reason instead of a silent generic failure — a Laravel
     // validation error (422) arrives as e.data.message / e.data.errors.

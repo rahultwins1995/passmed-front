@@ -19,8 +19,10 @@ Everything else lives in the shared hub so all regions behave identically:
 - **`app/plugins/gtag.client.ts`** — fires `page_view` on initial load + every
   SPA route change.
 - **`app/composables/useCookieConsent.ts`** — Consent Mode v2 (`consent update`).
-- **`nuxt.config.ts`** — loads gtag.js with the env Measurement ID and sets the
-  Consent Mode v2 defaults (all `denied`).
+- **`nuxt.config.ts`** — loads gtag.js unconditionally with the env
+  Measurement ID and sets the Consent Mode v2 **advanced mode** defaults (all
+  four consent signals `denied`, `functionality_storage` /
+  `security_storage` `granted`, `url_passthrough` + `ads_data_redaction`).
 
 ## Domain → Measurement ID → region → currency
 
@@ -117,9 +119,15 @@ sites don't change. Wiring:
 
 ## Consent Mode v2 + marketing category
 
-`gtag` loads with all four signals **denied** by default (in `nuxt.config.ts`):
-`analytics_storage`, `ad_storage`, `ad_user_data`, `ad_personalization`. The
-cookie banner (`useCookieConsent`) now has **two** granular categories:
+`gtag` runs in **advanced mode**: gtag.js is loaded unconditionally (not gated
+on the banner), with all four consent signals **denied** by default (in
+`nuxt.config.ts`): `analytics_storage`, `ad_storage`, `ad_user_data`,
+`ad_personalization` (`functionality_storage` / `security_storage` stay
+`granted`, `url_passthrough` + `ads_data_redaction` are set so `gclid`
+survives navigation while `ad_storage` is denied). This means denied visitors
+still send cookieless pings that Google uses to model the conversions basic
+mode would have made invisible. The cookie banner (`useCookieConsent`) has
+**two** granular categories:
 
 - **analytics** → grants `analytics_storage` (Google Analytics).
 - **marketing** → grants `ad_storage` / `ad_user_data` / `ad_personalization`

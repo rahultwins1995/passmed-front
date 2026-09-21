@@ -36,6 +36,8 @@ const REGION_TITLES: Record<string, string> = {
   PH: 'Passmed — Pass the PLE with Confidence',
 }
 const REGION_TITLE = REGION_TITLES[(process.env.NUXT_PUBLIC_REGION || '').toUpperCase()] || REGION_TITLES.US
+
+const GTAG_ID = process.env.NUXT_PUBLIC_GTAG_ID || ''
 // NOTE: per-market Meta Pixel IDs and facebook-domain-verification tokens are
 // resolved at RUNTIME from the request host (see app/composables/useRegion.ts +
 // app/plugins/domain-verify.ts), NOT here — because NUXT_PUBLIC_REGION is not set
@@ -93,39 +95,58 @@ export default defineNuxtConfig({
         { rel: 'icon',             type: 'image/png', sizes: '192x192', href: '/android-chrome-192x192.png' },
         { rel: 'icon',             type: 'image/png', sizes: '512x512', href: '/android-chrome-512x512.png' },
         { rel: 'manifest', href: '/site.webmanifest' },
+        // Preconnect to the font origins so the DNS+TCP+TLS handshake happens up
+        // front — cuts the font's render-blocking latency (Lighthouse perf).
+        { rel: 'preconnect', href: 'https://fonts.googleapis.com' },
+        { rel: 'preconnect', href: 'https://fonts.gstatic.com', crossorigin: '' },
         {
+          // Weights trimmed to the ones actually used in CSS (dropped normal 300/900
+          // and italic 300 — zero usages) to reduce font download + render-blocking.
           rel: 'stylesheet',
-          href: 'https://fonts.googleapis.com/css2?family=Figtree:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,300;1,400;1,600;1,800&family=JetBrains+Mono:wght@400;500&display=swap',
+          href: 'https://fonts.googleapis.com/css2?family=Figtree:ital,wght@0,400;0,500;0,600;0,700;0,800;1,400;1,600;1,800&family=JetBrains+Mono:wght@400;500&display=swap',
         },
       ],
       script: [
         // Google tag (gtag.js). The Measurement ID comes from
         // NUXT_PUBLIC_GTAG_ID — when unset, both tags render with an empty id
         // and gtag silently no-ops (safe in dev / unconfigured environments).
+        // Always loaded unconditionally, never gated on consent state or on
+        // which hostname served the request (Consent Mode v2 advanced mode —
+        // see the 'consent default' block below for why).
         {
           async: true,
-          src: `https://www.googletagmanager.com/gtag/js?id=${process.env.NUXT_PUBLIC_GTAG_ID || ''}`,
+          src: `https://www.googletagmanager.com/gtag/js?id=${GTAG_ID}`,
         },
         {
           innerHTML: `
             window.dataLayer = window.dataLayer || [];
             function gtag(){dataLayer.push(arguments);}
             gtag('js', new Date());
-            // Consent Mode v2 — deny analytics/ads (no _ga cookie) until the user
-            // opts in via the cookie banner (useCookieConsent → consent 'update').
+            // Consent Mode v2, advanced mode — gtag.js always loads and sends
+            // cookieless pings while denied, so Google can model the gap for
+            // visitors who never interact with the banner. Storage only
+            // switches to granted via gtag('consent','update',...) from the
+            // cookie banner (useCookieConsent).
             gtag('consent', 'default', {
               ad_storage: 'denied',
               ad_user_data: 'denied',
               ad_personalization: 'denied',
               analytics_storage: 'denied',
+              functionality_storage: 'granted',
+              security_storage: 'granted',
               wait_for_update: 500
             });
+            // Keeps gclid usable for attribution while ad_storage is denied:
+            // url_passthrough carries it through navigations without a cookie,
+            // ads_data_redaction strips ad-click identifiers from what's sent.
+            gtag('set', 'url_passthrough', true);
+            gtag('set', 'ads_data_redaction', true);
             // send_page_view:false — page_view is fired from plugins/gtag.client.ts
             // instead (initial load + every SPA route change), so every page_view
             // carries the same params (region, …) as the rest of the funnel and
             // SPA navigations aren't missed. No 'linker' config: these regional
             // domains are independent, so GA4 cross-domain linking stays OFF.
-            gtag('config', '${process.env.NUXT_PUBLIC_GTAG_ID || ''}', { send_page_view: false });
+            gtag('config', '${GTAG_ID}', { send_page_view: false });
           `,
         },
       ],
@@ -189,7 +210,7 @@ export default defineNuxtConfig({
       // GA4 Measurement ID — read by plugins/gtag.client.ts to fire page_view
       // on SPA route changes. Empty when unset, in which case the plugin no-ops.
       // Set per regional deployment (domain → ID map in .env.example).
-      gtagId: process.env.NUXT_PUBLIC_GTAG_ID || '',
+      gtagId: GTAG_ID,
       // Meta (Facebook) Pixel ID — when set AND the user grants MARKETING consent,
       // plugins/marketing.client.ts loads the Pixel and useAnalytics fires the
       // matching standard events (ViewContent/AddToCart/InitiateCheckout/
