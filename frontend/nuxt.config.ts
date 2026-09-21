@@ -95,9 +95,19 @@ export default defineNuxtConfig({
         { rel: 'icon',             type: 'image/png', sizes: '192x192', href: '/android-chrome-192x192.png' },
         { rel: 'icon',             type: 'image/png', sizes: '512x512', href: '/android-chrome-512x512.png' },
         { rel: 'manifest', href: '/site.webmanifest' },
+        // Resource hints: warm up the font + analytics origins so their
+        // DNS+TCP+TLS handshake is done before the request is needed — cuts the
+        // render-blocking latency of the font stylesheet (Lighthouse perf).
+        { rel: 'preconnect', href: 'https://fonts.googleapis.com' },
+        { rel: 'preconnect', href: 'https://fonts.gstatic.com', crossorigin: '' },
+        { rel: 'dns-prefetch', href: 'https://fonts.gstatic.com' },
+        { rel: 'preconnect', href: 'https://www.googletagmanager.com' },
+        { rel: 'dns-prefetch', href: 'https://www.googletagmanager.com' },
         {
+          // Weights trimmed to the ones actually used in CSS (dropped normal
+          // 300/900 and italic 300 — zero usages) to cut font download + render-block.
           rel: 'stylesheet',
-          href: 'https://fonts.googleapis.com/css2?family=Figtree:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,300;1,400;1,600;1,800&family=JetBrains+Mono:wght@400;500&display=swap',
+          href: 'https://fonts.googleapis.com/css2?family=Figtree:ital,wght@0,400;0,500;0,600;0,700;0,800;1,400;1,600;1,800&family=JetBrains+Mono:wght@400;500&display=swap',
         },
       ],
       script: [
