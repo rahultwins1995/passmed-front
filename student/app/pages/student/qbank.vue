@@ -24,10 +24,10 @@ const famChips   = ref<{ id: string; label: string; count: number; color: string
   { id:'incorrect',   label:'Incorrect',   count:0, color:'var(--rose)',      on:true },
   { id:'flagged',     label:'Flagged',     count:0, color:'var(--amber)',     on:true },
 ])
-const diffChips  = ref<{ id: string; label: string; count: number; color: string; on: boolean }[]>([
-  { id:'foundation',   label:'Foundation',   count:0, color:'var(--green)', on:true },
-  { id:'intermediate', label:'Intermediate', count:0, color:'var(--amber)', on:true },
-  { id:'advanced',   label:'Advanced',   count:0, color:'var(--rose)',  on:true },
+const diffChips  = ref<{ id: string; label: string; count: number; color: string; cls: string; on: boolean }[]>([
+  { id:'foundation',   label:'Foundation',   count:0, color:'var(--green)', cls:'diff-easy', on:true },
+  { id:'intermediate', label:'Intermediate', count:0, color:'var(--amber)', cls:'diff-med',  on:true },
+  { id:'advanced',   label:'Advanced',   count:0, color:'var(--rose)',  cls:'diff-hard', on:true },
 ])
 
 const sessionMode  = ref<'tutor' | 'timed'>('tutor')
@@ -970,7 +970,7 @@ async function launchSession() {
           </div>
           <div class="chip-row">
             <div v-for="chip in diffChips" :key="chip.id"
-              class="chip" :class="{ on: chip.on }"
+              class="chip" :class="[chip.cls, { on: chip.on }]"
               @click="chip.on = !chip.on">
               <div class="chip-dot" :style="{ background: chip.color }"></div>
               {{ chip.label }}

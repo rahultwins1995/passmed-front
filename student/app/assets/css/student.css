@@ -1901,7 +1901,7 @@ body.dark .dm-btn {
   font-variant-numeric: tabular-nums;
   font-size: 1.6rem;
   font-weight: 700;
-  color: var(--ink);
+  color: var(--teal);
   line-height: 1;
 }
 
@@ -2125,7 +2125,7 @@ body.dark .dm-btn {
 
 .chip.on {
   border-color: var(--teal);
-  color: var(--ink);
+  color: var(--teal);
   background: var(--teal-pale);
 }
 
@@ -2212,7 +2212,7 @@ body.dark .dm-btn {
 .tax-link {
   font-size: 0.7rem;
   font-weight: 700;
-  color: var(--ink);
+  color: var(--teal);
   cursor: pointer;
   transition: opacity 0.14s;
 }
@@ -2482,7 +2482,7 @@ body.dark .dm-btn {
 
 .count-preset.on {
   border-color: var(--teal);
-  color: var(--ink);
+  color: var(--teal);
   background: var(--teal-pale);
 }
 
