@@ -182,8 +182,13 @@ async function fetchDashboard() {
     const res = await api<any>('/dashboard', { query })
     if (res?.status === 'success') {
       data.value = res.data
-      // Feed the shared list so the topbar selector can render the cohorts.
-      cohortList.value = res.data?.cohorts ?? []
+      // Feed the shared list so the topbar selector can render the cohorts — but
+      // ONLY on the unfiltered fetch. A filtered response can carry a reduced/empty
+      // cohorts array; overwriting with that would hide the topbar selector
+      // (needs length>0) and strand the user on the filtered view with no way back.
+      if (!selectedCohortId.value) {
+        cohortList.value = res.data?.cohorts ?? []
+      }
     }
     else error.value = true
   } catch { error.value = true }

@@ -914,6 +914,7 @@ async function submitNewCohort() {
     let added = 0
     let skipped = 0
     let bulkSummary: any = null
+    let bulkFailed = false
     if (newCohortModal.value.inviteMode === 'existing' && newCohortModal.value.selIds.length) {
       for (const uid of newCohortModal.value.selIds) {
         try {
@@ -937,14 +938,18 @@ async function submitNewCohort() {
             body: { students: rows.map(r => ({ first_name: r.firstName, last_name: r.lastName, email: r.email })) },
           })
           bulkSummary = resp?.summary || {}
-        } catch (e) { logError('[seats-billing] new-cohort bulk invite failed', e) }
+        } catch (e) { bulkFailed = true; logError('[seats-billing] new-cohort bulk invite failed', e) }
       }
     }
 
     cohorts.value.push(created)
     closeNewCohort()
     fetchExistingStudents()
-    if (bulkSummary) {
+    if (bulkFailed) {
+      // The cohort was created but the bulk POST threw — do NOT let it fall through
+      // to the generic success toast, which would falsely imply students were invited.
+      showToast(`Cohort "${name}" created, but the bulk invite failed — no students were invited. Please try inviting again.`, 'var(--rose)')
+    } else if (bulkSummary) {
       // The bulk endpoint returns a summary, not the created rows — refresh so the
       // new cohort's roster shows the freshly invited students.
       await fetchCohorts()
