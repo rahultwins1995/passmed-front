@@ -1,30 +1,19 @@
 import { fileURLToPath } from 'node:url'
 
-// Resource/blog article slugs per market — mirrors frontend/app/data/resources*.
-// Keep in sync when adding guides so each region's sitemap lists its own posts.
-//
-// Audit PM-31: UK was missing here entirely, so its sitemap silently fell back
-// to RESOURCE_SLUGS.US — 3 dead US article slugs, and none of the UK's 11 real
-// guides. Better fix: generate this list from frontend/app/data/resources-uk.ts
-// (etc.) directly instead of hand-duplicating slugs a second time; keeping the
-// explicit list for now to match how CA/AU/PH are already done here.
-const RESOURCE_SLUGS: Record<string, string[]> = {
-  US: ['abim-boards-study-plan', 'shelf-exam-study-timeline', 'img-us-residency-pathway'],
-  SA: ['fcp-part-1-sa-complete-guide', 'fcog-part-1-sa-complete-guide', 'surgical-primaries-sa-complete-guide', 'diploma-hiv-management-sa-complete-guide', 'fcem-part-1-sa-complete-guide'],
-  UK: ['mrcp-part-2-complete-guide', 'mrcs-part-a-complete-guide', 'frca-primary-complete-guide', 'mrcem-sba-complete-guide', 'mrcgp-akt-complete-guide', 'msra-complete-guide', 'mrcpch-fop-tas-complete-guide', 'mrcpsych-paper-a-complete-guide', 'mrcog-part-1-complete-guide', 'ukmla-akt-complete-guide', 'plab-1-complete-guide'],
-}
 const REGION = (process.env.NUXT_PUBLIC_REGION || 'US').toUpperCase()
-const RESOURCE_URLS = (RESOURCE_SLUGS[REGION] || RESOURCE_SLUGS.US)
-  .map(s => ({ loc: `/resources/${s}`, changefreq: 'monthly' as const, priority: 0.6 }))
 
 // Mirrors SITE_URL_BY_REGION in frontend/app/composables/useSiteUrl.ts and
 // SITE_URL_BY_HOST in frontend/server/routes/robots.txt.ts. Audit PM-30: this
 // sitemap config previously trusted NUXT_PUBLIC_SITE_URL alone, which has
 // shipped wrong (pointing at a pm-frontend-*.vercel.app preview origin) on
 // several markets before — the two files above were already fixed the same
-// way canonicals/robots.txt were. site.url is resolved once at boot (not
-// per-request, unlike useSiteUrl()), so NUXT_PUBLIC_REGION being set per
-// Vercel project is still the real fix — this is the belt-and-braces half.
+// way canonicals/robots.txt were. This value is only the boot-time fallback:
+// server/plugins/site-config.ts overrides it per request from the Host
+// header (same allowlist as useSiteUrl()/robots.txt), so sitemap.xml is
+// correct even when NUXT_PUBLIC_REGION is missing or wrong on a Vercel
+// project — which is exactly what happened on UK. Getting NUXT_PUBLIC_REGION
+// set correctly per project is still worth doing (it drives currency,
+// support hours, pricing, etc., none of which this middleware touches).
 const SITE_URL_BY_REGION: Record<string, string> = {
   US: 'https://www.passmed.com',
   SA: 'https://www.passmed.co.za',
@@ -90,7 +79,6 @@ export default defineNuxtConfig({
       { loc: '/opportunities', changefreq: 'weekly', priority: 0.8 },
       { loc: '/img-pathways', changefreq: 'monthly', priority: 0.7 },
       { loc: '/resources',    changefreq: 'weekly',  priority: 0.7 },
-      ...RESOURCE_URLS,
       { loc: '/about-us',     changefreq: 'monthly', priority: 0.6 },
       { loc: '/faq',          changefreq: 'monthly', priority: 0.6 },
       { loc: '/contact',      changefreq: 'monthly', priority: 0.5 },
@@ -98,9 +86,21 @@ export default defineNuxtConfig({
       { loc: '/privacy',      changefreq: 'yearly',  priority: 0.3 },
     ],
 
-    // Dynamic exam detail pages (/exam/{slug}) — fetched at runtime from Laravel
-    // so newly published exams appear automatically. See the endpoint in
-    // frontend/server/api/__sitemap__/urls.ts.
+    // Dynamic exam detail pages (/exam/{slug}) AND each market's resource/guide
+    // articles (/resources/{slug}) — both resolved per-request from the Host
+    // header so every market gets its own correct URLs (see the handler for
+    // why this replaced a static, build-time resource-slug list here).
     sources: ['/api/__sitemap__/urls'],
+  },
+
+  // Modern build target — emit modern JS instead of transpiling down to ES5 and
+  // shipping legacy polyfills (addresses Lighthouse "Legacy JavaScript" → smaller
+  // bundle, less main-thread work). es2020 is supported by every browser since
+  // ~2020; only truly ancient browsers (IE11) drop off, which this audience does
+  // not use. Config-only — no app logic changes.
+  vite: {
+    build: {
+      target: 'es2020',
+    },
   },
 })

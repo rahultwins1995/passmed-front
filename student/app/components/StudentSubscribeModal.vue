@@ -108,9 +108,10 @@ let stripeElements: any = null
 
 async function mountCard() {
   await nextTick()
-  if (!$stripe || !cardEl.value) return
+  const stripe = await $stripe()
+  if (!stripe || !cardEl.value) return
   unmountCard()
-  stripeElements = $stripe.elements()
+  stripeElements = stripe.elements()
   cardElement.value = stripeElements.create('card', { hidePostalCode: true })
   cardElement.value.mount(cardEl.value)
   cardElement.value.on('change', (e: any) => {
@@ -178,14 +179,15 @@ async function submit() {
       if (!clientSecret) throw new Error('No clientSecret received')
 
       // 2) Confirm the card payment.
-      let { paymentIntent, error } = await $stripe.confirmCardPayment(clientSecret, {
+      const stripe = await $stripe()
+      let { paymentIntent, error } = await stripe.confirmCardPayment(clientSecret, {
         payment_method: { card: cardElement.value, billing_details: { name: fullName, email } },
       })
       if (error) throw new Error(error.message)
 
       // 3) Handle 3-D Secure / SCA challenge if the bank requires it.
       if (paymentIntent && (paymentIntent.status === 'requires_action' || paymentIntent.status === 'requires_source_action')) {
-        const next = await $stripe.handleNextAction({ clientSecret })
+        const next = await stripe.handleNextAction({ clientSecret })
         if (next.error) throw new Error(next.error.message)
         paymentIntent = next.paymentIntent
       }
