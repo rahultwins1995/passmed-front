@@ -21,7 +21,12 @@ export default defineEventHandler(async (event) => {
   const cfg = useRuntimeConfig()
   const token = cfg.airtableToken as string
   const target = resolveTarget(event)
-  if (!token || !target) throw createError({ statusCode: 500, statusMessage: 'Board not configured for this site' })
+  // Opportunities isn't configured on this market (no Airtable token/base) — this is a
+  // per-market CONFIG state, not a server fault. Return 404 so the form shows a clean
+  // "not available" message and Sentry drops it (4xx), instead of a 500 that reports as
+  // a crash (Sentry PASSMED-5/6). Mirrors the GET (listings.get.ts), which already
+  // degrades to an empty board on unconfigured markets.
+  if (!token || !target) throw createError({ statusCode: 404, statusMessage: 'Posting is not available on this site.' })
 
   const b = (await readBody(event)) || {}
 

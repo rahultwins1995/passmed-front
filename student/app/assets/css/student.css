@@ -3366,6 +3366,16 @@ body.single .a-scroll {
   border-right: none
 }
 
+/* Item 839: CMS stem lists render inside v-html, which the universal * { padding:0 }
+   reset strips of indentation — bullets/numbers overflow past the left margin.
+   Restore list indentation on the stem content containers (runner + review). */
+.stem-text ul, .stem-text ol,
+.stem-question ul, .stem-question ol,
+.q-text ul, .q-text ol,
+.q-preview ul, .q-preview ol {
+  padding-left: 1.25em;
+}
+
 .sd-k {
   color: var(--placeholder);
   font-size: 0.71rem;
@@ -5214,6 +5224,16 @@ body.single .a-scroll {
 
 .sd-cell:last-child {
   border-right: none
+}
+
+/* Item 839: CMS stem lists render inside v-html, which the universal * { padding:0 }
+   reset strips of indentation — bullets/numbers overflow past the left margin.
+   Restore list indentation on the stem content containers (runner + review). */
+.stem-text ul, .stem-text ol,
+.stem-question ul, .stem-question ol,
+.q-text ul, .q-text ol,
+.q-preview ul, .q-preview ol {
+  padding-left: 1.25em;
 }
 
 .sd-k {
@@ -12553,7 +12573,7 @@ body {
   padding: 9px 12px;
   font-size: 0.77rem;
   font-weight: 700;
-  color: var(--ink);
+  color: var(--teal);
   cursor: pointer;
   display: flex;
   align-items: center;

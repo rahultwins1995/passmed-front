@@ -9,6 +9,15 @@ useHead({
     tagPosition: 'head',
   }],
 })
+
+// Marketing pages are ALWAYS light. Dark mode is a portal-only opt-in (student/
+// institute), but `body.dark` lives on the shared <body> and can leak onto the
+// marketing site via SPA navigation (or a not-yet-cleared logout), turning it dark
+// and hiding light-designed sections. Force it off whenever this layout mounts;
+// the portal layouts re-apply it from the saved preference on their own mount.
+onMounted(() => {
+  if (import.meta.client) document.body.classList.remove('dark')
+})
 </script>
 
 <template>

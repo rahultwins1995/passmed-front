@@ -53,6 +53,8 @@ interface ApiQuestionRow {
     difficulty?: string | null
     category_id?: number | null
     category?: { id: number; name: string } | null
+    subject_id?: number | null
+    subject?: { id: number; name: string } | null   // item 840: subject-only questions
     // Explanation fields — now included in the backend select
     explanation?:       string | null  // maps to exp
     note?:              string | null  // maps to kp (key point)
@@ -87,10 +89,10 @@ function mapApiRow(row: ApiQuestionRow): Question {
   )
   const ans = correctIdx >= 0 ? String.fromCharCode(65 + correctIdx) : ''
 
-  // Topic badge — derived from Category name. The old topic_id field has
-  // been deprecated (rolled into category). "General" is the final
+  // Topic badge — Category name, else SUBJECT name (most questions are
+  // subject-only, so category is null — item 840). "General" is the final
   // fallback so the UI never shows blank.
-  const topicName = row.question?.category?.name || 'General'
+  const topicName = row.question?.category?.name || row.question?.subject?.name || 'General'
 
   // Difficulty — pass the raw backend value straight through. The badge
   // label + colour are derived from this value in the runner template

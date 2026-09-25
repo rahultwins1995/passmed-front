@@ -382,6 +382,14 @@ function badgeStyle(e: BillingExam) {
   if (e.status === 'expired') return 'background:var(--surface-2,#e5e7eb);color:var(--ink-dim,#6b7280)'  // gray
   return 'background:#e0f2fe;color:#0369a1'                                     // neutral blue (Purchased)
 }
+// Variant class for the two badges whose light colors are inline (institute amber,
+// purchased blue) — lets the scoped `body.dark` rules give them a dark override,
+// which a plain CSS rule cannot do against an inline style.
+function badgeVariant(e: BillingExam) {
+  if (e.source === 'institute') return 'bb-institute'
+  if (!e.is_current && e.status !== 'expired') return 'bb-purchased'
+  return ''
+}
 
 // ─── Hydrate profile fields from the auth user as soon as it's available ───
 watchEffect(() => {
@@ -1050,7 +1058,7 @@ async function submitSetPassword() {
       <template v-else>
         <div v-for="e in billingExams" :key="e.exam_id" class="billing-card">
           <div>
-            <span class="billing-badge" :style="badgeStyle(e)">{{ badgeText(e) }}</span>
+            <span class="billing-badge" :class="badgeVariant(e)" :style="badgeStyle(e)">{{ badgeText(e) }}</span>
             <div class="billing-name">{{ e.name }}</div>
             <div class="billing-detail">
               {{ planLabel(e) }}
@@ -1323,6 +1331,12 @@ async function submitSetPassword() {
 </template>
 
 <style scoped>
+/* Dark-mode overrides for the two billing badges whose light colors are inline
+   (badgeStyle): amber "Institute" and blue "Purchased". !important is needed to beat
+   the inline style; scoped to dark mode and to each variant so light mode is untouched. */
+body.dark .billing-badge.bb-institute { background: #78350f !important; color: #fde68a !important; }
+body.dark .billing-badge.bb-purchased { background: #0c4a6e !important; color: #bae6fd !important; }
+
 .btn-primary[disabled] {
   opacity: 0.6;
   cursor: not-allowed;

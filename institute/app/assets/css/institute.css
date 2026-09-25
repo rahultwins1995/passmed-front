@@ -1180,12 +1180,10 @@ body {
 ───────────────────────────────────────── */
 .topic-grid {
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: 1fr;   /* single column — 2 columns cut the list off (item 831) */
   gap: 8px;
-
-  @media (max-width: 500px) {
-    grid-template-columns: 1fr;
-  }
+  max-height: 300px;            /* scroll the list instead of clipping it */
+  overflow-y: auto;
 }
 
 .topic-row {

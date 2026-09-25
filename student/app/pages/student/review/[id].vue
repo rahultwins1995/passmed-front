@@ -104,8 +104,10 @@ function mapApiQ(row: any, idx: number): ReviewQuestion {
   const topic =
     (typeof q.topic === 'object' && q.topic?.name) ||
     (typeof q.category === 'object' && q.category?.name) ||
+    (typeof q.subject === 'object' && q.subject?.name) ||   // item 840: subject-only questions
     (typeof q.topic === 'string' ? q.topic : '') ||
     (typeof q.category === 'string' ? q.category : '') ||
+    (typeof q.subject === 'string' ? q.subject : '') ||
     '—'
 
   return {

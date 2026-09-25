@@ -850,14 +850,6 @@ async function launchSession() {
           </span>
           <div>
             <div class="q-counter-lbl">questions selected</div>
-            <div class="q-counter-total">
-              out of
-              <template v-if="liveCountLoading">
-                <span class="qb-sk-pulse" style="width:50px;height:0.7em;display:inline-block;vertical-align:middle;border-radius:3px;margin:0 4px"></span>
-              </template>
-              <template v-else>{{ availableCount.toLocaleString() }}</template>
-              total for {{ activeExam.name }}
-            </div>
           </div>
         </div>
       </div>
@@ -1006,6 +998,12 @@ async function launchSession() {
           </div>
 
           <div class="tax-tree">
+            <!-- Column headers for the two right-aligned stats: unseen/total + performance. -->
+            <div class="tax-col-head" style="display:flex;align-items:center;gap:8px;padding:2px 4px 7px;font-size:0.58rem;font-weight:800;text-transform:uppercase;letter-spacing:0.4px;color:var(--ink-dim);border-bottom:1px solid var(--border);margin-bottom:4px">
+              <span style="flex:1"></span>
+              <span>Questions available</span>
+              <span>% Performance</span>
+            </div>
             <div v-for="cat in filteredTaxonomy" :key="cat.id">
               <div class="cat-row" role="button" tabindex="0" @click="onCatRowClick(cat)" @keydown.enter="onCatRowClick(cat)" @keydown.space.prevent="onCatRowClick(cat)" :aria-expanded="cat.subs.length ? openCats.has(cat.id) : undefined">
                 <!-- Categories WITH sub-topics drill in via a +/− affordance
@@ -1024,12 +1022,11 @@ async function launchSession() {
                 <div v-else class="cb" :class="getCatCheckState(cat)"
                   @click.stop="toggleCat(cat.id)"></div>
                 <span class="cat-name">{{ cat.name }}</span>
+                <span class="cat-unseen" :title="(cat.unseen ?? cat.total) + ' unseen of ' + cat.total">{{ cat.unseen ?? cat.total }}/{{ cat.total }}</span>
                 <span class="cat-pct"
                   :style="{ background: getPctColor(cat.pct) + '22', color: getPctColor(cat.pct) }">
                   {{ cat.pct }}%
                 </span>
-                <span class="cat-unseen" :title="(cat.unseen ?? cat.total) + ' unseen of ' + cat.total">{{ cat.unseen ?? cat.total }}/{{ cat.total }}</span>
-                <span class="cat-count" title="Questions matching the current filters">{{ cat.count }}q</span>
               </div>
               <div class="sub-list" :class="{ open: openCats.has(cat.id) }">
                 <div v-for="sub in cat.subs" :key="sub.id"
@@ -1037,10 +1034,9 @@ async function launchSession() {
                   <div style="width:10px;flex-shrink:0"></div>
                   <div class="cb" :class="taxState[cat.id]?.has(sub.id) ? 'checked' : ''"></div>
                   <span class="sub-name">{{ sub.name }}</span>
+                  <span class="cat-unseen" :title="(sub.unseen ?? sub.total) + ' unseen of ' + sub.total">{{ sub.unseen ?? sub.total }}/{{ sub.total }}</span>
                   <span v-if="sub.pct !== undefined" class="cat-pct"
                     :style="{ background: getPctColor(sub.pct) + '22', color: getPctColor(sub.pct) }">{{ sub.pct }}%</span>
-                  <span class="cat-unseen" :title="(sub.unseen ?? sub.total) + ' unseen of ' + sub.total">{{ sub.unseen ?? sub.total }}/{{ sub.total }}</span>
-                  <span class="sub-count">{{ sub.count }}q</span>
                 </div>
               </div>
             </div>

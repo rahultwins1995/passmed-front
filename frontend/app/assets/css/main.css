@@ -3399,8 +3399,14 @@ footer {
   font-weight: 800;
   text-transform: uppercase;
   letter-spacing: 2.5px;
-  color: #fff;
+  color: var(--ink);   /* default: dark — visible on LIGHT sections (was blanket #fff → invisible) */
   margin-bottom: 14px;
+}
+
+/* White only on the DARK bands (hero + contact form), where #fff is correct. */
+#page-institutions .page-hero .eyebrow,
+#page-institutions .contact-wrap .eyebrow {
+  color: #fff;
 }
 
 #page-institutions .eyebrow::before {

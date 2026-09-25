@@ -530,8 +530,11 @@ const reassignId = ref<number | null>(null)
 watch(step, async (s) => {
   // Reset scroll to the top on every step change so the wizard always opens
   // at the step header rather than wherever the previous step was scrolled.
+  // Wait for the new step's DOM (nextTick + rAF), then scroll INSTANTLY: a smooth
+  // scroll from a deep position (the long Review-questions step) gets interrupted
+  // when the shorter next step (Settings) shrinks the page, leaving it mid-page.
   if (import.meta.client) {
-    requestAnimationFrame(() => window.scrollTo({ top: 0, behavior: 'smooth' }))
+    nextTick(() => requestAnimationFrame(() => window.scrollTo({ top: 0, behavior: 'auto' })))
   }
   if (s === 2 && selectedExamId.value) {
     fetchExamQuestions()

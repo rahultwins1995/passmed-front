@@ -48,6 +48,13 @@ export const useAuth = () => {
   async function logout() {
     try { await api('/logout', { method: 'POST' }) } catch (_) { /* ignore */ }
     user.value = null
+    // Dark mode is a portal-only opt-in — reset to light on logout so the marketing/
+    // home page isn't left dark. Direct DOM + storage reset ('pm_theme' is the
+    // useDarkMode key) so this doesn't depend on the student-layer composable.
+    if (import.meta.client) {
+      document.body.classList.remove('dark')
+      try { localStorage.setItem('pm_theme', '0') } catch { /* storage blocked */ }
+    }
     await navigateTo('/')
   }
 

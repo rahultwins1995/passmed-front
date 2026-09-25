@@ -75,6 +75,21 @@ export default defineNuxtPlugin(async (nuxtApp) => {
     // skips 4xx — the client just lacked the same guard. 5xx (incl. real backend
     // outages surfaced as "Unable to load this exam right now") still reports.
     beforeSend(event, hint) {
+      // Non-Error promise rejections carrying a DOM Event (CustomEvent is an Event
+      // subclass) — these come from browser extensions / third-party embeds on Safari
+      // (Sentry PASSMED-W "Event `CustomEvent` … captured as promise rejection"),
+      // have no app stack, and are unactionable. Real app errors are Error instances,
+      // never Event instances, so this never hides a genuine bug.
+      const ex = hint?.originalException as unknown
+      if (typeof Event !== 'undefined' && ex instanceof Event) return null
+      // Chunk-import failures (stale-chunk-after-deploy) reach Sentry via BOTH the
+      // unhandledrejection global handler AND Vue's error handler; drop by message
+      // here so suppression doesn't depend on ignoreErrors matching a particular
+      // capture path. chunk-error.client.ts already hard-reloads onto the new build.
+      const exMsg = (ex as { message?: string } | undefined)?.message
+        ?? (typeof ex === 'string' ? ex : '')
+      const msg = `${exMsg} ${event?.exception?.values?.[0]?.value ?? ''}`
+      if (/importing a module script failed|failed to fetch dynamically imported module|error loading dynamically imported module|not a valid javascript mime type|unable to preload css/i.test(msg)) return null
       const status = (hint?.originalException as { statusCode?: number } | undefined)?.statusCode
       if (typeof status === 'number' && status >= 400 && status < 500) return null
       return event

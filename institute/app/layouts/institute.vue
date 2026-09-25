@@ -28,8 +28,12 @@ const { selectedCohortId, cohortList } = useCohortFilter()
 // permission so it isn't shown to users who can't open the page.
 const { can } = useInstitutePermissions()
 const { unreadCount: notifUnread } = useInstituteNotifs()
+// Always render on the dashboard (item 832): the selector used to hide when the
+// institution had zero cohorts (cohortList.length > 0). Show it with the "All
+// cohorts" default regardless, so it's reliably visible; cohorts populate into it
+// once the dashboard fetch returns any.
 const showCohortFilter = computed(() =>
-  route.path.replace(/\/$/, '') === '/institute' && cohortList.value.length > 0)
+  route.path.replace(/\/$/, '') === '/institute')
 
 // Idle-session countdown. Lives on the layout so it covers every portal page —
 // the session can expire while you're anywhere, not just on Settings.

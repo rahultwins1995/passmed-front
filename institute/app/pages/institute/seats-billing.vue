@@ -915,6 +915,7 @@ async function submitNewCohort() {
     let skipped = 0
     let bulkSummary: any = null
     let bulkFailed = false
+    let bulkResults: any[] = []
     if (newCohortModal.value.inviteMode === 'existing' && newCohortModal.value.selIds.length) {
       for (const uid of newCohortModal.value.selIds) {
         try {
@@ -938,6 +939,7 @@ async function submitNewCohort() {
             body: { students: rows.map(r => ({ first_name: r.firstName, last_name: r.lastName, email: r.email })) },
           })
           bulkSummary = resp?.summary || {}
+          bulkResults = Array.isArray(resp?.results) ? resp.results : []
         } catch (e) { bulkFailed = true; logError('[seats-billing] new-cohort bulk invite failed', e) }
       }
     }
@@ -961,6 +963,14 @@ async function submitNewCohort() {
       if (s.no_seats)  parts.push(`${s.no_seats} seat-full`)
       showToast(`Cohort "${name}" created${parts.length ? ' · ' + parts.join(' · ') : ''}`,
         s.invited ? 'var(--teal)' : 'var(--amber)')
+      // Surface the rows that were NOT invited (duplicate/invalid/no-seat) so the
+      // admin can act on them — not just the aggregate count above.
+      const problems = bulkResults.filter((r:any) => r && r.status && r.status !== 'invited')
+      if (problems.length) {
+        bulkResultRows.value = problems
+        bulkResultCohortName.value = name
+        showBulkResults.value = true
+      }
     } else {
       const skipMsg = skipped ? ` (${skipped} skipped)` : ''
       showToast(added
@@ -984,6 +994,17 @@ function showToast(msg: string, _color = '') {
   toast.value = msg
   setTimeout(() => (toast.value = ''), 2400)
 }
+
+// ── New-cohort bulk-invite: per-row results ──────────────────────────────────
+// The bulk endpoint returns a per-row `results` array; after a new-cohort bulk
+// invite we surface the rows that were NOT invited (duplicate/invalid/no-seat)
+// with their reason, so the admin sees exactly which rows need attention instead
+// of only an aggregate count.
+const showBulkResults      = ref(false)
+const bulkResultRows       = ref<any[]>([])
+const bulkResultCohortName = ref('')
+const bulkStatusLabel = (s: string) =>
+  s === 'duplicate' ? 'Duplicate' : s === 'no_seats' ? 'No seat' : s === 'invalid' ? 'Invalid' : s
 </script>
 
 <template>
@@ -1793,6 +1814,33 @@ function showToast(msg: string, _color = '') {
       </div>
     </Transition>
 
+    <!-- New-cohort bulk-invite: per-row results (rows that were NOT invited) -->
+    <Transition name="modal">
+      <div v-if="showBulkResults" class="modal-overlay" @click.self="showBulkResults = false">
+        <div class="nc-modal" style="max-width:460px;">
+          <div class="nc-header">
+            <div>
+              <div class="nc-title">Some rows weren't invited</div>
+              <div class="nc-sub">Cohort “{{ bulkResultCohortName }}” — {{ bulkResultRows.length }} row{{ bulkResultRows.length === 1 ? '' : 's' }} need attention</div>
+            </div>
+            <button type="button" class="nc-close" @click="showBulkResults = false" aria-label="Close">
+              <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+            </button>
+          </div>
+          <div class="nc-body" style="max-height:340px;overflow:auto;">
+            <div v-for="(r, i) in bulkResultRows" :key="i" class="bulk-res-row">
+              <span class="bulk-res-email">{{ r.email || '—' }}</span>
+              <span class="bulk-res-badge" :class="`br-${r.status}`">{{ bulkStatusLabel(r.status) }}</span>
+              <span v-if="r.message" class="bulk-res-msg">{{ r.message }}</span>
+            </div>
+          </div>
+          <div class="nc-footer">
+            <button type="button" class="btn-send" @click="showBulkResults = false">Done</button>
+          </div>
+        </div>
+      </div>
+    </Transition>
+
     <!-- Toast -->
     <Transition name="toast">
       <div v-if="toast" class="toast">{{ toast }}</div>
@@ -1811,6 +1859,26 @@ function showToast(msg: string, _color = '') {
 </template>
 
 <style scoped>
+/* New-cohort bulk-invite per-row results modal */
+.bulk-res-row {
+  display: flex; align-items: center; gap: 8px; flex-wrap: wrap;
+  padding: 8px 0; border-bottom: 1px solid var(--line, #eef0f2);
+  font-size: 0.82rem;
+}
+.bulk-res-row:last-child { border-bottom: none; }
+.bulk-res-email { font-weight: 600; color: var(--ink); }
+.bulk-res-badge {
+  font-size: 0.68rem; font-weight: 700; padding: 2px 7px; border-radius: 999px;
+  text-transform: uppercase; letter-spacing: 0.02em;
+}
+.bulk-res-badge.br-duplicate { background: #fef3c7; color: #b45309; }
+.bulk-res-badge.br-invalid   { background: #fee2e2; color: #b91c1c; }
+.bulk-res-badge.br-no_seats  { background: #e0e7ff; color: #3730a3; }
+.bulk-res-msg { color: var(--ink-dim, #6b7280); font-size: 0.76rem; flex-basis: 100%; }
+body.dark .bulk-res-badge.br-duplicate { background: #78350f; color: #fde68a; }
+body.dark .bulk-res-badge.br-invalid   { background: #7f1d1d; color: #fecaca; }
+body.dark .bulk-res-badge.br-no_seats  { background: #312e81; color: #c7d2fe; }
+
 .sb-page { padding: 18px 22px; max-width: 1280px; }
 .fade-in { animation: fadeUp .3s cubic-bezier(.16,1,.3,1) both; }
 @keyframes fadeUp { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }

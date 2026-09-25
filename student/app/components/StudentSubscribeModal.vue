@@ -180,6 +180,9 @@ async function submit() {
 
       // 2) Confirm the card payment.
       const stripe = await $stripe()
+      // Guard (edge-only): if the lazy loader resolves null (missing key / load fail)
+      // surface a clean message via the catch below instead of a raw TypeError.
+      if (!stripe) throw new Error('Payment could not start — please refresh and try again.')
       let { paymentIntent, error } = await stripe.confirmCardPayment(clientSecret, {
         payment_method: { card: cardElement.value, billing_details: { name: fullName, email } },
       })
