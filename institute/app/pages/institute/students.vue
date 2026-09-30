@@ -418,7 +418,7 @@ function exportCsv() {
     a.remove()
     setTimeout(() => URL.revokeObjectURL(url), 4000)
   }
-  showToast('CSV exported ✓', 'var(--green)')
+  showToast('Exported! — passmed-students.csv', 'var(--green)')
 }
 
 // Resident invites are managed on the Seats & Cohorts page (per-cohort invite

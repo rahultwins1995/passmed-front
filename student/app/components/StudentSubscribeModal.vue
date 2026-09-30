@@ -510,7 +510,7 @@ useFocusTrap(submBoxEl, isOpen, { onEscape: () => { if (!submitting.value) close
   text-transform: uppercase; letter-spacing: 1px; outline: none;
 }
 .subm-coupon-row input:focus { border-color: var(--teal-border); }
-.subm-coupon-apply { padding: 0 16px; background: var(--ink); color: #fff; border: none; border-radius: 8px; font-weight: 700; font-size: 0.8rem; cursor: pointer; font-family: inherit; }
+.subm-coupon-apply { padding: 0 16px; background: var(--teal); color: #fff; border: none; border-radius: 8px; font-weight: 700; font-size: 0.8rem; cursor: pointer; font-family: inherit; }
 .subm-coupon-apply:hover { background: var(--teal); }
 .subm-coupon-applied {
   display: flex; align-items: center; justify-content: space-between; gap: 8px;

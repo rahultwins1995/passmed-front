@@ -34,6 +34,7 @@ type Dash = {
   mock_results: Mock[]
   heatmap: number[][]
   heatmap_weeks?: string[]   // per-column start-of-week labels (e.g. "1 Jul") from the API
+  heatmap_dates?: string[][] // item 842: per-cell [week][day] date labels for the hover tooltip
   activity_feed: Feed[]
 }
 
@@ -266,7 +267,7 @@ function showToast(text: string, color = 'var(--teal)') {
 const { downloading: exporting, downloadReport } = useReportDownload()
 async function exportReport() {
   const r = await downloadReport({ type: 'cohort', range: 'year' }, 'cohort-performance-summary.pdf')
-  if (r.ok) showToast(`${r.filename} downloaded`, 'var(--teal)')
+  if (r.ok) showToast(`Exported! — ${r.filename}`, 'var(--teal)')
   else if (r.error) showToast(r.error, 'var(--rose)')
 }
 </script>
@@ -607,7 +608,7 @@ async function exportReport() {
                 <div v-for="(val, dd) in week" :key="dd"
                   :class="'hm' + heatLevel(val)"
                   style="height:16px;border-radius:2px;"
-                  :title="`${val} questions`"></div>
+                  :title="`${data.heatmap_dates?.[wi]?.[dd] ? data.heatmap_dates[wi][dd] + ' · ' : ''}${val} questions`"></div>
               </div>
             </div>
           </div>

@@ -32,7 +32,12 @@ function mapApiSession(s: any): Session {
   const correct  = s.score_correct || 0
   const incorrect= s.score_incorrect || 0
   const skipped  = s.score_skipped || 0
-  const score    = total > 0 ? Math.round((correct / total) * 100) : 0
+  // Item 846: score = accuracy over ANSWERED questions (correct/(correct+incorrect)),
+  // NOT correct/question_count — otherwise 15 right of 20 answered in a 200-q session
+  // reads 8% instead of 75%. Skipped/unseen are excluded from the denominator (mirrors
+  // the backend's graded-results definition).
+  const answered = correct + incorrect
+  const score    = answered > 0 ? Math.round((correct / answered) * 100) : 0
   const name     = s.exam?.name || ''
   return {
     id: s.id, status: s.status, mode: s.mode,
@@ -184,10 +189,14 @@ const grouped = computed(() => {
 const stats = computed(() => {
   const f = filtered.value
   const totalQ = f.reduce((a, s) => a + s.total, 0)
-  const avgSc  = f.length ? Math.round(f.reduce((a, s) => a + s.score, 0) / f.length) : 0
+  // Item 846: Avg score is the mean of COMPLETED sessions only — in-progress /
+  // saved-for-later sessions (partial or 0 score) must not drag the average down.
+  // They stay in the list (with Resume), just out of this stat.
+  const completed = f.filter(s => s.status === 'completed')
+  const avgSc  = completed.length ? Math.round(completed.reduce((a, s) => a + s.score, 0) / completed.length) : 0
   const totalMins = f.reduce((a, s) => a + parseInt(s.duration), 0)
   const timeStr = totalMins >= 60 ? `${Math.round(totalMins/60)}h ${totalMins%60}m` : `${totalMins}m`
-  return { count: f.length, totalQ, avgSc: f.length ? avgSc + '%' : '—', time: timeStr }
+  return { count: f.length, totalQ, avgSc: completed.length ? avgSc + '%' : '—', time: timeStr }
 })
 
 // Per-card loading flag — driven by toggleCard so the breakdown shows a

@@ -211,7 +211,7 @@ function showToast(text: string, color = 'var(--teal)') {
 const { downloading: exporting, downloadReport } = useReportDownload()
 async function exportReport() {
   const r = await downloadReport({ type: 'mockexam', range: 'year' }, 'mock-exam-analysis.pdf')
-  if (r.ok) showToast(`${r.filename} downloaded`, 'var(--teal)')
+  if (r.ok) showToast(`Exported! — ${r.filename}`, 'var(--teal)')
   else if (r.error) showToast(r.error, 'var(--rose)')
 }
 

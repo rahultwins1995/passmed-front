@@ -43,6 +43,17 @@ export default defineNuxtPlugin(async (nuxtApp) => {
       /error loading dynamically imported module/i,
       /not a valid javascript mime type/i,
       /unable to preload css/i,
+      // Item 844 (Sentry PASSMED-X, /_nuxt, 0 users): "#entry" bare module-specifier
+      // errors. Same benign stale-chunk-after-deploy class — a cached index.html / CDN
+      // chunk imports "#entry", which the new build resolves differently, so an old
+      // load fails to resolve the specifier. chunk-error.client.ts hard-reloads real
+      // users onto the new build; these only reach Sentry from bots/stale caches (0
+      // users). Browser wordings: Chrome "Failed to resolve module specifier",
+      // Safari "module specifier … does not start with", Firefox "bare specifier … not
+      // remapped". Scoped to specifier-resolution failures only — never app logic.
+      /failed to resolve module specifier/i,
+      /module specifier.*does not start with/i,
+      /bare specifier.*was not remapped/i,
       // Native mobile-app WebView bridge noise (iOS WKWebView / Android / RN WebView) —
       // the embedding app injects these APIs; they are NOT the web app's own code.
       /webkit\.messageHandlers/i,
@@ -90,6 +101,9 @@ export default defineNuxtPlugin(async (nuxtApp) => {
         ?? (typeof ex === 'string' ? ex : '')
       const msg = `${exMsg} ${event?.exception?.values?.[0]?.value ?? ''}`
       if (/importing a module script failed|failed to fetch dynamically imported module|error loading dynamically imported module|not a valid javascript mime type|unable to preload css/i.test(msg)) return null
+      // Item 844: "#entry" bare module-specifier resolution failures (stale-chunk-
+      // after-deploy, 0 users). Same benign class as the chunk-import drops above.
+      if (/failed to resolve module specifier|module specifier.*does not start with|bare specifier.*was not remapped/i.test(msg)) return null
       const status = (hint?.originalException as { statusCode?: number } | undefined)?.statusCode
       if (typeof status === 'number' && status >= 400 && status < 500) return null
       return event

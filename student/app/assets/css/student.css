@@ -14512,3 +14512,6 @@ main:focus { outline: none; }
   .skip-link { transition: none; }
 }
 
+
+
+body.dark .subm-card { background: #fff; border-color: #d4dde6; }
