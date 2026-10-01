@@ -360,8 +360,10 @@ async function checkoutApplyCoupon () {
     if (response.status === 'success' && response.data) {
       couponApplied.value = {
         code: response.data.code,
-        desc: response.data.desc,
-        discount: response.data.discount,
+        // NEW-99: the backend returns `description` + `discount_value` (not desc/discount),
+        // so the label rendered "undefined" — map the real field names.
+        desc: response.data.description ?? response.data.desc,
+        discount: response.data.discount_value ?? response.data.discount,
         discount_amount: response.data.discount_amount,
       }
       couponError.value = false
@@ -501,6 +503,11 @@ watch(selectedPlan, (p) => {
 
 /* ================== STRIPE CARD ================== */
 const cardError    = ref('')
+// NEW-16: once the card has been charged in this checkout, keep the succeeded
+// PaymentIntent id here. If the grant (signup/addstudentexam) then fails, a retry
+// REUSES this id and re-runs only the grant — it never creates/confirms a second
+// charge. Cleared once the grant finally succeeds.
+const paidPiId     = ref(null)
 const cardComplete = ref(false)
 const cardElement  = ref(null)
 const checkoutRef  = ref(null)   // <CheckoutForm> instance; exposes cardEl mount node
@@ -680,7 +687,12 @@ async function submitSignup (method = 'email') {
     // below its minimum charge ("amount must be ≥ minimum charge"), so for a
     // free order we skip Stripe entirely (no card, no PaymentIntent) and let the
     // signup/addstudentexam call grant access with payment_intent_id = null.
-    if (signupPlan.value !== 'trial' && total.value > 0) {
+    if (signupPlan.value !== 'trial' && total.value > 0 && paidPiId.value) {
+      // NEW-16: the card was already charged on a previous attempt whose grant failed.
+      // Reuse that PaymentIntent and retry ONLY the grant below — never create/confirm
+      // a second charge (that was the double-charge / orphan-payment bug).
+      paymentIntentId = paidPiId.value
+    } else if (signupPlan.value !== 'trial' && total.value > 0) {
       if (!cardComplete.value) {
         cardError.value = 'Please enter complete card details'
         return
@@ -746,6 +758,9 @@ async function submitSignup (method = 'email') {
         throw new Error('Payment status: ' + (paymentIntent?.status || 'unknown'))
       }
       paymentIntentId = paymentIntent.id
+      // NEW-16: remember the successful charge so a failed grant can be retried
+      // without charging the card again.
+      paidPiId.value = paymentIntentId
     }
 
     // === SIGNUP / SUBSCRIBE ===
@@ -824,6 +839,10 @@ async function submitSignup (method = 'email') {
         throw new Error(message)
       }
     }
+
+    // NEW-16: grant succeeded — clear the remembered PaymentIntent so a later, separate
+    // order starts a fresh charge rather than reusing this one.
+    paidPiId.value = null
 
     // Standard GA4 ecommerce: a REAL paid subscription (Stripe charge succeeded).
     // Trial signups don't pay, and a 100%-off coupon skips Stripe entirely
