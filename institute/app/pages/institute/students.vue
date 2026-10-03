@@ -4,6 +4,8 @@
 // mutation on this page; the same rules are enforced server-side by the
 // perm: middleware, so hiding a button is UX, not the security boundary.
 const { canEdit, readOnly } = useInstitutePermissions()
+// Moving students between cohorts is a Seats & Cohorts action (edit).
+const canAssignCohort = computed(() => canEdit('seats_cohorts'))
 const PERM_AREA = 'students' as const
 
 // /institute/students — live data from /api-institute/v1/testinstitutions
@@ -19,7 +21,9 @@ const route = useRoute()
 // 'none' = Not Started — a student who has attempted 0 questions has no performance
 // signal, so they're neither "On Track" nor "At Risk"; they get their own state and
 // are excluded from every risk count and the cohort average.
-type Risk  = 'high' | 'medium' | 'low' | 'none'
+// 'pending' = Pending Data — started, but fewer than 100 questions answered: too
+// little to judge, so (like Not Started) it is never counted as at risk or on track.
+type Risk  = 'high' | 'medium' | 'low' | 'pending' | 'none'
 type Trend = 'up' | 'down' | 'flat'
 
 type Student = {
@@ -95,6 +99,8 @@ function mapStudent(raw: any, idx: number): Student {
     const r = String(raw.risk_level).toLowerCase()
     if (r === 'high')   risk = 'high'
     else if (r === 'medium' || r === 'med') risk = 'medium'
+    else if (r === 'pending') risk = 'pending'
+    else if (r === 'not_started') risk = 'none'
   } else {
     if (score < mediumFloor.value) risk = 'high'
     else if (score < passMark.value) risk = 'medium'
@@ -106,7 +112,7 @@ function mapStudent(raw: any, idx: number): Student {
   // flag everyone. A non-zero score is definitive proof the student started, so it
   // always wins. (Once questions_done is reliably populated, qs>0 will also count.)
   const qsDone = Number(raw.questions_done ?? raw.qs ?? raw.total_questions ?? 0)
-  if (qsDone <= 0 && score <= 0) risk = 'none'
+  if (!raw.risk_level && qsDone <= 0 && score <= 0) risk = 'none'
 
   let trend: Trend = 'flat'
   if (raw.trend) {
@@ -122,8 +128,9 @@ function mapStudent(raw: any, idx: number): Student {
     initials:   initialsFor(name),
     avatarUrl:  raw.avatar_url ?? null,
     bg:         gradientFor(name),
-    // Cohort column: prefer the real cohort name (PG2/PG3), fall back to grad year.
-    year:       raw.cohort ?? raw.year ?? raw.pgy ?? '—',
+    // Cohort column: the real cohort name, or "Unassigned" for students not yet
+    // placed in one (e.g. joined with an invite code). Grad year is no stand-in.
+    year:       raw.cohort || 'Unassigned',
     score,
     qs:         qsDone,
     streak:     Number(raw.streak ?? raw.current_streak ?? 0),
@@ -161,7 +168,7 @@ onMounted(loadStudents)
 // ── Filters / sorting ────────────────────────────────────────────────────────
 const search = ref('')
 const cohort = ref<string>('All')
-const risk   = ref<'all' | 'atrisk' | 'high' | 'medium' | 'low' | 'none'>('all')
+const risk   = ref<'all' | 'atrisk' | 'high' | 'medium' | 'low' | 'pending' | 'none'>('all')
 const sortKey = ref<SortKey>('risk')
 const sortDir = ref<'asc' | 'desc'>('asc')
 const selected = ref<Set<string | number>>(new Set())
@@ -183,7 +190,7 @@ function openDrawer(s: Student) {
 // ── Filters ↔ URL (two-way) ──────────────────────────────────────────────────
 // Read on load: ?filter=atrisk|high|medium|low (the dashboard's At-Risk card
 // deep-links to ?filter=atrisk) and ?cohort=<year>.
-const RISK_VALUES = ['atrisk', 'high', 'medium', 'low'] as const
+const RISK_VALUES = ['atrisk', 'high', 'medium', 'low', 'pending', 'none'] as const
 const qFilter = String(route.query.filter ?? '')
 if ((RISK_VALUES as readonly string[]).includes(qFilter)) risk.value = qFilter as typeof risk.value
 const qCohort = String(route.query.cohort ?? '')
@@ -226,10 +233,11 @@ const riskPills: Array<{ value: typeof risk.value; label: string }> = [
   { value: 'high',   label: 'High Risk'     },
   { value: 'medium', label: 'Medium Risk'   },
   { value: 'low',    label: 'On Track'      },
+  { value: 'pending', label: 'Pending Data' },
   { value: 'none',   label: 'Not Started'   },
 ]
 
-const riskRank: Record<string, number> = { high: 0, medium: 1, low: 2, none: 3 }
+const riskRank: Record<string, number> = { high: 0, medium: 1, low: 2, pending: 3, none: 4 }
 
 const filtered = computed<Student[]>(() => {
   const q = search.value.toLowerCase().trim()
@@ -243,7 +251,7 @@ const filtered = computed<Student[]>(() => {
     const matchRisk =
       risk.value === 'all'      ? true
       : risk.value === 'atrisk' ? (s.risk === 'high' || s.risk === 'medium')
-      : s.risk === risk.value                       // 'high' | 'medium' | 'low'
+      : s.risk === risk.value                       // 'high' | 'medium' | 'low' | 'pending' | 'none'
     return matchSearch && matchCohort && matchRisk
   })
 })
@@ -383,6 +391,41 @@ function selectedUserIds(): number[] {
     .filter(s => selected.value.has(s.id) && s.userId)
     .map(s => s.userId as number)
 }
+// ── Bulk "Assign to cohort" ──────────────────────────────────────────────────
+// Cohort list is fetched when the picker is first opened (seats_cohorts view).
+const cohortChoices   = ref<{ id: number; name: string }[]>([])
+const cohortPickerOpen = ref(false)
+const cohortAssignBusy = ref(false)
+async function openCohortPicker() {
+  cohortPickerOpen.value = !cohortPickerOpen.value
+  if (!cohortPickerOpen.value || cohortChoices.value.length) return
+  try {
+    const res: any = await api<any>('/cohorts')
+    cohortChoices.value = (res?.data ?? []).map((c: any) => ({ id: Number(c.id), name: String(c.name ?? '') }))
+  } catch { showToast('Could not load cohorts', 'var(--rose)') }
+}
+async function assignToCohort(c: { id: number; name: string }) {
+  const ids = selectedUserIds()
+  if (!ids.length) { showToast('Selected students have no account yet', 'var(--amber)'); return }
+  if (cohortAssignBusy.value) return
+  cohortAssignBusy.value = true
+  try {
+    const res: any = await api<any>(`/cohorts/${c.id}/students/assign`, { method: 'POST', body: { user_ids: ids } })
+    if (res?.status === 'success') {
+      showToast(res.message || `Added to ${c.name}`)
+      selected.value = new Set()
+      cohortPickerOpen.value = false
+      loadStudents()
+    } else {
+      showToast(res?.message || 'Could not assign to cohort', 'var(--rose)')
+    }
+  } catch (e: any) {
+    showToast(e?.data?.message || e?.data?.msg || 'Could not assign to cohort', 'var(--rose)')
+  } finally {
+    cohortAssignBusy.value = false
+  }
+}
+
 // Carry the selection into the Assign-Exams wizard as pre-chosen recipients.
 function bulkAssign() {
   const ids = selectedUserIds()
@@ -459,6 +502,8 @@ function riskBadge(r: Student['risk']) {
   // Not Started — neutral grey, deliberately NOT green, so a 0-attempt student is
   // never mistaken for "On Track". Uses theme surface/ink tokens so it flips in dark mode.
   if (r === 'none')   return { label: 'Not Started', bg: 'var(--surface-hi)',  fg: 'var(--ink-dim)', bd: 'var(--border)' }
+  // Pending Data — started but < 100 questions: neutral too, never green or red.
+  if (r === 'pending') return { label: 'Pending Data', bg: 'var(--surface-hi)', fg: 'var(--ink-mid)', bd: 'var(--border)' }
   return                  { label: 'On Track',    bg: 'var(--green-light)', fg: 'var(--green)', bd: 'var(--green-border)' }
 }
 // CSV/text status — same labels without colour.
@@ -466,6 +511,7 @@ function riskStatusLabel(r: Student['risk']) {
   if (r === 'high')   return 'High Risk'
   if (r === 'medium') return 'Medium Risk'
   if (r === 'none')   return 'Not Started'
+  if (r === 'pending') return 'Pending Data'
   return 'On Track'
 }
 function lastActiveLabel(d: number) {
@@ -655,9 +701,18 @@ function lastActiveColor(d: number) {
             :disabled="bulkEmailBusy"
             :style="bulkEmailBusy ? 'opacity:.5;cursor:not-allowed;' : ''">
             <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
-            {{ bulkEmailBusy ? 'Sending…' : 'Email selected' }}
+            {{ bulkEmailBusy ? 'Sending…' : 'Send check-in email' }}
           </button>
           <button type="button" v-if="canEdit(PERM_AREA)" class="bulk-assign" @click="bulkAssign">Assign exam</button>
+          <div v-if="canAssignCohort" class="cohort-pick">
+            <button type="button" class="bulk-assign" :disabled="cohortAssignBusy" @click="openCohortPicker">
+              {{ cohortAssignBusy ? 'Assigning…' : 'Assign to cohort ▾' }}
+            </button>
+            <div v-if="cohortPickerOpen" class="cohort-menu">
+              <div v-if="!cohortChoices.length" class="cohort-menu-empty">No cohorts yet — create one in Seats &amp; Cohorts.</div>
+              <button v-for="c in cohortChoices" :key="c.id" type="button" class="cohort-menu-item" @click="assignToCohort(c)">{{ c.name }}</button>
+            </div>
+          </div>
           <button type="button" class="bulk-clear" @click="clearSelection">✕ Clear</button>
         </div>
 
@@ -853,6 +908,18 @@ function lastActiveColor(d: number) {
   font-family: Figtree, sans-serif; font-size: 0.73rem; font-weight: 800;
   cursor: pointer;
 }
+.cohort-pick { position: relative; }
+.cohort-menu {
+  position: absolute; top: calc(100% + 4px); left: 0; z-index: 20; min-width: 180px;
+  background: var(--white); border: 1px solid var(--border); border-radius: 8px;
+  box-shadow: 0 8px 24px rgba(0,0,0,.12); padding: 4px; max-height: 260px; overflow: auto;
+}
+.cohort-menu-item {
+  display: block; width: 100%; text-align: left; padding: 7px 10px; border: 0; background: none;
+  font-size: 0.76rem; color: var(--ink); border-radius: 6px; cursor: pointer;
+}
+.cohort-menu-item:hover { background: var(--surface-hi); }
+.cohort-menu-empty { padding: 8px 10px; font-size: 0.72rem; color: var(--ink-dim); }
 .bulk-clear {
   padding: 6px 10px; border-radius: 7px;
   background: none; color: var(--ink-dim); border: none;

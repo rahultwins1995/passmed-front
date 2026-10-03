@@ -19,6 +19,15 @@ const inviteFirstName = ref('')
 const inviteLastName  = ref('')
 const inviteEmail     = ref('')
 const invitePassword  = ref('')
+// Institution students skip onboarding (where Terms are normally accepted), so
+// the invite-code signup asks for it. Required by the backend too.
+const inviteAcceptTerms = ref(false)
+const inviteTermsError  = ref('')
+// Cohort picker — the validated code returns the institution's active cohorts;
+// required when there are any, so the student lands in the right group.
+const inviteCohortId    = ref('')
+const inviteCohortError = ref('')
+const inviteCohorts     = computed(() => inviteCodeinstitute.value?.cohorts || [])
 // Advisory password-strength meter (same estimator as signup / reset-password).
 const invitePwStrength = computed(() => estimatePasswordStrength(invitePassword.value))
 
@@ -73,6 +82,14 @@ function validateInviteFields () {
   if (!invitePassword.value || invitePassword.value.length < 8) {
     invitePasswordError.value = 'Password must be at least 8 characters'; ok = false
   }
+  inviteCohortError.value = ''
+  if (inviteCohorts.value.length && !inviteCohortId.value) {
+    inviteCohortError.value = 'Please choose your cohort'; ok = false
+  }
+  inviteTermsError.value = ''
+  if (!inviteAcceptTerms.value) {
+    inviteTermsError.value = 'Please accept the Terms & Conditions'; ok = false
+  }
   return ok
 }
 
@@ -92,6 +109,8 @@ async function submitInviteSignup () {
         lname: inviteLastName.value,
         email: inviteEmail.value,
         password: invitePassword.value,
+        accept_terms: inviteAcceptTerms.value,
+        cohort_id: inviteCohortId.value ? Number(inviteCohortId.value) : null,
       },
     })
 
@@ -102,6 +121,10 @@ async function submitInviteSignup () {
       inviteExistingAccount.value = false
       const loggedInUser = await login(inviteEmail.value, invitePassword.value)
       const role = String(loggedInUser?.user?.role || '').toLowerCase()
+      // Close the pop-up — it used to stay open over the new dashboard until the
+      // user clicked away.
+      closeInvite()
+      resetInvite()
       if (role === 'institution-admin' || role === 'professor') {
         await router.push('/institute')
       } else {
@@ -148,6 +171,10 @@ function resetInvite () {
   invitePasswordError.value  = ''
   inviteServerError.value    = ''
   inviteExistingAccount.value = false
+  inviteCohortId.value       = ''
+  inviteCohortError.value    = ''
+  inviteAcceptTerms.value    = false
+  inviteTermsError.value     = ''
 }
 
 /* close on overlay click */
@@ -253,6 +280,15 @@ function switchToSignup () {
             </div>
           </div>
 
+          <template v-if="inviteCohorts.length">
+            <label class="field-label" for="inviteCohort">Cohort</label>
+            <select id="inviteCohort" v-model="inviteCohortId" class="form-input" @change="inviteCohortError = ''">
+              <option value="" disabled>Select your cohort</option>
+              <option v-for="c in inviteCohorts" :key="c.id" :value="String(c.id)">{{ c.name }}</option>
+            </select>
+            <div v-if="inviteCohortError" class="field-error">{{ inviteCohortError }}</div>
+          </template>
+
           <label class="field-label" for="inviteEmail">Email</label>
           <input
             id="inviteEmail"
@@ -295,6 +331,17 @@ function switchToSignup () {
             This email already has a Passmed account — enter its password to join, or
             <a href="#" @click.prevent="switchToLogin">sign in instead</a>.
           </div>
+
+          <label class="terms-check" for="inviteTerms">
+            <input id="inviteTerms" v-model="inviteAcceptTerms" type="checkbox" />
+            <span>
+              I agree to the
+              <a href="/terms" target="_blank" rel="noopener">Terms &amp; Conditions</a>
+              and
+              <a href="/privacy" target="_blank" rel="noopener">Privacy Policy</a>.
+            </span>
+          </label>
+          <div v-if="inviteTermsError" class="field-error">{{ inviteTermsError }}</div>
 
           <div v-if="inviteServerError" class="field-error" style="margin-top:8px;">
             {{ inviteServerError }}
@@ -376,6 +423,9 @@ function switchToSignup () {
 #inviteModal .pw-tip { color: #6b7280; text-align: right; }
 @media (prefers-reduced-motion: reduce) { #inviteModal .pw-seg { transition: none; } }
 #inviteModal .field-hint { color: #6b7280; font-size: 13px; margin-top: 6px; }
+#inviteModal .terms-check { display: flex; align-items: flex-start; gap: 8px; margin-top: 14px; font-size: 13px; color: #374151; line-height: 1.4; cursor: pointer; }
+#inviteModal .terms-check input { margin-top: 2px; flex-shrink: 0; width: auto; }
+#inviteModal .terms-check a { color: var(--teal, #0d9488); font-weight: 700; text-decoration: none; }
 #inviteModal .field-hint a { color: var(--teal, #0d9488); font-weight: 700; text-decoration: none; }
 #inviteModal .form-row    { display: flex; gap: 12px; }
 #inviteModal .form-col    { flex: 1; }

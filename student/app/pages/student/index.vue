@@ -88,6 +88,9 @@ function checkOnboarding() {
   if (onboardingResolved.value) return
   const u: any = user.value
   if (!u) return                       // /me not hydrated yet — wait for the watch
+  // Invited by an institution → no self-serve intake: the institution already
+  // set them up (exam, cohort, school), so the welcome questions don't apply.
+  if (u.student_institution) { onboardingResolved.value = true; return }
   if (u.onboarded === false) showOnboarding.value = true
   // Any concrete value (true/false) is a decision; undefined = backend not
   // deployed yet → leave unresolved so nothing shows.

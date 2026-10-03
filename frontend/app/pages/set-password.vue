@@ -15,6 +15,9 @@ usePageSeo({ title: 'Set up your account', noindex: true })
 
 const password = ref('')
 const passwordConfirm = ref('')
+// Institution invitees skip the onboarding where everyone else accepts the
+// Terms, so they accept them here (the backend requires it for invitees).
+const acceptTerms = ref(false)
 const loading = ref(false)
 const error = ref('')
 const success = ref(false)
@@ -57,6 +60,10 @@ const submitSetPassword = async () => {
     error.value = 'Passwords do not match.'
     return
   }
+  if (!acceptTerms.value) {
+    error.value = 'Please accept the Terms & Conditions to continue.'
+    return
+  }
 
   loading.value = true
 
@@ -69,6 +76,7 @@ const submitSetPassword = async () => {
         token,
         password: password.value,
         confirm_password: passwordConfirm.value,
+        accept_terms: acceptTerms.value,
       },
     })
 
@@ -166,6 +174,16 @@ const submitSetPassword = async () => {
           />
         </label>
 
+        <label class="terms-check">
+          <input v-model="acceptTerms" type="checkbox" />
+          <span>
+            I agree to the
+            <a href="/terms" target="_blank" rel="noopener">Terms &amp; Conditions</a>
+            and
+            <a href="/privacy" target="_blank" rel="noopener">Privacy Policy</a>.
+          </span>
+        </label>
+
         <p v-if="error" class="error">{{ error }}</p>
         <button type="submit" class="btn-primary" :disabled="loading">
           {{ loading ? 'Setting up…' : 'Create password & continue' }}
@@ -214,6 +232,20 @@ const submitSetPassword = async () => {
   border-radius: 8px;
   font-size: 1rem;
 }
+
+.reset-card label.terms-check {
+  display: flex;
+  align-items: flex-start;
+  gap: .5rem;
+  line-height: 1.4;
+}
+.reset-card label.terms-check input {
+  width: auto;
+  margin: .2rem 0 0;
+  padding: 0;
+  flex-shrink: 0;
+}
+.reset-card label.terms-check a { color: #0d9488; font-weight: 600; }
 
 .muted {
   color: #6b7280;

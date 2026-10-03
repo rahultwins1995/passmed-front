@@ -4,13 +4,31 @@
 // server-side by the perm: middleware, so hiding a button is UX, not the
 // security boundary.
 //
-//   canEdit   → program details, thresholds, notification prefs  (inst_settings,edit)
-//   canManage → invite and REMOVE team members                   (inst_settings,full)
+// Each tab is its own Role Matrix area (pm-admin → Settings → Role Matrix):
 //
-// Removing an admin takes away someone's access to the whole portal, so it sits
-// behind `manage` rather than `edit`.
-const { canEdit, canManage, readOnly } = useInstitutePermissions()
-const PERM_AREA = 'inst_settings' as const
+//   Program        settings_program        view / edit
+//   Thresholds     settings_thresholds     view / edit
+//   Notifications  settings_notifications  view / edit
+//   Team           settings_team           view / manage (invite, change role, remove)
+//   Security       settings_security       view / edit (session timeout, team-wide 2FA)
+//   Danger zone    settings_danger         view (data export) / edit (reset progress, clear seats)
+//
+// A tab is shown with `view`; its Save/actions need `edit` (Team: `manage`).
+// The page itself is open to every portal user: the Profile tab (own photo, name,
+// password) is self-service, so a role with every section `none` gets a
+// Profile-only Settings page.
+const { can, canEdit, canManage } = useInstitutePermissions()
+const SECTION_AREA = {
+  program:       'settings_program',
+  thresholds:    'settings_thresholds',
+  notifications: 'settings_notifications',
+  admins:        'settings_team',
+  security:      'settings_security',
+  danger:        'settings_danger',
+} as const
+type SectionId = keyof typeof SECTION_AREA
+const canSection = (id: SectionId) => can(SECTION_AREA[id])
+const canSettings = computed(() => (Object.keys(SECTION_AREA) as SectionId[]).some(canSection))
 
 // /institute/settings — program profile, cohorts, thresholds,
 // notification preferences & team management.
@@ -19,34 +37,9 @@ import {
   zoneOptions, regionsOf, zoneLabel, timeIn, offsetIn, defaultZoneForHost, isValidZone,
   type Zone,
 } from '../../utils/timezones'
-const { instName, instLogo, userPhoto } = useInstitution()
+const { instName, instLogo, userPhoto, userName, userEmail } = useInstitution()
 
-// ── Two-factor authentication (mirrors the student settings toggle) ─────────
-const { user, fetchMe } = useAuth()
 const instituteApi = useInstituteApi()
-
-const twoFaServerValue = computed<boolean>(() => Boolean((user.value as any)?.two_fa_enabled))
-const twoFaOptimistic  = ref<boolean | null>(null)
-const twoFaEnabled     = computed<boolean>(() => twoFaOptimistic.value ?? twoFaServerValue.value)
-const twoFaBusy        = ref(false)
-
-async function handleTwoFaToggle() {
-  if (twoFaBusy.value) return
-  const willBeEnabled = !twoFaEnabled.value
-  twoFaOptimistic.value = willBeEnabled   // optimistic flip
-  twoFaBusy.value = true
-  try {
-    await instituteApi(willBeEnabled ? '/2fa/enable' : '/2fa/disable', { method: 'POST' })
-    await fetchMe()
-    twoFaOptimistic.value = null
-    showToast(willBeEnabled ? 'Two-factor authentication enabled.' : 'Two-factor authentication disabled.')
-  } catch (e: any) {
-    twoFaOptimistic.value = null   // revert
-    showToast(e?.data?.msg || e?.message || 'Failed to update 2FA setting.', 'var(--rose)')
-  } finally {
-    twoFaBusy.value = false
-  }
-}
 
 definePageMeta({ layout: 'institute' })
 useHead({ title: 'Settings · Passmed Institute' })
@@ -89,8 +82,8 @@ type NotifKey =
   | 'Billing reminders'
 
 // Section navigation (chip-row at top — mirrors the student settings page).
-const activeTab = ref('program')
-const tabs = [
+// Profile is everyone's; each other tab needs its own settings_* area.
+const ALL_SECTIONS: Array<{ id: SectionId; label: string }> = [
   { id: 'program',       label: 'Program' },
   { id: 'thresholds',    label: 'Thresholds' },
   { id: 'notifications', label: 'Notifications' },
@@ -99,12 +92,24 @@ const tabs = [
   { id: 'security',      label: 'Security' },
   { id: 'danger',        label: 'Danger zone' },
 ]
+// Profile first — it's everyone's own account and the default tab.
+const tabs = computed(() => [
+  { id: 'profile', label: 'Profile' },
+  ...ALL_SECTIONS.filter(t => canSection(t.id)),
+])
+const activeTab = ref<string>(tabs.value[0]!.id)
+// Permissions can arrive after setup (fresh /me) — never leave someone on a tab
+// they can't see.
+watch(tabs, (list) => {
+  if (!list.some(t => t.id === activeTab.value)) activeTab.value = list[0]!.id
+})
+// Read-only banner follows the tab being looked at (Profile has none).
+const activeArea = computed(() =>
+  (activeTab.value in SECTION_AREA) ? SECTION_AREA[activeTab.value as SectionId] : '')
 
 const program = ref({
-  name: '',
+  // Set by PassMed when the licence is created — read-only here.
   institution: '',
-  examType: '',
-  director: '',
   // Empty, not 'America/New_York'. The default is resolved from the portal's own
   // domain once we know it (see resolveDefaultZone), and a SAVED zone always wins.
   // Hardcoding New York here is what made every non-US programme look American.
@@ -119,7 +124,6 @@ const program = ref({
 watch(instName, (v) => {
   if (!v) return
   if (!program.value.institution) program.value.institution = v
-  if (!program.value.name)        program.value.name        = v
 }, { immediate: true })
 
 /**
@@ -148,10 +152,7 @@ async function loadProgram() {
     const d = res?.data
     if (d) {
       program.value = {
-        name:        d.name        ?? '',
-        institution: d.institution ?? '',
-        examType:    d.examType    || program.value.examType,
-        director:    d.director    ?? '',
+        institution: d.institution || program.value.institution,
         // A SAVED zone always wins. The country default is only ever a fallback for
         // an institution that has never chosen one — re-deriving it on every load
         // would quietly drag a US-hosted programme in Berlin back to New York.
@@ -171,7 +172,13 @@ async function loadProgram() {
 const pageLoading = ref(true)
 onMounted(async () => {
   try {
-    await Promise.all([loadProgram(), loadCohorts(), loadAdmins(), loadSettingsExtras()])
+    // Only the sections this role can see — the others 403 by design.
+    await Promise.all([
+      loadProfile(),
+      ...(canSection('program') ? [loadProgram(), loadCohorts()] : []),
+      ...(canSection('admins') ? [loadAdmins()] : []),
+      ...((canSection('thresholds') || canSection('notifications') || canSection('security')) ? [loadSettingsExtras()] : []),
+    ])
   } finally {
     pageLoading.value = false
   }
@@ -216,10 +223,10 @@ const professors = computed(() => team.value.filter(m => m.role === 'professor')
 const adminsFull     = computed(() => teamCounts.value.admins     >= teamCounts.value.max_admins)
 const professorsFull = computed(() => teamCounts.value.professors >= teamCounts.value.max_professors)
 
-// `manage` on inst_settings, not `edit`. Removing an admin takes away someone's
+// `manage` on settings_team, not `view`. Removing an admin takes away someone's
 // access to the portal — that is what the manage tier is for. Program details and
 // thresholds stay at `edit`.
-const canManageTeam = computed(() => canManage(PERM_AREA))
+const canManageTeam = computed(() => canManage('settings_team'))
 
 // ── Invite form (the placeholder that was never built) ──────────────────────
 const invite = ref<{ firstname: string; lastname: string; email: string; role: TeamMember['role'] }>({
@@ -330,7 +337,7 @@ async function resendTeamInvite(m: TeamMember) {
  */
 type TimeoutToken = '' | '30min' | '1hour' | '4hour' | '24hour' | 'never'
 
-const security = ref<{ sessionTimeout: TimeoutToken }>({ sessionTimeout: '' })
+const security = ref<{ sessionTimeout: TimeoutToken; require2fa: boolean; require2faStudents: boolean }>({ sessionTimeout: '', require2fa: false, require2faStudents: false })
 const effectiveMinutes = ref<number | null>(null)
 const securityState = ref<'idle' | 'saving' | 'saved'>('idle')
 
@@ -353,7 +360,7 @@ const platformDefaultLabel = computed(() =>
 )
 
 async function saveSecurity() {
-  if (!canEdit(PERM_AREA)) return
+  if (!canEdit('settings_security')) return
   securityState.value = 'saving'
   try {
     await instituteApi('/settings-extras', {
@@ -372,6 +379,32 @@ async function saveSecurity() {
   }
 }
 
+// Institution-wide 2FA requirements (Security tab), one switch per group:
+//   require2fa         → admins and professors
+//   require2faStudents → the institution's students (their own toggle is hidden)
+// Saved on toggle. Everyone covered gets an emailed code at sign-in.
+const twoFaSaving = ref<'' | 'require2fa' | 'require2faStudents'>('')
+const TWO_FA_GROUPS = [
+  { key: 'require2fa' as const,         label: 'Admins & professors' },
+  { key: 'require2faStudents' as const, label: 'Students' },
+]
+async function toggleRequire2fa(key: 'require2fa' | 'require2faStudents' = 'require2fa') {
+  if (!canEdit('settings_security') || twoFaSaving.value) return
+  const next = !security.value[key]
+  security.value[key] = next                // optimistic
+  twoFaSaving.value = key
+  const who = key === 'require2fa' ? 'admins and professors' : 'students'
+  try {
+    await instituteApi('/settings-extras', { method: 'POST', body: { security: { [key]: next } } })
+    showToast(next ? `Two-factor sign-in is now required for ${who}.` : `Two-factor sign-in is no longer required for ${who}.`)
+  } catch (e: any) {
+    security.value[key] = !next             // revert
+    showToast(e?.data?.msg || e?.message || 'Failed to update 2FA setting.', 'var(--rose)')
+  } finally {
+    twoFaSaving.value = ''
+  }
+}
+
 // Hydrate thresholds + notification preferences + security from the backend.
 async function loadSettingsExtras() {
   try {
@@ -381,6 +414,8 @@ async function loadSettingsExtras() {
     if (d?.notifications) notifs.value     = { ...notifs.value, ...d.notifications }
     if (d?.security) {
       security.value.sessionTimeout = (d.security.sessionTimeout ?? '') as TimeoutToken
+      security.value.require2fa = !!d.security.require2fa
+      security.value.require2faStudents = !!d.security.require2faStudents
       effectiveMinutes.value = d.security.effectiveMinutes ?? null
     }
   } catch (e) { /* keep defaults on failure */ }
@@ -434,12 +469,6 @@ const selectedZoneLine = computed(() => {
   return t ? `It's ${t} there right now (${o})` : ''
 })
 
-const programFields: Array<{ label: string; key: keyof typeof program.value }> = [
-  { label: 'Program name',     key: 'name' },
-  { label: 'Institution',      key: 'institution' },
-  { label: 'Exam type',        key: 'examType' },
-  { label: 'Program director', key: 'director' },
-]
 
 const thresholdFields = [
   { label: 'Pass threshold',          key: 'passmark' as const,      unit: '%',     hint: 'Residents below this are flagged at-risk. Affects dashboard, at-risk table and board readiness report.' },
@@ -551,10 +580,6 @@ async function saveProgram() {
     await instituteApi('/program', {
       method: 'POST',
       body: {
-        name:        program.value.name,
-        institution: program.value.institution,
-        examType:    program.value.examType,
-        director:    program.value.director,
         timezone:    program.value.timezone,
         logoUrl:     program.value.logoUrl,
         sharedPoolOptin: program.value.sharedPoolOptin,
@@ -597,31 +622,115 @@ async function saveNotifs() {
 }
 
 // Send a real password-reset link to the logged-in admin's own email.
-const resetSending = ref(false)
-async function sendPasswordReset() {
-  if (resetSending.value) return
-  const email = (user.value as any)?.email
-  if (!email) { showToast('No account email found', 'var(--amber)'); return }
-  resetSending.value = true
+// ── Profile (self-service — every portal user) ─────────────────────────────
+// Email is the sign-in identifier, so it's shown but not editable here (same rule
+// as the student portal).
+const profile = ref({ firstname: '', lastname: '', email: '' })
+async function loadProfile() {
   try {
-    await $fetch(instituteAuthApiPath('forgot-password'), { method: 'POST', body: { email } })
-    showToast('Password reset email sent to ' + email, 'var(--green)')
+    const res: any = await instituteApi('/profile')
+    const u = res?.data?.user
+    if (u) {
+      let first = u.firstname || ''
+      let last  = u.lastname  || ''
+      // Legacy accounts only have `name` — split it once for the form.
+      if (!first && !last && u.name) {
+        const parts = String(u.name).trim().split(/\s+/)
+        first = parts.shift() || ''
+        last  = parts.join(' ')
+      }
+      profile.value = { firstname: first, lastname: last, email: u.email || '' }
+    }
+  } catch (e) { /* leave blank on failure */ }
+}
+
+const profileState = ref<SaveState>('idle')
+async function saveProfile() {
+  if (profileState.value === 'saving') return
+  const firstname = profile.value.firstname.trim()
+  const lastname  = profile.value.lastname.trim()
+  if (!firstname || !lastname) { showToast('First and last name are required.', 'var(--rose)'); return }
+  profileState.value = 'saving'
+  try {
+    const res: any = await instituteApi('/profile/update', { method: 'POST', body: { firstname, lastname } })
+    userName.value = res?.data?.name || `${firstname} ${lastname}`   // live-update the sidebar
+    profileState.value = 'saved'
+    setTimeout(() => { profileState.value = 'idle' }, 2000)
   } catch (e: any) {
-    showToast('Failed to send reset link', 'var(--rose)')
-  } finally {
-    resetSending.value = false
+    profileState.value = 'idle'
+    showToast(e?.data?.msg || e?.data?.message || 'Failed to save profile.', 'var(--rose)')
   }
 }
 
-// Styled danger-confirm modal replaces the native window.confirm() dialogs.
-const dangerDialog = ref<null | 'reset' | 'deactivate'>(null)
+const pw = ref({ current: '', next: '', confirm: '' })
+const pwState = ref<SaveState>('idle')
+const pwError = ref('')
+async function changePassword() {
+  pwError.value = ''
+  if (!pw.value.current || !pw.value.next || !pw.value.confirm) { pwError.value = 'Fill in all three password fields.'; return }
+  if (pw.value.next.length < 8)            { pwError.value = 'New password must be at least 8 characters.'; return }
+  if (pw.value.next !== pw.value.confirm)  { pwError.value = 'New passwords do not match.'; return }
+  pwState.value = 'saving'
+  try {
+    await instituteApi('/profile/password', {
+      method: 'POST',
+      body: {
+        current_password: pw.value.current,
+        new_password: pw.value.next,
+        new_password_confirmation: pw.value.confirm,
+      },
+    })
+    pw.value = { current: '', next: '', confirm: '' }
+    pwState.value = 'saved'
+    setTimeout(() => { pwState.value = 'idle' }, 2000)
+  } catch (e: any) {
+    pwState.value = 'idle'
+    const errs = e?.data?.errors
+    pwError.value = e?.data?.msg
+      || (errs && (Object.values(errs)[0] as string[])?.[0])
+      || e?.data?.message
+      || 'Failed to change password.'
+  }
+}
+
+// Danger zone actions (settings_danger,edit). Both are irreversible from the UI,
+// so each needs a typed confirmation (RESET / CLEAR) — checked server-side too.
+const dangerDialog = ref<null | 'reset' | 'clear'>(null)
+const dangerBusy   = ref(false)
 function resetConfirm()      { dangerDialog.value = 'reset' }
-function deactivateConfirm() { dangerDialog.value = 'deactivate' }
-function doDangerConfirm() {
+function clearSeatsConfirm() { dangerDialog.value = 'clear' }
+const DANGER = {
+  reset: {
+    word: 'RESET', path: '/danger/reset-progress',
+    title: 'Reset all resident progress',
+    message: 'This clears question history, scores, streaks, mock attempts and flags for EVERY student in your institution. It cannot be undone. Type RESET to confirm.',
+    label: 'Reset progress',
+  },
+  clear: {
+    word: 'CLEAR', path: '/danger/clear-seats',
+    title: 'Clear all student seats',
+    message: 'This removes EVERY student from your institution — enrolled students and pending invites — and frees all seats. Their PassMed accounts are not deleted, but they lose access through your institution. Type CLEAR to confirm.',
+    label: 'Clear all seats',
+  },
+} as const
+async function doDangerConfirm(typed?: string) {
   const kind = dangerDialog.value
   dangerDialog.value = null
-  if (kind === 'reset')      showToast('Progress reset complete', 'var(--rose)')
-  if (kind === 'deactivate') showToast('Contact Passmed support to complete deactivation — support@passmed.com', 'var(--rose)')
+  if (!kind || dangerBusy.value) return
+  const d = DANGER[kind]
+  if (String(typed || '').trim().toUpperCase() !== d.word) {
+    showToast(`Not confirmed — type ${d.word} to proceed.`, 'var(--amber)')
+    return
+  }
+  dangerBusy.value = true
+  try {
+    const res: any = await instituteApi(d.path, { method: 'POST', body: { confirm: d.word } })
+    showToast(res?.msg || 'Done.', 'var(--rose)')
+  } catch (e: any) {
+    showToast(e?.data?.msg || e?.data?.message || 'Action failed — nothing was changed.', 'var(--rose)')
+  } finally {
+    dangerBusy.value = false
+  }
 }
 // Real export — complete data bundle (residents + analytics, mock-exam results,
 // audit log + a JSON manifest), zipped, via the reports endpoint.
@@ -656,7 +765,7 @@ function initials(name: string) {
 <template>
   <div class="main">
     <!-- `view` level: page is visible but every mutation is hidden. -->
-    <ReadOnlyBanner :area="PERM_AREA" />
+    <ReadOnlyBanner v-if="activeArea" :area="activeArea" />
 
     <div class="content">
 
@@ -691,7 +800,7 @@ function initials(name: string) {
         <div class="page-header" style="margin-bottom:18px;">
           <div>
             <div class="page-title">Settings</div>
-            <div class="page-sub">Program configuration · {{ program.institution }}</div>
+            <div class="page-sub">{{ canSettings ? 'Program configuration' : 'Your account' }} · {{ program.institution || instName }}</div>
           </div>
         </div>
 
@@ -711,9 +820,10 @@ function initials(name: string) {
         <div v-show="activeTab === 'program'" class="card" style="margin-bottom:14px;">
           <div class="section-eyebrow">Program information</div>
           <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:18px;">
-            <div v-for="f in programFields" :key="f.key">
-              <label class="fld-label">{{ f.label }}</label>
-              <input v-model="program[f.key]" type="text" class="fld" />
+            <div>
+              <label class="fld-label">Institution</label>
+              <input :value="program.institution" type="text" class="fld" readonly disabled />
+              <div class="fld-hint">Set by PassMed on your licence. Contact PassMed to change it.</div>
             </div>
           </div>
           <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:18px;">
@@ -742,32 +852,14 @@ function initials(name: string) {
                 </div>
                 <div class="logo-actions">
                   <input ref="logoInput" type="file" accept="image/png,image/jpeg,image/webp" hidden @change="onLogoChange" />
-                  <button v-if="canEdit(PERM_AREA)" type="button" class="btn-logo" :disabled="logoUploading" @click="logoInput?.click()">
+                  <button v-if="canEdit('settings_program')" type="button" class="btn-logo" :disabled="logoUploading" @click="logoInput?.click()">
                     {{ logoUploading ? 'Uploading…' : (program.logoUrl ? 'Change logo' : 'Upload logo') }}
                   </button>
-                  <button v-if="canEdit(PERM_AREA) && program.logoUrl" type="button" class="btn-logo-remove" @click="removeLogo">Remove</button>
+                  <button v-if="canEdit('settings_program') && program.logoUrl" type="button" class="btn-logo-remove" @click="removeLogo">Remove</button>
                   <div class="logo-hint">PNG, JPG or WebP · up to 5MB</div>
                 </div>
               </div>
 
-              <!-- Admin profile photo (logged-in user) -->
-              <label class="fld-label" style="margin-top:16px;">
-                Your profile photo <span style="font-weight:500;color:var(--ink-faint);">(optional)</span>
-              </label>
-              <div class="logo-upload">
-                <div class="logo-preview">
-                  <img v-if="userPhoto" :src="userPhoto" alt="Profile photo" />
-                  <span v-else class="logo-ph">No photo</span>
-                </div>
-                <div class="logo-actions">
-                  <input ref="userPhotoInput" type="file" accept="image/png,image/jpeg,image/webp" hidden @change="onUserPhotoChange" />
-                  <button type="button" class="btn-logo" :disabled="userPhotoUploading" @click="userPhotoInput?.click()">
-                    {{ userPhotoUploading ? 'Uploading…' : (userPhoto ? 'Change photo' : 'Upload photo') }}
-                  </button>
-                  <button v-if="userPhoto" type="button" class="btn-logo-remove" :disabled="userPhotoUploading" @click="removeUserPhoto">Remove</button>
-                  <div class="logo-hint">PNG, JPG or WebP · up to 5MB</div>
-                </div>
-              </div>
             </div>
           </div>
           <div>
@@ -785,7 +877,7 @@ function initials(name: string) {
                Institution Q Bank. Off by default (their own questions only). -->
           <div style="border-top:1px solid var(--border);margin-top:16px;padding-top:16px;">
             <label style="display:flex;align-items:flex-start;gap:10px;cursor:pointer;max-width:640px;">
-              <input type="checkbox" v-model="program.sharedPoolOptin" :disabled="!canEdit(PERM_AREA)"
+              <input type="checkbox" v-model="program.sharedPoolOptin" :disabled="!canEdit('settings_program')"
                      style="margin-top:3px;width:16px;height:16px;cursor:pointer;flex-shrink:0;" />
               <span>
                 <span class="fld-label" style="display:block;margin:0 0 2px;">Include the Shared Pool in our students' Question Bank</span>
@@ -795,7 +887,7 @@ function initials(name: string) {
           </div>
 
           <div style="display:flex;justify-content:flex-end;margin-top:18px;">
-            <button v-if="canEdit(PERM_AREA)" type="button" @click="saveProgram" class="btn-save" :class="{ saved: programState === 'saved' }" :disabled="programState === 'saving'">
+            <button v-if="canEdit('settings_program')" type="button" @click="saveProgram" class="btn-save" :class="{ saved: programState === 'saved' }" :disabled="programState === 'saving'">
               <template v-if="programState === 'saved'">✓ Saved</template>
               <template v-else>{{ programState === 'saving' ? 'Saving…' : 'Save changes' }}</template>
             </button>
@@ -821,7 +913,7 @@ function initials(name: string) {
             </div>
           </div>
           <div style="display:flex;justify-content:flex-end;margin-top:18px;">
-            <button v-if="canEdit(PERM_AREA)" type="button" @click="saveThresholds" class="btn-save" :class="{ saved: thresholdsState === 'saved' }" :disabled="thresholdsState === 'saving'">
+            <button v-if="canEdit('settings_thresholds')" type="button" @click="saveThresholds" class="btn-save" :class="{ saved: thresholdsState === 'saved' }" :disabled="thresholdsState === 'saving'">
               <template v-if="thresholdsState === 'saved'">✓ Saved</template>
               <template v-else>{{ thresholdsState === 'saving' ? 'Saving…' : 'Save changes' }}</template>
             </button>
@@ -851,7 +943,7 @@ function initials(name: string) {
             </div>
           </div>
           <div style="display:flex;justify-content:flex-end;margin-top:18px;">
-            <button v-if="canEdit(PERM_AREA)" type="button" @click="saveNotifs" class="btn-save" :class="{ saved: notifsState === 'saved' }" :disabled="notifsState === 'saving'">
+            <button v-if="canEdit('settings_notifications')" type="button" @click="saveNotifs" class="btn-save" :class="{ saved: notifsState === 'saved' }" :disabled="notifsState === 'saving'">
               <template v-if="notifsState === 'saved'">✓ Saved</template>
               <template v-else>{{ notifsState === 'saving' ? 'Saving…' : 'Save changes' }}</template>
             </button>
@@ -1004,7 +1096,7 @@ function initials(name: string) {
                 v-model="security.sessionTimeout"
                 class="fld fld-small"
                 style="background:var(--white);cursor:pointer;"
-                :disabled="!canEdit(PERM_AREA) || securityState === 'saving'"
+                :disabled="!canEdit('settings_security') || securityState === 'saving'"
                 @change="saveSecurity"
               >
                 <!-- '' is not "no timeout" — it's "whatever Passmed sets". Keeping the
@@ -1023,23 +1115,23 @@ function initials(name: string) {
                 <template v-else-if="effectiveTimeoutLabel">In force now: {{ effectiveTimeoutLabel }}</template>
               </div>
             </div>
+            <!-- Institution-wide: an admin turns it on, and every admin and professor
+                 of this institution must enter an emailed code when signing in. -->
             <div class="sec-tile">
               <div class="sec-title">Two-factor authentication</div>
-              <div class="sec-desc">Require 2FA for all administrator accounts.</div>
-              <div style="display:flex;align-items:center;gap:10px;">
-                <button type="button" class="toggle" :class="{ on: twoFaEnabled }" @click="handleTwoFaToggle"
-                  role="switch" :aria-checked="twoFaEnabled" :disabled="twoFaBusy" aria-label="Two-factor authentication">
+              <div class="sec-desc">Require a code emailed at sign-in. Set separately for staff and for students.</div>
+              <div v-for="opt in TWO_FA_GROUPS" :key="opt.key"
+                   style="display:flex;align-items:center;gap:10px;margin-top:8px;">
+                <button type="button" class="toggle" :class="{ on: security[opt.key] }" @click="toggleRequire2fa(opt.key)"
+                  role="switch" :aria-checked="security[opt.key]"
+                  :disabled="!canEdit('settings_security') || !!twoFaSaving" :aria-label="`Require two-factor authentication for ${opt.label}`">
                   <div class="toggle-knob"></div>
                 </button>
+                <span style="font-size:0.72rem;color:var(--ink);font-weight:600;">{{ opt.label }}</span>
                 <span style="font-size:0.7rem;color:var(--ink-dim);">
-                  {{ twoFaBusy ? (twoFaEnabled ? 'Enabling…' : 'Disabling…') : 'Recommended for programs with HIPAA obligations' }}
+                  {{ twoFaSaving === opt.key ? 'Saving…' : (security[opt.key] ? 'Required' : 'Not required') }}
                 </span>
               </div>
-            </div>
-            <div class="sec-tile">
-              <div class="sec-title">Change password</div>
-              <div class="sec-desc">Update your administrator account password.</div>
-              <button type="button" @click="sendPasswordReset" :disabled="resetSending" class="btn-secondary-sm">{{ resetSending ? 'Sending…' : 'Send reset link' }}</button>
             </div>
             <div class="sec-tile">
               <div class="sec-title">Audit log</div>
@@ -1047,6 +1139,75 @@ function initials(name: string) {
               <button type="button" @click="downloadAuditLog" :disabled="auditDownloading" class="btn-secondary-sm">{{ auditDownloading ? 'Downloading…' : 'Download CSV' }}</button>
             </div>
           </div>
+        </div>
+
+        <!-- 7. Profile — every portal user (professors see only this). -->
+        <div v-show="activeTab === 'profile'" class="card" style="margin-bottom:14px;">
+          <div class="section-eyebrow">Your profile</div>
+
+          <label class="fld-label">Profile photo <span style="font-weight:500;color:var(--ink-faint);">(optional)</span></label>
+          <div class="logo-upload" style="margin-bottom:18px;">
+            <div class="logo-preview">
+              <img v-if="userPhoto" :src="userPhoto" alt="Profile photo" />
+              <span v-else class="logo-ph">No photo</span>
+            </div>
+            <div class="logo-actions">
+              <input ref="userPhotoInput" type="file" accept="image/png,image/jpeg,image/webp" hidden @change="onUserPhotoChange" />
+              <button type="button" class="btn-logo" :disabled="userPhotoUploading" @click="userPhotoInput?.click()">
+                {{ userPhotoUploading ? 'Uploading…' : (userPhoto ? 'Change photo' : 'Upload photo') }}
+              </button>
+              <button v-if="userPhoto" type="button" class="btn-logo-remove" :disabled="userPhotoUploading" @click="removeUserPhoto">Remove</button>
+              <div class="logo-hint">PNG, JPG or WebP · up to 5MB · saved immediately</div>
+            </div>
+          </div>
+
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px;">
+            <div>
+              <label class="fld-label">First name</label>
+              <input v-model="profile.firstname" type="text" class="fld" autocomplete="given-name" />
+            </div>
+            <div>
+              <label class="fld-label">Last name</label>
+              <input v-model="profile.lastname" type="text" class="fld" autocomplete="family-name" />
+            </div>
+            <div>
+              <label class="fld-label">Email</label>
+              <input :value="profile.email" type="email" class="fld" readonly disabled />
+              <div class="fld-hint">Your sign-in email. Contact PassMed to change it.</div>
+            </div>
+          </div>
+          <div style="display:flex;justify-content:flex-end;">
+            <button type="button" @click="saveProfile" class="btn-save" :class="{ saved: profileState === 'saved' }" :disabled="profileState === 'saving'">
+              <template v-if="profileState === 'saved'">✓ Saved</template>
+              <template v-else>{{ profileState === 'saving' ? 'Saving…' : 'Save profile' }}</template>
+            </button>
+          </div>
+
+          <div style="border-top:1px solid var(--border);margin-top:18px;padding-top:16px;">
+            <div class="section-eyebrow">Change password</div>
+            <form @submit.prevent="changePassword" style="display:grid;grid-template-columns:1fr 1fr;gap:14px;">
+              <div style="grid-column:1 / -1;max-width:calc(50% - 7px);min-width:220px;">
+                <label class="fld-label">Current password</label>
+                <input v-model="pw.current" type="password" class="fld" autocomplete="current-password" />
+              </div>
+              <div>
+                <label class="fld-label">New password</label>
+                <input v-model="pw.next" type="password" class="fld" autocomplete="new-password" />
+              </div>
+              <div>
+                <label class="fld-label">Confirm new password</label>
+                <input v-model="pw.confirm" type="password" class="fld" autocomplete="new-password" />
+              </div>
+              <div style="grid-column:1 / -1;display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;">
+                <span class="fld-hint" :style="pwError ? 'color:var(--rose)' : ''">{{ pwError || 'At least 8 characters.' }}</span>
+                <button type="submit" class="btn-save" :class="{ saved: pwState === 'saved' }" :disabled="pwState === 'saving'">
+                  <template v-if="pwState === 'saved'">✓ Password changed</template>
+                  <template v-else>{{ pwState === 'saving' ? 'Saving…' : 'Change password' }}</template>
+                </button>
+              </div>
+            </form>
+          </div>
+
         </div>
 
         <!-- 6. Danger zone -->
@@ -1057,21 +1218,22 @@ function initials(name: string) {
               <div class="danger-title">Export all data</div>
               <div class="danger-desc">Download a ZIP containing every resident with their analytics, all mock-exam results, your audit log and a JSON summary.</div>
             </div>
-            <button type="button" @click="exportAll" class="btn-danger-fill" :disabled="exporting" :style="exporting ? 'opacity:0.6;cursor:default' : ''">{{ exporting ? 'Exporting…' : '↓ Export' }}</button>
+            <button type="button" v-if="canSection('danger')" @click="exportAll" class="btn-danger-fill" :disabled="exporting" :style="exporting ? 'opacity:0.6;cursor:default' : ''">{{ exporting ? 'Exporting…' : '↓ Export' }}</button>
           </div>
-          <div class="danger-row">
+          <!-- Edit level (Role Matrix: Settings · Danger zone = edit). -->
+          <div v-if="canEdit('settings_danger')" class="danger-row">
             <div>
               <div class="danger-title">Reset all resident progress</div>
-              <div class="danger-desc">Clears all question history, scores and streaks. This action cannot be undone.</div>
+              <div class="danger-desc">Clears question history, scores, streaks, mock attempts and flags for every student. This cannot be undone.</div>
             </div>
-            <button type="button" @click="resetConfirm" class="btn-danger">Reset progress</button>
+            <button type="button" @click="resetConfirm" class="btn-danger" :disabled="dangerBusy">Reset progress</button>
           </div>
-          <div class="danger-row no-border">
+          <div v-if="canEdit('settings_danger')" class="danger-row no-border">
             <div>
-              <div class="danger-title">Deactivate program</div>
-              <div class="danger-desc">Suspend all resident and admin access. Seats and data are preserved and can be reactivated.</div>
+              <div class="danger-title">Clear all student seats</div>
+              <div class="danger-desc">Removes every student (and pending invite) from your institution and frees all seats. Their PassMed accounts are kept.</div>
             </div>
-            <button type="button" @click="deactivateConfirm" class="btn-danger">Deactivate</button>
+            <button type="button" @click="clearSeatsConfirm" class="btn-danger" :disabled="dangerBusy">Clear seats</button>
           </div>
         </div>
 
@@ -1085,12 +1247,12 @@ function initials(name: string) {
 
   <ConfirmModal
     :open="dangerDialog !== null"
-    :title="dangerDialog === 'reset' ? 'Reset all progress' : 'Deactivate program'"
-    :message="dangerDialog === 'reset'
-      ? 'This will permanently delete all resident question history, scores and streaks. This cannot be undone.'
-      : 'Are you sure you want to deactivate this program? All resident and admin access will be suspended immediately.'"
-    :confirm-label="dangerDialog === 'reset' ? 'Delete history' : 'Deactivate'"
+    :title="dangerDialog ? DANGER[dangerDialog].title : ''"
+    :message="dangerDialog ? DANGER[dangerDialog].message : ''"
+    :confirm-label="dangerDialog ? DANGER[dangerDialog].label : ''"
     danger
+    prompt-mode
+    :prompt-placeholder="dangerDialog ? `Type ${DANGER[dangerDialog].word}` : ''"
     @confirm="doDangerConfirm"
     @cancel="dangerDialog = null"
   />
@@ -1118,6 +1280,8 @@ function initials(name: string) {
   font-size: 0.72rem; font-weight: 700; color: var(--ink-mid);
   display: block; margin-bottom: 6px;
 }
+.fld-hint { font-size: 0.64rem; color: var(--ink-dim); margin-top: 5px; line-height: 1.45; }
+.fld[disabled] { opacity: 0.75; cursor: not-allowed; }
 .fld {
   width: 100%; padding: 9px 12px;
   border: 1.5px solid var(--border); border-radius: 9px;

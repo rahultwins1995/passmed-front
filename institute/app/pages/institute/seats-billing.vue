@@ -106,11 +106,20 @@ function mapStudent(s: any): Student {
     avatarUrl: s.avatar_url ?? null,
     email: s.email ?? '',
     status,
-    joined: s.invited_at
-      ? new Date(s.invited_at).toLocaleDateString('en-GB', { month: 'short', year: 'numeric' })
-      : '—',
+    joined: status === 'invited' ? '' : fmtJoined(s.joined_at),
     lastActive: status === 'invited' ? 'Pending' : 'Recently',
   }
+}
+
+// "1st Oct 2026" — the date the student JOINED (seat activated). Blank until
+// they accept the invite: an invite date is not a join date.
+function fmtJoined(d: string | null | undefined): string {
+  if (!d) return ''
+  const dt = new Date(String(d).replace(' ', 'T'))
+  if (isNaN(dt.getTime())) return ''
+  const day = dt.getDate()
+  const sfx = (day % 10 === 1 && day !== 11) ? 'st' : (day % 10 === 2 && day !== 12) ? 'nd' : (day % 10 === 3 && day !== 13) ? 'rd' : 'th'
+  return `${day}${sfx} ${dt.toLocaleDateString('en-GB', { month: 'short' })} ${dt.getFullYear()}`
 }
 
 function mapCohort(raw: any): Cohort {
@@ -196,9 +205,7 @@ async function fetchExistingStudents() {
         initials:   nm ? nm.split(' ').map((w: string) => w[0]).join('').slice(0, 2).toUpperCase() : '??',
         avatarUrl:  s.avatar_url ?? null,
         status:     (rawStatus === 'active' ? 'active' : rawStatus === 'atrisk' ? 'atrisk' : 'invited') as StudentStatus,
-        joined:     s.invited_at ?? s.created_at
-          ? new Date(s.invited_at ?? s.created_at).toLocaleDateString('en-GB', { month: 'short', year: 'numeric' })
-          : '—',
+        joined:     rawStatus === 'invited' ? '' : fmtJoined(s.joined_at),
         lastActive: s.last_active ?? '—',
         cohort:     s.cohort_name ?? s.cohort?.name ?? 'Unassigned',
         avatarIdx:  idx,
@@ -248,9 +255,11 @@ watch(() => route.query.invite, async (val) => {
 }, { immediate: true })
 
 // ── Derived seat counts ───────────────────────────────────────────────────────
-// seatsOccupied = every student_institutes row for this institution (all statuses)
-// This matches existingStudents which comes from GET /institution-students
-const seatsOccupied  = computed(() => existingStudents.value.length)
+// seatsOccupied = ACTIVATED students only. A pending invite doesn't take a seat
+// until the student accepts (same rule as the backend's seat checks).
+const seatsOccupied  = computed(() => existingStudents.value.filter(s => s.status !== 'invited').length)
+// Invites sent but not yet accepted (no seat taken until they are).
+const invitesPending = computed(() => existingStudents.value.filter(s => s.status === 'invited').length)
 const seatsAvailable = computed(() => Math.max(0, totalSeats.value - seatsOccupied.value))
 const usagePct       = computed(() => totalSeats.value > 0 ? Math.round((seatsOccupied.value / totalSeats.value) * 100) : 0)
 
@@ -313,13 +322,13 @@ type InviteForm = {
   lastName: string
   email: string
   role: string
-  selectedUserId: number | null
+  selectedUserIds: number[]        // existing students to add (multi-select)
   existSearch: string
 }
 const inviteForm = ref<InviteForm>({
   open: false, cohortId: null, mode: 'single',
   firstName: '', lastName: '', email: '', role: '',
-  selectedUserId: null, existSearch: '',
+  selectedUserIds: [], existSearch: '',
 })
 
 const filteredExisting = computed(() => {
@@ -381,7 +390,7 @@ async function requestRenewal() {
 /*
  * ── "Request additional seats" ───────────────────────────────────────────────
  *
- * Posts to the purpose-built POST /seats/request, gated on `perm:seats_cohorts,edit`
+ * Posts to the purpose-built POST /seats/request, gated on `perm:seats_cohorts,full`
  * — the page this button lives on. It used to be smuggled through /messages/send
  * (the contact-support endpoint) with the seat count pasted into a prose string,
  * which meant the ask was gated on `notifications` rather than on seats, and the
@@ -427,10 +436,25 @@ function openInvite(cohortId: number) {
   inviteForm.value = {
     open: true, cohortId, mode: 'single',
     firstName: '', lastName: '', email: '', role: '',
-    selectedUserId: null, existSearch: '',
+    selectedUserIds: [], existSearch: '',
   }
 }
 function closeInvite() { inviteForm.value.open = false }
+function toggleExisting(uid: number) {
+  const ids = inviteForm.value.selectedUserIds
+  inviteForm.value.selectedUserIds = ids.includes(uid) ? ids.filter(i => i !== uid) : [...ids, uid]
+}
+
+// "+ Invite resident" on the All residents tab: the invite panel lives inside a
+// cohort card on the Cohorts tab, so switch there first (it did nothing before —
+// it opened the panel on a tab that wasn't showing).
+async function inviteFromRoster() {
+  if (!cohorts.value.length) { openNewCohort(); return }
+  activeTab.value = 'cohorts'
+  openInvite(cohorts.value[0].id)
+  await nextTick()
+  document.querySelector('.invite-panel, .cohort-card')?.scrollIntoView({ behavior: 'smooth', block: 'center' })
+}
 
 const inviteSubmitting = ref(false)
 
@@ -442,8 +466,21 @@ async function sendInvite(cohortId: number) {
 
   let body: Record<string, any>
   if (isExisting) {
-    if (!inviteForm.value.selectedUserId) { showToast('Please select a student', 'var(--amber)'); return }
-    body = { user_id: inviteForm.value.selectedUserId }
+    const ids = inviteForm.value.selectedUserIds
+    if (!ids.length) { showToast('Please select at least one student', 'var(--amber)'); return }
+    // Several at once → the bulk assign endpoint (moves them in, notifies each).
+    inviteSubmitting.value = true
+    try {
+      const res: any = await api(`/cohorts/${cohortId}/students/assign`, { method: 'POST', body: { user_ids: ids } })
+      closeInvite()
+      await Promise.all([fetchCohorts(), fetchExistingStudents()])
+      showToast(res?.message || `${ids.length} student${ids.length !== 1 ? 's' : ''} added to ${cohort.label}`, 'var(--teal)')
+    } catch (e: any) {
+      showToast(e?.data?.message || 'Failed to add students', 'var(--rose)')
+    } finally {
+      inviteSubmitting.value = false
+    }
+    return
   } else {
     const firstName = inviteForm.value.firstName.trim()
     const lastName  = inviteForm.value.lastName.trim()
@@ -633,29 +670,43 @@ async function doDeleteCohort() {
 
 // Remove now asks for confirmation first (it frees the seat — shouldn't be
 // a one-click accident).
-const removeModal = ref<{ open: boolean; cohortId: number; seatId: number; name: string }>({
-  open: false, cohortId: 0, seatId: 0, name: '',
+// mode 'cohort'      → take them out of this cohort only; they become Unassigned.
+// mode 'institution' → take them out of the institution (revokes the seat).
+type RemoveMode = 'cohort' | 'institution'
+const removeModal = ref<{ open: boolean; cohortId: number; seatId: number; name: string; mode: RemoveMode }>({
+  open: false, cohortId: 0, seatId: 0, name: '', mode: 'cohort',
 })
 const removingId = ref<number | null>(null)
 
-function removeStudent(cohortId: number, seatId: number, studentName: string) {
-  removeModal.value = { open: true, cohortId, seatId, name: studentName }
+function removeStudent(cohortId: number, seatId: number, studentName: string, mode: RemoveMode = 'cohort') {
+  removeModal.value = { open: true, cohortId, seatId, name: studentName, mode }
 }
 function closeRemove() { removeModal.value.open = false }
 
 async function confirmRemoveStudent() {
   const m = { ...removeModal.value }
   closeRemove()                               // close the dialog immediately
-  if (!m.cohortId || !m.seatId || removingId.value) return
+  if (!m.seatId || removingId.value) return
+  if (m.mode === 'cohort' && !m.cohortId) return
   removingId.value = m.seatId
   const pruneSeat = () => {
     const cohort = cohorts.value.find(c => c.id === m.cohortId)
     if (cohort) cohort.students = cohort.students.filter(s => s.seatId !== m.seatId)
   }
   try {
-    await api(`/cohorts/${m.cohortId}/students/${m.seatId}`, { method: 'DELETE' })
-    pruneSeat()
-    showToast(`${m.name} removed`, 'var(--ink)')
+    if (m.mode === 'institution') {
+      await api(`/students/${m.seatId}`, { method: 'DELETE' })
+      pruneSeat()
+      existingStudents.value = existingStudents.value.filter(s => s.seatId !== m.seatId)
+      showToast(`${m.name} removed from the institution`, 'var(--ink)')
+    } else {
+      await api(`/cohorts/${m.cohortId}/students/${m.seatId}`, { method: 'DELETE' })
+      pruneSeat()
+      // Still enrolled — now shows as Unassigned everywhere.
+      const r = existingStudents.value.find(s => s.seatId === m.seatId)
+      if (r) { r.cohortId = null; r.cohort = 'Unassigned' }
+      showToast(`${m.name} removed from cohort — now unassigned`, 'var(--ink)')
+    }
   } catch (e: any) {
     const code = e?.response?.status ?? e?.statusCode
     if (code === 403)      showToast("You don't have permission to remove students.", 'var(--rose)')
@@ -663,6 +714,51 @@ async function confirmRemoveStudent() {
     else                   showToast(e?.data?.message || 'Failed to remove student', 'var(--rose)')
   } finally {
     removingId.value = null
+  }
+}
+
+// ── Bulk "Assign to cohort" (All residents + the Unassigned group) ───────────
+// Selection holds USER ids (the assign endpoint works on enrolled students).
+// Selections are addressed by KEY, not by passing the ref from the template —
+// Vue unwraps refs in templates, so the handler received the bare Set and
+// `set.value` was undefined: nothing ever got ticked.
+type SelKey = 'roster' | 'unassigned'
+const rosterSel     = ref<Set<number>>(new Set())
+const unassignedSel = ref<Set<number>>(new Set())
+const selRef = (k: SelKey) => (k === 'roster' ? rosterSel : unassignedSel)
+const bulkTarget    = ref<string>('')        // cohort id chosen in the bulk bar
+const bulkAssigning = ref(false)
+function toggleSel(k: SelKey, uid: number | null) {
+  if (!uid) return
+  const r = selRef(k)
+  const next = new Set(r.value)
+  next.has(uid) ? next.delete(uid) : next.add(uid)
+  r.value = next
+}
+function setAll(k: SelKey, uids: (number | null)[], on: boolean) {
+  selRef(k).value = on ? new Set(uids.filter((u): u is number => !!u)) : new Set()
+}
+function isAllSelected(k: SelKey, uids: (number | null)[]) {
+  const ids = uids.filter((u): u is number => !!u)
+  return ids.length > 0 && ids.every(u => selRef(k).value.has(u))
+}
+const unassignedStudents = computed(() => existingStudents.value.filter(s => !s.cohortId))
+async function assignSelectedToCohort(k: SelKey) {
+  const set = selRef(k)
+  const ids = [...set.value]
+  const cohortId = Number(bulkTarget.value)
+  if (!ids.length || !cohortId || bulkAssigning.value) return
+  bulkAssigning.value = true
+  try {
+    const res: any = await api(`/cohorts/${cohortId}/students/assign`, { method: 'POST', body: { user_ids: ids } })
+    showToast(res?.message || 'Students assigned', 'var(--teal)')
+    set.value = new Set()
+    bulkTarget.value = ''
+    await Promise.all([fetchCohorts(), fetchExistingStudents()])
+  } catch (e: any) {
+    showToast(e?.data?.message || e?.data?.msg || 'Could not assign to cohort', 'var(--rose)')
+  } finally {
+    bulkAssigning.value = false
   }
 }
 
@@ -1027,7 +1123,7 @@ const bulkStatusLabel = (s: string) =>
 
       <!-- Skeleton state -->
       <template v-if="statsLoading">
-        <div v-for="i in 4" :key="i" class="stat-card" style="--top:linear-gradient(90deg,var(--border),var(--border));">
+        <div v-for="i in 5" :key="i" class="stat-card" style="--top:linear-gradient(90deg,var(--border),var(--border));">
           <div class="sk-line" style="width:64px;height:9px;border-radius:4px;margin-bottom:12px;"></div>
           <div class="sk-line" style="width:48px;height:28px;border-radius:6px;margin-bottom:10px;"></div>
           <div class="sk-line" style="width:90px;height:9px;border-radius:4px;"></div>
@@ -1040,6 +1136,13 @@ const bulkStatusLabel = (s: string) =>
           <div class="stat-label">Total seats</div>
           <div class="stat-val mono">{{ totalSeats }}</div>
           <div class="stat-sub">Institution Pro</div>
+        </div>
+        <!-- Pending invites — sent but not yet accepted. They don't take a seat
+             until accepted; activation is refused once the seats are full. -->
+        <div class="stat-card" style="--top:linear-gradient(90deg,#92400e,var(--amber));">
+          <div class="stat-label">Invites sent</div>
+          <div class="stat-val mono">{{ invitesPending }}</div>
+          <div class="stat-sub">Awaiting acceptance</div>
         </div>
         <div class="stat-card" style="--top:linear-gradient(90deg,var(--teal-dark),var(--teal));">
           <div class="stat-label">Occupied</div>
@@ -1063,7 +1166,7 @@ const bulkStatusLabel = (s: string) =>
     <!-- Low-seats warning -->
     <div v-if="seatsAvailable <= 5 && !cohortsLoading" class="warn-banner">
       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--amber)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
-      <span>Only <strong>{{ seatsAvailable }} seat{{ seatsAvailable !== 1 ? 's' : '' }}</strong> remaining — add more seats before inviting more residents.</span>
+      <span>Only <strong>{{ seatsAvailable }} seat{{ seatsAvailable !== 1 ? 's' : '' }}</strong> remaining<template v-if="invitesPending"> and <strong>{{ invitesPending }}</strong> invite{{ invitesPending !== 1 ? 's' : '' }} awaiting acceptance</template> — once seats are full, invited residents can't join until you add more seats.</span>
     </div>
 
     <!-- Main 2-col layout -->
@@ -1248,8 +1351,8 @@ const bulkStatusLabel = (s: string) =>
                         v-for="s in filteredExisting"
                         :key="s.id"
                         class="exist-row"
-                        :class="{ selected: inviteForm.selectedUserId === s.id }"
-                        @click="inviteForm.selectedUserId = s.id"
+                        :class="{ selected: inviteForm.selectedUserIds.includes(s.id) }"
+                        @click="toggleExisting(s.id)"
                       >
                         <div class="student-ava" style="width:26px;height:26px;font-size:.58rem;background:var(--teal);flex-shrink:0;">
                           <img v-if="s.avatarUrl" :src="s.avatarUrl" :alt="s.name" class="student-ava-img" />
@@ -1259,7 +1362,7 @@ const bulkStatusLabel = (s: string) =>
                           <div class="student-name">{{ s.name }}</div>
                           <div class="student-email mono">{{ s.email }}</div>
                         </div>
-                        <svg v-if="inviteForm.selectedUserId === s.id" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--teal)" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                        <svg v-if="inviteForm.selectedUserIds.includes(s.id)" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--teal)" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
                       </div>
                       <div v-if="!filteredExisting.length" class="cohort-empty" style="padding:16px;">
                         {{ inviteForm.existSearch ? 'No students match that search' : 'No existing students found' }}
@@ -1267,8 +1370,8 @@ const bulkStatusLabel = (s: string) =>
                     </div>
                     <div style="text-align:right;margin-top:10px;">
                       <button type="button" class="btn-secondary" @click="closeInvite" style="margin-right:8px;">Cancel</button>
-                      <button type="button" class="btn-send" :disabled="!inviteForm.selectedUserId || inviteSubmitting" @click="sendInvite(cohort.id)">
-                        {{ inviteSubmitting ? 'Adding…' : 'Add to cohort →' }}
+                      <button type="button" class="btn-send" :disabled="!inviteForm.selectedUserIds.length || inviteSubmitting" @click="sendInvite(cohort.id)">
+                        {{ inviteSubmitting ? 'Adding…' : (inviteForm.selectedUserIds.length > 1 ? `Add ${inviteForm.selectedUserIds.length} to cohort →` : 'Add to cohort →') }}
                       </button>
                     </div>
                   </template>
@@ -1345,6 +1448,51 @@ const bulkStatusLabel = (s: string) =>
               <div v-else class="cohort-empty">No students in this cohort yet. Click <strong>Invite</strong> to add residents.</div>
             </div>
 
+            <!-- Unassigned — enrolled students not in any cohort (e.g. joined with an
+                 invite code, or removed from a cohort). Select and allocate. -->
+            <div v-if="unassignedStudents.length" class="cohort-card">
+              <div class="cohort-hdr" style="background:var(--surface);border-bottom-color:var(--border);">
+                <div class="cohort-icon" style="background:var(--ink-faint);">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="7" r="4"/><path d="M5.5 21a6.5 6.5 0 0 1 13 0"/></svg>
+                </div>
+                <div style="flex:1;">
+                  <div class="cohort-name">Unassigned</div>
+                  <div class="cohort-stats" style="font-size:.7rem;color:var(--ink-dim);">{{ unassignedStudents.length }} student{{ unassignedStudents.length !== 1 ? 's' : '' }} not in a cohort</div>
+                </div>
+                <label v-if="canEdit(PERM_AREA)" style="display:flex;align-items:center;gap:6px;font-size:.72rem;color:var(--ink-dim);">
+                  <input type="checkbox"
+                    :checked="isAllSelected('unassigned', unassignedStudents.map(s => s.id))"
+                    @change="setAll('unassigned', unassignedStudents.map(s => s.id), ($event.target as HTMLInputElement).checked)" />
+                  Select all
+                </label>
+              </div>
+              <div v-if="unassignedSel.size && canEdit(PERM_AREA)" class="bulk-cohort-bar" style="border-bottom:1px solid var(--border);">
+                <span>{{ unassignedSel.size }} selected</span>
+                <select v-model="bulkTarget" class="bulk-cohort-select">
+                  <option value="" disabled>Allocate to cohort…</option>
+                  <option v-for="c in cohorts" :key="c.id" :value="String(c.id)">{{ c.label }}</option>
+                </select>
+                <button type="button" class="btn-send" :disabled="!bulkTarget || bulkAssigning" @click="assignSelectedToCohort('unassigned')">
+                  {{ bulkAssigning ? 'Allocating…' : 'Allocate' }}
+                </button>
+              </div>
+              <div v-for="s in unassignedStudents" :key="s.seatId" class="student-row">
+                <input v-if="canEdit(PERM_AREA)" type="checkbox" :aria-label="`Select ${s.name}`" :disabled="!s.id"
+                  :checked="!!s.id && unassignedSel.has(s.id)" @change="toggleSel('unassigned', s.id)" />
+                <div class="student-ava" :style="{ background: avatarBg(s.avatarIdx) }">
+                  <img v-if="s.avatarUrl" :src="s.avatarUrl" :alt="s.name" class="student-ava-img" />
+                  <template v-else>{{ s.initials }}</template>
+                </div>
+                <div style="flex:1;min-width:0;">
+                  <div class="student-name">{{ s.name }}</div>
+                  <div class="student-email mono">{{ s.email }}</div>
+                </div>
+                <span class="status-chip dot" :style="{ background: statusData(s.status).bg, color: statusData(s.status).fg, borderColor: statusData(s.status).bd }">
+                  <span class="status-dot"></span>{{ statusData(s.status).label }}
+                </span>
+              </div>
+            </div>
+
             <!-- Empty state when no cohorts -->
             <div v-if="!cohorts.length" class="cohort-empty-state">
               <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="var(--ink-faint)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
@@ -1373,9 +1521,27 @@ const bulkStatusLabel = (s: string) =>
               </div>
             </div>
 
+            <!-- Bulk bar: assign the selected residents to a cohort -->
+            <div v-if="rosterSel.size && canEdit(PERM_AREA)" class="bulk-cohort-bar">
+              <span>{{ rosterSel.size }} selected</span>
+              <select v-model="bulkTarget" class="bulk-cohort-select">
+                <option value="" disabled>Assign to cohort…</option>
+                <option v-for="c in cohorts" :key="c.id" :value="String(c.id)">{{ c.label }}</option>
+              </select>
+              <button type="button" class="btn-send" :disabled="!bulkTarget || bulkAssigning" @click="assignSelectedToCohort('roster')">
+                {{ bulkAssigning ? 'Assigning…' : 'Assign' }}
+              </button>
+              <button type="button" class="btn-secondary" @click="rosterSel = new Set()">✕ Clear</button>
+            </div>
+
             <table class="roster-table">
               <thead>
                 <tr>
+                  <th v-if="canEdit(PERM_AREA)" style="width:32px;padding-left:16px;">
+                    <input type="checkbox" aria-label="Select all"
+                      :checked="isAllSelected('roster', filteredRoster.map(s => s.id))"
+                      @change="setAll('roster', filteredRoster.map(s => s.id), ($event.target as HTMLInputElement).checked)" />
+                  </th>
                   <th style="padding-left:20px;">Resident</th>
                   <th>Cohort</th>
                   <th>Status</th>
@@ -1386,6 +1552,10 @@ const bulkStatusLabel = (s: string) =>
               </thead>
               <tbody>
                 <tr v-for="(s, i) in filteredRoster" :key="s.id" class="roster-row">
+                  <td v-if="canEdit(PERM_AREA)" style="padding-left:16px;">
+                    <input type="checkbox" :aria-label="`Select ${s.name}`" :disabled="!s.id"
+                      :checked="!!s.id && rosterSel.has(s.id)" @change="toggleSel('roster', s.id)" />
+                  </td>
                   <td style="padding-left:20px;">
                     <div style="display:flex;align-items:center;gap:9px;">
                       <div class="student-ava" :style="{ background: avatarBg(s.avatarIdx) }">
@@ -1409,22 +1579,21 @@ const bulkStatusLabel = (s: string) =>
                   <td style="text-align:right;padding-right:20px;">
                     <button type="button" v-if="canEdit(PERM_AREA) && s.status === 'invited'" class="ghost-btn teal" :disabled="resendingId === s.seatId" :style="resendingId === s.seatId ? 'opacity:0.6;cursor:default' : ''" @click="resend(s.cohortId ?? 0, s.seatId, s.name)">{{ resendingId === s.seatId ? 'Sending…' : 'Resend' }}</button>
                     <button type="button"
-                      v-else-if="canManage(PERM_AREA) && s.cohortId"
+                      v-else-if="canManage(PERM_AREA)"
                       class="ghost-btn danger"
-                      @click="removeStudent(s.cohortId, s.seatId, s.name)"
+                      @click="removeStudent(s.cohortId ?? 0, s.seatId, s.name, 'institution')"
                     >Remove</button>
-                    <span v-else-if="!s.cohortId" class="dim" style="font-size:.65rem;">No cohort</span>
                   </td>
                 </tr>
                 <tr v-if="!filteredRoster.length">
-                  <td colspan="6" class="table-empty">No residents match this filter</td>
+                  <td colspan="7" class="table-empty">No residents match this filter</td>
                 </tr>
               </tbody>
             </table>
 
             <div class="roster-footer">
               <span class="dim">{{ seatsAvailable }} seat{{ seatsAvailable !== 1 ? 's' : '' }} unallocated</span>
-              <button type="button" class="btn-teal-outline" :disabled="!cohorts.length" @click="cohorts.length && openInvite(cohorts[0].id)">+ Invite resident</button>
+              <button type="button" class="btn-teal-outline" @click="inviteFromRoster">+ Invite resident</button>
             </div>
           </div>
         </template>
@@ -1462,10 +1631,10 @@ const bulkStatusLabel = (s: string) =>
           </div>
 
 
-          <!-- Asking Passmed for more seats is a billing action. Gated on `edit` for
-               seats_cohorts — a role with only `view` here sees its usage but cannot
-               ask for more. The endpoint enforces the same, so hiding this is UX. -->
-          <button v-if="canEdit(PERM_AREA)" type="button" class="btn-purple-full" @click="openSeatsModal()">Upgrade / Add seats</button>
+          <!-- Asking Passmed for more seats is a billing action: `manage` on
+               seats_cohorts (Role Matrix). `edit` can run cohorts but not buy seats.
+               The endpoint enforces the same (perm:seats_cohorts,full). -->
+          <button v-if="canManage(PERM_AREA)" type="button" class="btn-purple-full" @click="openSeatsModal()">Upgrade / Add seats</button>
         </div>
 
       </div>
@@ -1753,8 +1922,8 @@ const bulkStatusLabel = (s: string) =>
         <div class="nc-modal" style="max-width:420px;">
           <div class="nc-header">
             <div>
-              <div class="nc-title">Remove student?</div>
-              <div class="nc-sub">This frees their seat</div>
+              <div class="nc-title">{{ removeModal.mode === 'institution' ? 'Remove from institution?' : 'Remove from cohort?' }}</div>
+              <div class="nc-sub">{{ removeModal.mode === 'institution' ? 'This frees their seat' : 'They stay enrolled, as Unassigned' }}</div>
             </div>
             <button type="button" class="nc-close" @click="closeRemove" aria-label="Close">
               <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
@@ -1762,7 +1931,12 @@ const bulkStatusLabel = (s: string) =>
           </div>
           <div class="nc-body">
             <p style="font-size:0.85rem;color:var(--ink);margin:0;">
-              Remove <strong>{{ removeModal.name }}</strong> from this cohort? This frees their seat. You can invite them again later.
+              <template v-if="removeModal.mode === 'institution'">
+                Remove <strong>{{ removeModal.name }}</strong> from the institution? Their seat is freed and they lose access. You can invite them again later.
+              </template>
+              <template v-else>
+                Remove <strong>{{ removeModal.name }}</strong> from this cohort? They keep their seat and move to <strong>Unassigned</strong>, where you can allocate them to another cohort.
+              </template>
             </p>
           </div>
           <div class="nc-footer">
@@ -1859,6 +2033,14 @@ const bulkStatusLabel = (s: string) =>
 </template>
 
 <style scoped>
+.bulk-cohort-bar {
+  display: flex; align-items: center; gap: 8px; flex-wrap: wrap;
+  padding: 10px 16px; background: var(--teal-pale, #ecfeff); font-size: .76rem; font-weight: 700; color: var(--ink);
+}
+.bulk-cohort-select {
+  padding: 6px 10px; border: 1.5px solid var(--border); border-radius: 8px;
+  background: var(--white); font-size: .76rem; color: var(--ink);
+}
 /* New-cohort bulk-invite per-row results modal */
 .bulk-res-row {
   display: flex; align-items: center; gap: 8px; flex-wrap: wrap;
@@ -1916,7 +2098,7 @@ body.dark .bulk-res-badge.br-no_seats  { background: #312e81; color: #c7d2fe; }
 .hdr-purple:hover { background: #6d28d9; color: #fff; border-color: #6d28d9; }
 
 /* ── Stat strip ──────────────────────────────────────────────────────── */
-.stat-grid { display: grid; grid-template-columns: repeat(4,1fr); gap: 12px; margin-bottom: 18px; 
+.stat-grid { display: grid; grid-template-columns: repeat(5,1fr); gap: 12px; margin-bottom: 18px; 
   @media (max-width: 900px) {
     grid-template-columns: repeat(2, 1fr);
   }

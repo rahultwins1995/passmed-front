@@ -120,7 +120,8 @@ const bottomSections = computed<NavSection[]>(() => visibleSections([
       { label: 'Notifications',   to: '/institute/notifications', tip: 'Notifications', area: 'notifications',
         ...(notifUnread.value > 0 ? { badge: notifUnread.value, badgeClass: 'ni-badge-amber' } : {}) },
       { label: 'Seats & Cohorts', to: '/institute/seats-billing', tip: 'Seats & Cohorts', area: 'seats_cohorts' },
-      { label: 'Settings',        to: '/institute/settings',      tip: 'Settings', area: 'inst_settings' },
+      // Ungated: everyone has the Profile tab; institution tabs are gated in-page.
+      { label: 'Settings',        to: '/institute/settings',      tip: 'Settings', area: null },
     ],
   },
   {

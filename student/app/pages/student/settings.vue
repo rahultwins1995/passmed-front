@@ -64,14 +64,28 @@ watch(activeExamId, async (id, prev) => {
 
 const activeTab = ref('profile')
 
-const tabs = [
+// Students enrolled through an institution (from /me). Their account belongs to
+// the institution: they sign in with their institution email only (no Google
+// linking) and can't reset progress or delete the account — the institution
+// manages that. The backend refuses those actions for them too.
+const studentInstitution = computed<{ id: number; name: string; require_2fa?: boolean } | null>(
+  () => (user.value as any)?.student_institution || null)
+const isInstitutional = computed(() => !!studentInstitution.value)
+
+const tabs = computed(() => [
   { id:'profile',       label:'Profile' },
   { id:'security',      label:'Security' },
   { id:'notifications', label:'Notifications' },
   { id:'billing',       label:'Subscription' },
-  { id:'linked',        label:'Linked accounts' },
-  { id:'danger',        label:'Danger zone' },
-]
+  ...(isInstitutional.value ? [] : [
+    { id:'linked',        label:'Linked accounts' },
+    { id:'danger',        label:'Danger zone' },
+  ]),
+])
+// /me can arrive after the tab was picked — never leave a hidden tab open.
+watch(tabs, (list) => {
+  if (!list.some(t => t.id === activeTab.value)) activeTab.value = 'profile'
+})
 
 // ─── Profile (dynamic) ──────────────────────────────────────────────────────
 // Only the three fields wired below are sent to /profile/update. The other
@@ -456,9 +470,11 @@ async function saveProfile() {
     // server-side in updateProfile). Onboarding fields are saved here too; the
     // school/work fields follow the selected audience so switching from resident
     // to student (or back) clears the now-irrelevant ones.
+    // Institutional students: their institution IS their school / workplace.
+    const instName = studentInstitution.value?.name || null
     const audienceFields = isStudentProfile.value
-      ? { medical_school: effectiveProfileSchool.value || null, work_study: null, specialty: null }
-      : { medical_school: null, work_study: profile.work_study.trim() || null, specialty: profile.specialty.trim() || null }
+      ? { medical_school: (isInstitutional.value ? instName : effectiveProfileSchool.value) || null, work_study: null, specialty: null }
+      : { medical_school: null, work_study: (isInstitutional.value ? instName : profile.work_study.trim()) || null, specialty: profile.specialty.trim() || null }
     await studentApi('/profile/update', {
       method: 'POST',
       body: {
@@ -888,34 +904,35 @@ async function submitSetPassword() {
         </div>
       </div>
 
-      <!-- Student: medical school (dropdown scoped to country, or free text) -->
-      <template v-if="isStudentProfile">
-        <div v-if="profileHasSchoolList" class="setting-row">
-          <div class="row-left"><div class="row-label">Medical school</div></div>
-          <div class="row-right">
-            <select class="s-select" v-model="profile.medical_school" :disabled="profileSaving">
+      <!-- Institution — ONE row. Enrolled via an institution: its name, read-only.
+           Otherwise: medical school (dropdown scoped to country, with a free-text
+           box in the same row when the school isn't listed) or, for residents,
+           where they work / study. -->
+      <div v-if="isInstitutional" class="setting-row">
+        <div class="row-left"><div class="row-label">Institution</div><div class="row-sub">Set by your institution</div></div>
+        <div class="row-right"><input class="s-input" type="text" :value="studentInstitution?.name || ''" disabled readonly /></div>
+      </div>
+      <template v-else-if="isStudentProfile">
+        <div class="setting-row">
+          <div class="row-left"><div class="row-label">Institution</div><div class="row-sub">Your medical school</div></div>
+          <div class="row-right" style="display:flex;flex-direction:column;gap:8px">
+            <select v-if="profileHasSchoolList" class="s-select" v-model="profile.medical_school" :disabled="profileSaving">
               <option value="" disabled>— Select —</option>
               <optgroup v-for="grp in profileSchoolGroups" :key="grp.group" :label="grp.group">
                 <option v-for="s in grp.schools" :key="s" :value="s">{{ s }}</option>
               </optgroup>
               <option value="__other__">My school isn’t listed…</option>
             </select>
+            <input v-if="!profileHasSchoolList || profile.medical_school === '__other__'" class="s-input" type="text"
+              v-model="profile.medical_school_other" :disabled="profileSaving" placeholder="Your medical school" />
           </div>
-        </div>
-        <div v-if="profileHasSchoolList && profile.medical_school === '__other__'" class="setting-row">
-          <div class="row-left"><div class="row-label">School name</div></div>
-          <div class="row-right"><input class="s-input" type="text" v-model="profile.medical_school_other" :disabled="profileSaving" placeholder="Your medical school" /></div>
-        </div>
-        <div v-if="!profileHasSchoolList" class="setting-row">
-          <div class="row-left"><div class="row-label">Medical school</div></div>
-          <div class="row-right"><input class="s-input" type="text" v-model="profile.medical_school_other" :disabled="profileSaving" placeholder="Your medical school" /></div>
         </div>
       </template>
 
       <!-- Resident: where they work/study + specialty -->
-      <template v-else>
-        <div class="setting-row">
-          <div class="row-left"><div class="row-label">Where you work / study</div></div>
+      <template v-if="!isStudentProfile">
+        <div v-if="!isInstitutional" class="setting-row">
+          <div class="row-left"><div class="row-label">Institution</div><div class="row-sub">Where you work / study</div></div>
           <div class="row-right"><input class="s-input" type="text" v-model="profile.work_study" :disabled="profileSaving" placeholder="Institution or program" /></div>
         </div>
         <div class="setting-row">
@@ -966,9 +983,18 @@ async function submitSetPassword() {
       <div class="setting-row" style="border-bottom:none">
         <div class="row-left">
           <div class="row-label">Two-factor authentication</div>
-          <div class="row-sub">Extra layer of protection via authenticator app</div>
+          <!-- Codes are EMAILED at sign-in (no authenticator app). Institution
+               students: their institution sets this, so no toggle. -->
+          <div class="row-sub">{{ isInstitutional
+            ? 'Set by your institution'
+            : 'Extra protection: we email you a sign-in code each time you log in' }}</div>
         </div>
-        <div class="row-right" style="display:flex;align-items:center;gap:8px">
+        <div v-if="isInstitutional" class="row-right">
+          <span style="font-size:0.72rem;font-weight:700;color:var(--ink-dim)">
+            {{ studentInstitution?.require_2fa ? 'On — required by your institution' : 'Off' }}
+          </span>
+        </div>
+        <div v-else class="row-right" style="display:flex;align-items:center;gap:8px">
           <span style="font-size:0.72rem;font-weight:700;color:var(--ink-dim)">
             {{ twoFaBusy ? (twoFaEnabled ? 'Enabling…' : 'Disabling…') : (twoFaEnabled ? 'On' : 'Off') }}
           </span>
@@ -1128,7 +1154,7 @@ async function submitSetPassword() {
     </div>
 
     <!-- ── LINKED ACCOUNTS ── -->
-    <div v-show="activeTab === 'linked' && !pageLoading" class="settings-section fi d2">
+    <div v-show="activeTab === 'linked' && !pageLoading && !isInstitutional" class="settings-section fi d2">
       <div class="section-header">
         <div class="section-icon" style="background:#e0f9fd">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#0891b2" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>
@@ -1187,7 +1213,7 @@ async function submitSetPassword() {
     </div>
 
     <!-- ── DANGER ZONE ── -->
-    <div v-show="activeTab === 'danger' && !pageLoading" class="settings-section danger-section fi d2">
+    <div v-show="activeTab === 'danger' && !pageLoading && !isInstitutional" class="settings-section danger-section fi d2">
       <div class="section-header" style="background:var(--rose-light)">
         <div class="section-icon" style="background:var(--rose-light)">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--rose)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>

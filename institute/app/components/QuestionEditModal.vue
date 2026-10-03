@@ -102,7 +102,10 @@ function htmlToPlain(html: string): string {
     .replace(/<\/?(ul|ol)[^>]*>/gi, '\n')
     .replace(/<\/(p|div|h[1-6])>/gi, '\n\n')
     .replace(/<br\s*\/?>/gi, '\n')
-    .replace(/<[^>]+>/g, '')
+    // NEW-36: strip ONLY real HTML tags (a letter after "<"/"</"). The old /<[^>]+>/g
+    // ate clinical inequalities like "WBC <4 or >11" (it saw "<4 or >" as a tag) and
+    // destroyed lab values on save. Anchoring on a letter leaves "<4"/">11" untouched.
+    .replace(/<\/?[a-z][a-z0-9]*(?:\s[^>]*)?\/?>/gi, '')
     .replace(/&nbsp;/gi, ' ').replace(/&amp;/gi, '&')
     .replace(/&lt;/gi, '<').replace(/&gt;/gi, '>')
     .replace(/&quot;/gi, '"').replace(/&#39;/gi, "'")

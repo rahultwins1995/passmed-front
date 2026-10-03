@@ -26,7 +26,13 @@ export const INSTITUTE_AREAS = [
   'question_bank',
   'reports',
   'seats_cohorts',
-  'inst_settings',
+  // Settings, one area per tab. Profile is not an area — it's always available.
+  'settings_program',
+  'settings_thresholds',
+  'settings_notifications',
+  'settings_team',
+  'settings_security',
+  'settings_danger',
   'notifications',
 ] as const
 
@@ -44,7 +50,7 @@ export type InstituteArea = typeof INSTITUTE_AREAS[number]
  * ── AREA_LEVELS: the levels each area can actually honour ───────────────────
  * Mirror of Permission::AREA_LEVELS in the Laravel model. Not every area has
  * four real states: `reports` is a single read-only endpoint, and nothing in
- * `inst_settings` or `students` can be deleted or published. Offering `full` on
+ * `students` can be deleted or published. Offering `full` on
  * those columns implied a capability that no route checked.
  *
  * Keep this in step with the PHP. The backend clamps too (and is the actual
@@ -57,8 +63,13 @@ export const AREA_LEVELS: Record<InstituteArea, PermissionLevel[]> = {
   assign_exams:  ['none', 'view', 'edit', 'full'],            // full = delete an assignment
   question_bank: ['none', 'view', 'edit', 'full'],            // full = approve/reject into the live bank
   reports:       ['none', 'view'],                            // read-only by nature
-  seats_cohorts: ['none', 'view', 'edit', 'full'],            // full = delete cohort + revoke a seat
-  inst_settings: ['none', 'view', 'edit', 'full'],            // full = add/remove team members
+  seats_cohorts: ['none', 'view', 'edit', 'full'],            // full = delete cohort + revoke a seat + Upgrade / Add seats
+  settings_program:       ['none', 'view', 'edit'],
+  settings_thresholds:    ['none', 'view', 'edit'],
+  settings_notifications: ['none', 'view', 'edit'],
+  settings_team:          ['none', 'view', 'full'],         // full = invite / change role / remove
+  settings_security:      ['none', 'view', 'edit'],         // edit = session timeout
+  settings_danger:        ['none', 'view', 'edit'],         // view = data export; edit = reset progress + clear seats
   notifications: ['none', 'view', 'edit'],                    // own inbox only; nothing destructive
 }
 
@@ -86,7 +97,6 @@ export const INSTITUTE_PAGE_AREAS: Array<{ prefix: string; area: InstituteArea }
   { prefix: '/institute/question-bank', area: 'question_bank' },
   { prefix: '/institute/reports',       area: 'reports' },
   { prefix: '/institute/seats-billing', area: 'seats_cohorts' },
-  { prefix: '/institute/settings',      area: 'inst_settings' },
   { prefix: '/institute/notifications', area: 'notifications' },
 ]
 
@@ -98,6 +108,9 @@ export const INSTITUTE_PUBLIC_PATHS = [
   '/institute',          // dashboard (exact match — see areaForPath)
   '/institute/help',
   '/institute/contact',
+  // Settings is open to everyone for the self-service Profile tab; the page shows
+  // each institution tab only with its own settings_* area.
+  '/institute/settings',
 ]
 
 /** Which permission area guards this path? `null` = ungated portal page. */
