@@ -51,9 +51,21 @@ function mapApiSession(s: any): Session {
 }
 
 async function loadSessions() {
-  const examId = activeExam.value?.examId
-  if (!examId) {
-    // No active exam yet — keep skeleton until useExam resolves.
+  // NEW-63: institution-pool students have NO numeric exam_id — their active "exam" is
+  // the Institution Q Bank (source 'institution', examId empty, institutionId set). The
+  // old `if (!examId) return` guard bailed out for them, so Past never loaded (the skeleton
+  // spun forever). Build the query by scope: exam_id for a real exam, scope+institution_id
+  // for the pool.
+  const ex      = activeExam.value
+  const isPool  = ex?.source === 'institution'
+  const examId  = ex?.examId
+  const instId  = ex?.institutionId
+  const params: Record<string, any> = isPool
+    ? { scope: 'institution', ...(instId ? { institution_id: Number(instId) } : {}) }
+    : { exam_id: Number(examId) }
+
+  // Not resolved yet: no exam AND no pool → keep skeleton until useExam resolves.
+  if (!isPool && !examId) {
     return
   }
   loadingList.value = true
@@ -64,9 +76,7 @@ async function loadSessions() {
   sessions.value    = []
   try {
     const studentApi = useStudentApi()
-    const res: any = await studentApi('/sessions', {
-      params: { exam_id: Number(examId) },
-    })
+    const res: any = await studentApi('/sessions', { params })
     sessions.value = (res?.data ?? []).map(mapApiSession)
   } catch (e: any) {
     loadError.value = e?.data?.msg || e?.message || 'Failed to load past sessions.'
@@ -80,7 +90,9 @@ async function loadSessions() {
 onMounted(loadSessions)
 
 // Refetch the list whenever the user switches active exam in the sidebar.
-watch(() => activeExam.value?.examId, (newId, oldId) => {
+// NEW-63: key on the UNIQUE id ('se_<id>' / 'inst_<id>'), not examId — a pool has no
+// numeric examId, so watching examId never fired when switching between pools.
+watch(() => activeExam.value?.id, (newId, oldId) => {
   if (newId && newId !== oldId) loadSessions()
 })
 

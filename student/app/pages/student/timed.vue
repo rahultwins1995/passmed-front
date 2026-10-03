@@ -310,7 +310,10 @@ onMounted(async () => {
   qDeadlineTs = Date.now() + qTimer.value * 1000
   sessionInt = setInterval(() => { if (!paused.value) secs.value++ }, 1000)
   qInt = setInterval(() => {
-    if (!paused.value && current.value && !result.value[current.value.id]) {
+    // NEW-61: gate the countdown on !isGraded (correct/incorrect) — not on any result.
+    // A GRADED question's timer must stay frozen on its verdict screen; a SKIPPED one is
+    // not graded, so if the student navigates back to it its timer may resume normally.
+    if (!paused.value && current.value && !isGraded(result.value[current.value.id])) {
       // Derive remaining from wall-clock — resilient to tab throttling / drift.
       qTimer.value = Math.max(0, Math.round((qDeadlineTs - Date.now()) / 1000))
       if (qTimer.value <= 0) autoSkip()
@@ -399,6 +402,11 @@ function autoSkip() {
       ? (ch === q.ans ? 'correct' : 'incorrect')
       : 'skipped'
     result.value = { ...result.value, [q.id]: r as any }
+    // NEW-60: timed grades on advance (the pick IS the commit) — persist the grade to the
+    // backend with submit:true so it's scored server-side. Without this, the BE (which now
+    // only grades on an explicit submit) would never score timed answers.
+    if (ch) syncQuestion(q.id, { chosen_answer: ch, submit: true })
+    else    syncQuestion(q.id, { result: 'skipped' })
   }
   // qTimer swap is handled by the watch on current.value?.id.
   if (idx.value < total.value - 1) {
@@ -418,8 +426,11 @@ function handleNext() {
   // previously marked 'skipped'); skipped is not a final grade.
   if (chosen.value[q.id] && !isGraded(result.value[q.id])) {
     result.value = { ...result.value, [q.id]: chosen.value[q.id] === q.ans ? 'correct' : 'incorrect' }
+    // NEW-60: persist the grade (submit) so the BE scores this timed answer.
+    syncQuestion(q.id, { chosen_answer: chosen.value[q.id], submit: true })
   } else if (!isGraded(result.value[q.id])) {
     result.value = { ...result.value, [q.id]: 'skipped' }
+    syncQuestion(q.id, { result: 'skipped' })   // NEW-60: honour skip server-side
   }
   // qTimer swap is handled by the watch on current.value?.id.
   goNext()

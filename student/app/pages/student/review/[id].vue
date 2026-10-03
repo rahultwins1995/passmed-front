@@ -134,7 +134,12 @@ const session = computed<ReviewSession | null>(() => {
   const correct    = s.score_correct || 0
   const incorrect  = s.score_incorrect || 0
   const skipped    = s.score_skipped || 0
-  const score      = total > 0 ? Math.round((correct / total) * 100) : 0
+  // NEW-59: accuracy is over ANSWERED questions (correct / (correct + incorrect)) — the
+  // SAME definition the dashboard uses. The old `correct / total` counted every skipped /
+  // unseen question as wrong, so a 200-q session with 15/20 answered read 7.5% here but
+  // 75% on the dashboard. A session with nothing answered has no score (0).
+  const answered   = correct + incorrect
+  const score      = answered > 0 ? Math.round((correct / answered) * 100) : 0
   const totalSecs  = s.elapsed_seconds || 0
   const mins       = Math.max(1, Math.round(totalSecs / 60))
   const avgSecs    = total > 0 ? Math.round(totalSecs / total) : 0

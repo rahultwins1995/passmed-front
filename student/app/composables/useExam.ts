@@ -181,6 +181,22 @@ export const useExam = () => {
         // No server-side selection yet — default to the first exam in the list.
         activeExamId.value = list[0]!.id
       }
+
+      // NEW-67: if the active exam has EXPIRED but the student still owns a valid one,
+      // switch to it and PERSIST the change — otherwise they land on a lapsed exam and
+      // get a false paywall even though they have paid access elsewhere. An exam with no
+      // expiry date (institute / assigned) is perpetual and never counts as expired.
+      const isExpired = (e: Exam) => !!e.expiryRaw && e.daysLeft <= 0
+      const cur = list.find(e => e.id === activeExamId.value)
+      if (cur && isExpired(cur)) {
+        const valid = list.find(e => !isExpired(e))
+        if (valid && valid.id !== cur.id) {
+          activeExamId.value = valid.id
+          // Persist so the server's is_active matches on the next load (best-effort —
+          // a failed POST still leaves the correct local selection for this session).
+          setActive(valid.id).catch(() => {})
+        }
+      }
       loaded.value = true
     } catch (e: any) {
       if (e?.response?.status === 404) {

@@ -143,6 +143,10 @@ export const useSession = () => {
   const timerPerQ      = useState<number>('session:timerPerQ', () => 60)
   const loading        = useState<boolean>('session:loading', () => false)
   const fetchError     = useState<string>('session:error', () => '')
+  // NEW-62: surfaces a PERSISTENT save failure (a per-question PATCH that failed even
+  // after a retry) so the runner can warn the student their progress isn't saving —
+  // instead of the old silent console warning. Cleared on the next successful PATCH.
+  const syncError      = useState<string>('session:syncError', () => '')
   const totalQuestions = useState<number>('session:total', () => 0)   // from API top-level
 
   // ─── Backend session lifecycle ─────────────────────────────────────────────
@@ -252,6 +256,10 @@ export const useSession = () => {
   function syncQuestion(questionId: number, payload: {
     chosen_answer?: string | null
     result?: 'correct' | 'incorrect' | 'skipped' | null
+    // NEW-60: `submit:true` tells the backend to GRADE this answer now (score it
+    // server-side). A plain chosen_answer without it is only a tentative pick and is
+    // saved for resume, never scored — so a pick-then-change isn't counted or locked.
+    submit?: boolean
     q_timer_remaining?: number
     q_time_spent?: number
   }) {
@@ -279,12 +287,25 @@ export const useSession = () => {
       // Re-check just before sending — defence in depth.
       if (body && 'flagged' in body) delete (body as any).flagged
       if (!body || Object.keys(body).length === 0) return
-      const studentApi = useStudentApi()
-      const p = studentApi(`/sessions/${sid}/questions/${questionId}`, {
-        method: 'PATCH',
-        body,
-      }).catch(e => log.warn('session', 'syncQuestion failed', e))
-      trackPromise(p)
+      // NEW-62: retry a failed PATCH once (transient network blip) before surfacing. A
+      // persistent failure sets syncError so the student is warned, rather than silently
+      // losing the answer (the old code only logged a console warning).
+      const send = (attempt = 1): Promise<any> => {
+        const studentApi = useStudentApi()
+        return studentApi(`/sessions/${sid}/questions/${questionId}`, {
+          method: 'PATCH',
+          body,
+        })
+          .then((r) => { syncError.value = ''; return r })
+          .catch((e) => {
+            log.warn('session', `syncQuestion failed (attempt ${attempt})`, e)
+            if (attempt < 2) {
+              return new Promise((res) => setTimeout(() => res(send(attempt + 1)), 1500))
+            }
+            syncError.value = 'Your answers aren’t saving — check your connection and try again.'
+          })
+      }
+      trackPromise(send())
     }, 250)
   }
 
@@ -400,6 +421,14 @@ export const useSession = () => {
       sessionId.value = data.id
       // Track mode for the "Continue session" link (resume/redo path).
       inProgressMode.value = data.mode === 'timed' ? 'timed' : 'tutor'
+
+      // NEW-61: restore the per-question timer base from the saved session, so a RESUMED
+      // timed session keeps the countdown length it was created with. Without this it fell
+      // back to the 60s default on resume — shortening (or lengthening) every question's
+      // timer versus the original sitting.
+      if (typeof data.timer_per_q === 'number' && data.timer_per_q > 0) {
+        timerPerQ.value = data.timer_per_q
+      }
 
       // Pull the saved per-question rows in their stored order. Backend
       // already orders by position via the show() eager-load constraint.
@@ -837,10 +866,17 @@ export const useSession = () => {
     const r = ch === q.ans ? 'correct' : 'incorrect'
     result.value = { ...result.value, [q.id]: r }
     submitted.value = true
+    // NEW-60: grade on the backend ONLY now (explicit submit). The server re-scores from
+    // the chosen option's is_correct (never trusts this local `r`) and stamps answered_at.
+    syncQuestion(q.id, { chosen_answer: ch, submit: true })
   }
 
   function skip() {
-    result.value = { ...result.value, [current.value.id]: 'skipped' }
+    const qid = current.value.id
+    result.value = { ...result.value, [qid]: 'skipped' }
+    // NEW-60: persist the skip immediately so it's honoured server-side (recorded as
+    // 'skipped' with answered_at), not only inferred at session complete.
+    syncQuestion(qid, { result: 'skipped' })
     goNext()
   }
 
@@ -934,7 +970,7 @@ export const useSession = () => {
   return {
     // state
     questions, idx, chosen, result, flagged, secs, submitted,
-    timerPerQ, loading, fetchError, totalQuestions,
+    timerPerQ, loading, fetchError, syncError, totalQuestions,
     sessionId, inProgressMode, trialBlock,
     // computed
     current, total, answered, score, progress,

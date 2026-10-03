@@ -731,6 +731,16 @@ async function launchSession() {
       return
     }
 
+    // NEW-62: block the launch when there's NO backend session id. Without it every
+    // per-question PATCH silently no-ops (syncQuestion early-returns on !sessionId), so
+    // the student would answer a whole session and lose all of it on refresh/exit. Fail
+    // loudly here instead of navigating into an unsaveable runner.
+    if (!sid) {
+      error.value = 'Could not start a saved session — please check your connection and try again.'
+      launching.value = false
+      return
+    }
+
     // Refresh the exam list so the trial balance (trialRemaining) updates in the
     // UI after this session consumed part of the pool.
     if (isFreeTrial.value) { try { await fetchExams(true) } catch {} }
@@ -741,7 +751,7 @@ async function launchSession() {
     navigateTo({
       path,
       query: {
-        session: sid ? String(sid) : undefined,
+        session: String(sid),
         count:   String(qCount.value),
         mode:    sessionMode.value,
       },

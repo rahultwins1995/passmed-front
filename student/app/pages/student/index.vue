@@ -371,17 +371,29 @@ function renderHeatmap() {
   }
 
   const maxCount = Math.max(...Object.values(heatmap.value), 1)
-  // Group by columns of 7 (weeks)
-  const days     = Object.entries(heatmap.value)
+  // NEW-69: Monday-align the grid. The old code chunked the dates in raw groups of 7
+  // from index 0, so each column started on whatever weekday the data happened to begin —
+  // rows never lined up to a fixed weekday (a GitHub-style grid must read Mon→Sun top to
+  // bottom). Sort by date, then pad the first column with empty cells so the first date
+  // lands on its true weekday row.
+  const sorted = Object.entries(heatmap.value).sort((a, b) => (a[0] < b[0] ? -1 : 1))
+  // Day-of-week with Monday = 0 … Sunday = 6.
+  const mondayIdx = (iso: string) => ((new Date(iso).getDay() + 6) % 7)
+  const firstDow  = sorted.length ? mondayIdx(sorted[0][0]) : 0
+  const padded: (([string, number]) | null)[] = [...Array(firstDow).fill(null), ...sorted]
+
   const cols: { label: string; cells: string }[] = []
-  for (let i = 0; i < days.length; i += 7) {
+  for (let i = 0; i < padded.length; i += 7) {
     const colIdx    = i / 7
-    const firstDate = days[i]?.[0]
+    // First REAL date in this column (skip leading pads) for the week label.
+    const firstDate = (padded.slice(i, i + 7).find(e => e)?.[0]) || ''
     // Week-of-year labels every 3rd column — frequent enough to pin a mid-grid
     // streak to a calendar week, but spaced enough (45px pitch) that the "Wk NN"
     // text doesn't overlap the next label on the 12px+3px-gap grid.
     const label = (colIdx % 3 === 0 && firstDate) ? `Wk ${isoWeek(firstDate)}` : ''
-    const cells = days.slice(i, i + 7).map(([, cnt]) => {
+    const cells = padded.slice(i, i + 7).map((e) => {
+      if (!e) return `<div class="hm-cell hm0"></div>`   // Monday-align padding
+      const cnt   = e[1]
       const level = cnt === 0 ? 0 : Math.ceil((cnt / maxCount) * 4)
       return `<div class="hm-cell hm${level}" title="${cnt} Qs"></div>`
     }).join('')
