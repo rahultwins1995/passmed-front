@@ -16,7 +16,7 @@
 // Production only — the dev server needs inline/eval for HMR and applies no CSP.
 import { randomBytes } from 'node:crypto'
 
-const buildCsp = (nonce: string): string =>
+const buildCsp = (nonce: string, apiOrigin: string): string =>
   [
     "default-src 'self'",
     "base-uri 'self'",
@@ -50,12 +50,12 @@ const buildCsp = (nonce: string): string =>
     // every report blocked by the browser: only server-side (Nitro) errors ever
     // reached the dashboard. Both region-specific and default ingest hosts are
     // allowed so a DSN moved between Sentry regions keeps working.
-    // api.passmed.com is the Laravel backend. Most calls go through the same-origin
-    // /api proxy ('self'), but large file uploads (institute/student question import)
-    // hit the backend DIRECTLY to bypass Vercel's 4.5MB proxy body cap — that direct
-    // cross-origin call needs api.passmed.com whitelisted here, or the browser blocks
-    // it (the "Import failed to start" with no server reason).
-    "connect-src 'self' https://api.passmed.com https://accounts.google.com https://apis.google.com https://www.googleapis.com https://*.stripe.com https://challenges.cloudflare.com https://www.googletagmanager.com https://www.google-analytics.com https://*.google-analytics.com https://*.analytics.google.com https://connect.facebook.net https://www.facebook.com https://www.googleadservices.com https://googleads.g.doubleclick.net https://www.google.com https://pagead2.googlesyndication.com https://*.ingest.de.sentry.io https://*.ingest.sentry.io",
+    // NEW-92: the Laravel backend origin is taken from RUNTIME CONFIG (apiBase), not
+    // hard-coded to api.passmed.com — each market runs on its own API host (api-uk…,
+    // api-za…, passamc.org, …) and the old hard-coded host CSP-blocked the DIRECT upload
+    // call (large institute/student question imports that bypass Vercel's 4.5MB proxy cap)
+    // on every non-US region. Most calls still go through the same-origin /api proxy ('self').
+    `connect-src 'self' ${apiOrigin} https://accounts.google.com https://apis.google.com https://www.googleapis.com https://*.stripe.com https://challenges.cloudflare.com https://www.googletagmanager.com https://www.google-analytics.com https://*.google-analytics.com https://*.analytics.google.com https://connect.facebook.net https://www.facebook.com https://www.googleadservices.com https://googleads.g.doubleclick.net https://www.google.com https://pagead2.googlesyndication.com https://*.ingest.de.sentry.io https://*.ingest.sentry.io`,
     "frame-src https://accounts.google.com https://js.stripe.com https://*.stripe.com https://challenges.cloudflare.com https://td.doubleclick.net https://www.google.com",
   ].join('; ')
 
@@ -77,6 +77,20 @@ export default defineNitroPlugin((nitroApp) => {
     html.bodyPrepend = stampNonce(html.bodyPrepend, nonce)
     html.bodyAppend = stampNonce(html.bodyAppend, nonce)
 
-    setResponseHeader(event, 'content-security-policy', buildCsp(nonce))
+    // NEW-92: derive THIS market's backend origin from runtime config (apiBase) so the
+    // CSP connect-src allows the region's own direct-upload host instead of a hard-coded
+    // api.passmed.com. Empty/unparseable → just omit it (the same-origin /api proxy still
+    // covers normal calls); never hard-code a wrong host.
+    // directApiBase (= NUXT_PUBLIC_API_BASE) is THIS market's real Laravel host used by the
+    // direct-upload path; apiBase is always the relative '/api' proxy, so it can't be used
+    // here. Derive just the origin (scheme + host).
+    let apiOrigin = ''
+    try {
+      const cfg = useRuntimeConfig(event) as any
+      const base = String(cfg?.public?.directApiBase || '')
+      if (base) apiOrigin = new URL(base).origin
+    } catch { /* leave empty */ }
+
+    setResponseHeader(event, 'content-security-policy', buildCsp(nonce, apiOrigin))
   })
 })

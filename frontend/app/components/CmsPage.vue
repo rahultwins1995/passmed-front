@@ -18,9 +18,18 @@ const { onContentClick } = useContentClick()
 const { data: page, pending: loading, error } = await useAsyncData(
   `page-${route.path}`,
   async () => {
-    const res = await $fetch(getApiPath(`getpage${route.path}`), { method: 'GET' })
-    if (res.status === 'success') return res.data
-    return null
+    try {
+      const res = await $fetch(getApiPath(`getpage${route.path}`), { method: 'GET' })
+      if (res.status === 'success') return res.data
+      // CMS reachable but no published page → legitimate fallback (not an error).
+      return null
+    } catch (e) {
+      // NEW-92: a genuine fetch FAILURE (network / 5xx / maintenance) must NOT be cached
+      // by ISR as a degraded 200 page — that pins a broken page for the whole revalidate
+      // window. Surface a 503 so the edge caches the error only briefly and the next
+      // request re-fetches a healthy page.
+      throw createError({ statusCode: 503, statusMessage: 'Content temporarily unavailable' })
+    }
   }
 )
 
