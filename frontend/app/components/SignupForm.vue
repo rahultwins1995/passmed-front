@@ -734,7 +734,15 @@ async function submitSignup (method = 'email') {
         },
       })
 
-      if (error) throw new Error(error.message)
+      // NEW-114: show a FRIENDLY message, not Stripe's raw/internal string. Genuine card
+      // declines (card_error/validation_error) already carry a customer-safe message;
+      // any other type (api_error, invalid_request_error like "No such payment_intent")
+      // is internal and must be masked behind a plain message.
+      if (error) throw new Error(
+        (error.type === 'card_error' || error.type === 'validation_error')
+          ? (error.message || 'Your card was declined.')
+          : "Your card couldn't be processed. Please check your details or try another card."
+      )
 
       // 3D Secure / SCA: EU/UK cards (and many US cards) come back as
       // 'requires_action' instead of 'succeeded' — the customer still has to
@@ -746,7 +754,11 @@ async function submitSignup (method = 'email') {
         (paymentIntent.status === 'requires_action' || paymentIntent.status === 'requires_source_action')
       ) {
         const next = await stripe.handleNextAction({ clientSecret: piResponse.clientSecret })
-        if (next.error) throw new Error(next.error.message)
+        if (next.error) throw new Error(
+          (next.error.type === 'card_error' || next.error.type === 'validation_error')
+            ? (next.error.message || 'Your card was declined.')
+            : "Your card couldn't be processed. Please check your details or try another card."
+        )
         paymentIntent = next.paymentIntent
       }
 
