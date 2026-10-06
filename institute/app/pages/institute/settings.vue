@@ -8,7 +8,7 @@
 //
 //   Program        settings_program        view / edit
 //   Thresholds     settings_thresholds     view / edit
-//   Notifications  settings_notifications  view / edit
+//   Notifications  — self-service (each user's own channels), no area needed
 //   Team           settings_team           view / manage (invite, change role, remove)
 //   Security       settings_security       view / edit (session timeout, team-wide 2FA)
 //   Danger zone    settings_danger         view (data export) / edit (reset progress, clear seats)
@@ -21,7 +21,6 @@ const { can, canEdit, canManage } = useInstitutePermissions()
 const SECTION_AREA = {
   program:       'settings_program',
   thresholds:    'settings_thresholds',
-  notifications: 'settings_notifications',
   admins:        'settings_team',
   security:      'settings_security',
   danger:        'settings_danger',
@@ -79,24 +78,30 @@ type NotifKey =
   | 'Mock exam results'
   | 'Low engagement alert'
   | 'Seat invitation accepted'
-  | 'Billing reminders'
+type NotifChannels = { inapp: boolean; email: boolean }
 
 // Section navigation (chip-row at top — mirrors the student settings page).
 // Profile is everyone's; each other tab needs its own settings_* area.
 const ALL_SECTIONS: Array<{ id: SectionId; label: string }> = [
   { id: 'program',       label: 'Program' },
-  { id: 'thresholds',    label: 'Thresholds' },
-  { id: 'notifications', label: 'Notifications' },
   // Was "Admins" — it always listed professors too, and now it invites them.
   { id: 'admins',        label: 'Team' },
+  { id: 'thresholds',    label: 'Thresholds' },
   { id: 'security',      label: 'Security' },
   { id: 'danger',        label: 'Danger zone' },
 ]
-// Profile first — it's everyone's own account and the default tab.
-const tabs = computed(() => [
-  { id: 'profile', label: 'Profile' },
-  ...ALL_SECTIONS.filter(t => canSection(t.id)),
-])
+// Order: Profile, Program, Team, Thresholds, Notifications, Security, Danger zone.
+// Profile and Notifications are self-service (everyone's own account / own
+// channels); the rest need their settings_* area.
+const tabs = computed(() => {
+  const gated = ALL_SECTIONS.filter(t => canSection(t.id))
+  const at = gated.findIndex(t => t.id === 'security' || t.id === 'danger')
+  const notif = { id: 'notifications', label: 'Notifications' }
+  return [
+    { id: 'profile', label: 'Profile' },
+    ...(at < 0 ? [...gated, notif] : [...gated.slice(0, at), notif, ...gated.slice(at)]),
+  ]
+})
 const activeTab = ref<string>(tabs.value[0]!.id)
 // Permissions can arrive after setup (fresh /me) — never leave someone on a tab
 // they can't see.
@@ -115,8 +120,8 @@ const program = ref({
   // Hardcoding New York here is what made every non-US programme look American.
   timezone: '',
   logoUrl: '',
-  // Include the Shared Pool in students' Institution Q Bank (default off).
-  sharedPoolOptin: false,
+  // Shared Pool access (default ON — institutions opt out).
+  sharedPoolOptin: true,
 })
 
 // Prefill institution identity from the shared profile state — the form must
@@ -159,7 +164,7 @@ async function loadProgram() {
         // `isValidZone` guards against junk already in the column.
         timezone:    (d.timezone && isValidZone(d.timezone)) ? d.timezone : resolveDefaultZone(),
         logoUrl:     d.logoUrl     ?? '',
-        sharedPoolOptin: !!d.sharedPoolOptin,
+        sharedPoolOptin: d.sharedPoolOptin !== false,
       }
     }
   } catch (e) { /* keep prefill defaults if the fetch fails */ }
@@ -175,9 +180,10 @@ onMounted(async () => {
     // Only the sections this role can see — the others 403 by design.
     await Promise.all([
       loadProfile(),
+      loadNotifs(),
       ...(canSection('program') ? [loadProgram(), loadCohorts()] : []),
       ...(canSection('admins') ? [loadAdmins()] : []),
-      ...((canSection('thresholds') || canSection('notifications') || canSection('security')) ? [loadSettingsExtras()] : []),
+      ...((canSection('thresholds') || canSection('security')) ? [loadSettingsExtras()] : []),
     ])
   } finally {
     pageLoading.value = false
@@ -195,13 +201,13 @@ async function loadCohorts() {
 }
 // (loaded via the consolidated onMounted above)
 const thresholds = ref({ passmark: 65, atRiskWeeks: 2, weeklyQTarget: 150 })
-const notifs = ref<Record<NotifKey, boolean>>({
-  'At-risk alert': true,
-  'Weekly digest': true,
-  'Mock exam results': true,
-  'Low engagement alert': true,
-  'Seat invitation accepted': false,
-  'Billing reminders': true,
+// The signed-in user's OWN channels per notification type (GET /my-notifications).
+const notifs = ref<Record<NotifKey, NotifChannels>>({
+  'At-risk alert':            { inapp: true,  email: true },
+  'Weekly digest':            { inapp: true,  email: true },
+  'Mock exam results':        { inapp: true,  email: false },
+  'Low engagement alert':     { inapp: true,  email: true },
+  'Seat invitation accepted': { inapp: false, email: false },
 })
 // ── Team access ─────────────────────────────────────────────────────────────
 const team       = ref<TeamMember[]>([])
@@ -405,13 +411,26 @@ async function toggleRequire2fa(key: 'require2fa' | 'require2faStudents' = 'requ
   }
 }
 
-// Hydrate thresholds + notification preferences + security from the backend.
+async function loadNotifs() {
+  try {
+    const res: any = await instituteApi('/my-notifications')
+    const d = res?.data
+    if (d && typeof d === 'object') {
+      const next = { ...notifs.value }
+      for (const k of Object.keys(next) as NotifKey[]) {
+        if (d[k]) next[k] = { inapp: !!d[k].inapp, email: !!d[k].email }
+      }
+      notifs.value = next
+    }
+  } catch (e) { /* keep defaults on failure */ }
+}
+
+// Hydrate thresholds + security from the backend.
 async function loadSettingsExtras() {
   try {
     const res: any = await instituteApi('/settings-extras')
     const d = res?.data
     if (d?.thresholds)    thresholds.value = { ...thresholds.value, ...d.thresholds }
-    if (d?.notifications) notifs.value     = { ...notifs.value, ...d.notifications }
     if (d?.security) {
       security.value.sessionTimeout = (d.security.sessionTimeout ?? '') as TimeoutToken
       security.value.require2fa = !!d.security.require2fa
@@ -423,12 +442,11 @@ async function loadSettingsExtras() {
 // (loaded via the consolidated onMounted above)
 
 const notifDescriptions: Record<NotifKey, string> = {
-  'At-risk alert': 'Email when a resident drops below the pass threshold',
+  'At-risk alert': 'When a resident drops below the pass threshold',
   'Weekly digest': 'Sunday summary of cohort activity and performance',
   'Mock exam results': 'Notify when exam results are ready to review',
-  'Low engagement alert': "Email when a resident hasn't logged in for 5+ days",
+  'Low engagement alert': "When a resident hasn't logged in for 5+ days",
   'Seat invitation accepted': 'Notify when a new resident accepts their invitation',
-  'Billing reminders': 'Renewal and payment notifications',
 }
 
 /*
@@ -612,7 +630,7 @@ async function saveNotifs() {
   if (notifsState.value === 'saving') return
   notifsState.value = 'saving'
   try {
-    await instituteApi('/settings-extras', { method: 'POST', body: { notifications: notifs.value } })
+    await instituteApi('/my-notifications', { method: 'POST', body: { prefs: notifs.value } })
     notifsState.value = 'saved'
     setTimeout(() => { notifsState.value = 'idle' }, 2000)
   } catch (e: any) {
@@ -873,15 +891,15 @@ function initials(name: string) {
             <div style="font-size:0.66rem;color:var(--ink-dim);margin-top:6px;">Manage cohorts in Seats &amp; Cohorts.</div>
           </div>
 
-          <!-- Shared Pool opt-in — whether students see Shared-Pool questions in their
-               Institution Q Bank. Off by default (their own questions only). -->
+          <!-- Shared Pool access — on by default (institutions opt out). Off removes
+               Shared-Pool questions for staff (Question Bank, Assign Exam) and students. -->
           <div style="border-top:1px solid var(--border);margin-top:16px;padding-top:16px;">
             <label style="display:flex;align-items:flex-start;gap:10px;cursor:pointer;max-width:640px;">
               <input type="checkbox" v-model="program.sharedPoolOptin" :disabled="!canEdit('settings_program')"
                      style="margin-top:3px;width:16px;height:16px;cursor:pointer;flex-shrink:0;" />
               <span>
-                <span class="fld-label" style="display:block;margin:0 0 2px;">Include the Shared Pool in our students' Question Bank</span>
-                <span style="font-size:0.7rem;color:var(--ink-dim);line-height:1.5;">Off: students see only your institution's own questions. On: they also see Shared-Pool questions contributed by other institutions (each shown with a “Shared” badge).</span>
+                <span class="fld-label" style="display:block;margin:0 0 2px;">Use the Shared Pool</span>
+                <span style="font-size:0.7rem;color:var(--ink-dim);line-height:1.5;">On: your Question Bank, Assign Exam and your students' Question Bank include Shared-Pool questions contributed by other institutions (each shown with a “Shared” badge). Off: only your institution's own questions are available. Exams already assigned keep their questions.</span>
               </span>
             </label>
           </div>
@@ -920,30 +938,38 @@ function initials(name: string) {
           </div>
         </div>
 
-        <!-- 3. Email notifications -->
+        <!-- 3. Notifications (per user) -->
         <div v-show="activeTab === 'notifications'" class="card" style="margin-bottom:14px;">
-          <div class="section-eyebrow" style="margin-bottom:4px;">Email notifications</div>
+          <div class="section-eyebrow" style="margin-bottom:4px;">Notifications</div>
           <div style="font-size:0.67rem;color:var(--ink-dim);margin-bottom:14px;">
-            Sent to all administrators listed below unless otherwise configured.
+            Applies to your account only. Choose whether each alert appears in the platform, is emailed to you, or both.
+          </div>
+          <div class="notif-head">
+            <span></span>
+            <span>In-platform</span>
+            <span>Email</span>
           </div>
           <div>
             <div
               v-for="(label, i) in Object.keys(notifs) as NotifKey[]"
               :key="label"
-              class="notif-row"
+              class="notif-row notif-row--ch"
               :class="{ 'no-border': i === Object.keys(notifs).length - 1 }"
             >
               <div>
                 <div style="font-size:0.78rem;font-weight:700;color:var(--ink);">{{ label }}</div>
                 <div style="font-size:0.66rem;color:var(--ink-dim);margin-top:2px;">{{ notifDescriptions[label] }}</div>
               </div>
-              <button type="button" class="toggle" :class="{ on: notifs[label] }" @click="notifs[label] = !notifs[label]" role="switch" :aria-checked="notifs[label]" :aria-label="label">
+              <button type="button" class="toggle" :class="{ on: notifs[label].inapp }" @click="notifs[label].inapp = !notifs[label].inapp" role="switch" :aria-checked="notifs[label].inapp" :aria-label="`${label} — in-platform`">
+                <div class="toggle-knob"></div>
+              </button>
+              <button type="button" class="toggle" :class="{ on: notifs[label].email }" @click="notifs[label].email = !notifs[label].email" role="switch" :aria-checked="notifs[label].email" :aria-label="`${label} — email`">
                 <div class="toggle-knob"></div>
               </button>
             </div>
           </div>
           <div style="display:flex;justify-content:flex-end;margin-top:18px;">
-            <button v-if="canEdit('settings_notifications')" type="button" @click="saveNotifs" class="btn-save" :class="{ saved: notifsState === 'saved' }" :disabled="notifsState === 'saving'">
+            <button type="button" @click="saveNotifs" class="btn-save" :class="{ saved: notifsState === 'saved' }" :disabled="notifsState === 'saving'">
               <template v-if="notifsState === 'saved'">✓ Saved</template>
               <template v-else>{{ notifsState === 'saving' ? 'Saving…' : 'Save changes' }}</template>
             </button>
@@ -1358,6 +1384,13 @@ function initials(name: string) {
   padding: 13px 0; border-bottom: 1px solid var(--border);
 }
 .notif-row.no-border { border-bottom: none; }
+.notif-row--ch { display: grid; grid-template-columns: minmax(0, 1fr) 80px 80px; gap: 12px; justify-items: center; }
+.notif-row--ch > div:first-child { justify-self: stretch; }
+.notif-head {
+  display: grid; grid-template-columns: minmax(0, 1fr) 80px 80px; gap: 12px;
+  font-size: 0.6rem; font-weight: 800; letter-spacing: 1px; text-transform: uppercase;
+  color: var(--ink-dim); text-align: center; padding-bottom: 6px;
+}
 
 .toggle {
   width: 38px; height: 22px; border-radius: 20px;

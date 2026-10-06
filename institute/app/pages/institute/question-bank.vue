@@ -43,7 +43,8 @@ type ApiQuestion = {
   category?: { id: number; name: string } | null
   exam?: { id: number; name: string } | null
   question_options?: { id: number; question_id: number; option_text: string; is_correct: number }[]
-  is_flagged?: boolean
+  is_flagged?: boolean       // flagged by ME (drives the Flag / Flagged button)
+  flag_count?: number        // active flags on one of OUR questions, from anyone
   question_owner?: number | null
   visibility?: string | null
   // ISO Y-m-d date the question was last edited/imported (backend-stamped).
@@ -106,6 +107,9 @@ const difficulty       = ref<'all' | Difficulty>('all')
 // public (the shared pool). Passmed is intentionally NOT an option here — the
 // Question Bank page never surfaces Passmed (that lives in the mock builder).
 const source           = ref<'all' | 'mine' | 'public'>('all')  // default tab = All Questions
+// false → the institution opted out of the Shared Pool (Settings → Program): the
+// backend already excludes shared questions; this hides the card / filter option.
+const sharedEnabled    = ref(true)
 // "Authored by me" — filters the list + counts to questions THIS user created
 // (created_by / author_user_id = me). Mutually exclusive with the source cards.
 const authoredByMe      = ref(false)
@@ -183,9 +187,29 @@ function plain(input: unknown): string {
   }
   return t.replace(/[ \t]+\n/g, '\n').replace(/\n{3,}/g, '\n\n').trim()
 }
-async function toggleFlag(id: number) {
+// Flag button: flagged by me → un-flag straight away; otherwise open the
+// reason dialog, and the flag is sent from submitFlag().
+const flagTarget = ref<ApiQuestion | null>(null)
+const flagBusy   = ref(false)
+
+function toggleFlag(id: number) {
   const q = questions.value.find(q => q.id === id)
   if (!q) return
+  if (isFlagged(q)) sendFlag(q, null)
+  else flagTarget.value = q
+}
+
+async function submitFlag(v: { reason: string; note: string }) {
+  const q = flagTarget.value
+  if (!q) return
+  flagBusy.value = true
+  const ok = await sendFlag(q, v)
+  flagBusy.value = false
+  if (ok) flagTarget.value = null
+}
+
+async function sendFlag(q: ApiQuestion, v: { reason: string; note: string } | null): Promise<boolean> {
+  const id = q.id
   const currently = isFlagged(q)
   const revert = () => {
     if (currently) { localFlagged.value.add(id); localUnflagged.value.delete(id) }
@@ -195,17 +219,57 @@ async function toggleFlag(id: number) {
   if (currently) { localFlagged.value.delete(id); localUnflagged.value.add(id) }
   else           { localUnflagged.value.delete(id); localFlagged.value.add(id) }
   try {
-    const res: any = await api(`/questions/${id}/flag`, { method: 'POST' })
+    const res: any = await api(`/questions/${id}/flag`, { method: 'POST', body: v ?? {} })
     if (res?.status === 'success') {
-      // Refresh the Flagged stat card; if we're viewing flagged-only, refresh the list
-      // too so an unflagged row drops out.
+      flashDeleteMsg(v
+        ? (q.owned ? 'Flagged — it now shows in your Flagged list' : 'Flag sent to the question\'s owner')
+        : 'Flag removed')
+      // Refresh the Flagged stat card + list (own-question flag counts change).
       fetchCounts()
-      if (flaggedOnly.value) fetchQuestions()
-    } else {
-      revert()
+      if (flaggedOnly.value || q.owned) fetchQuestions(true)
+      delete flagReports.value[id]
+      return true
     }
-  } catch {
     revert()
+  } catch (e: any) {
+    revert()
+    flashDeleteMsg(e?.data?.msg || 'Could not update the flag — please try again')
+  }
+  return false
+}
+
+// ── Flag reports on our OWN questions (reason, note, who) ────────────────────
+type FlagReport = { id: number; reason: string; note: string | null; by: string; date: string | null }
+const flagReports  = ref<Record<number, { loading: boolean; rows: FlagReport[] }>>({})
+const resolvingId  = ref<number | null>(null)
+
+async function loadFlagReports(q: ApiQuestion | undefined) {
+  if (!q || !q.owned || !q.flag_count || flagReports.value[q.id]) return
+  flagReports.value[q.id] = { loading: true, rows: [] }
+  try {
+    const res: any = await api(`/questions/${q.id}/flags`)
+    flagReports.value[q.id] = { loading: false, rows: Array.isArray(res?.data) ? res.data : [] }
+  } catch {
+    flagReports.value[q.id] = { loading: false, rows: [] }
+  }
+}
+
+async function resolveFlags(q: ApiQuestion) {
+  if (resolvingId.value) return
+  resolvingId.value = q.id
+  try {
+    const res: any = await api(`/questions/${q.id}/flags/resolve`, { method: 'POST' })
+    if (res?.status === 'success') {
+      flashDeleteMsg('Flags resolved')
+      delete flagReports.value[q.id]
+      localFlagged.value.delete(q.id)
+      fetchCounts()
+      fetchQuestions(true)
+    }
+  } catch (e: any) {
+    flashDeleteMsg(e?.data?.msg || 'Could not resolve flags — please try again')
+  } finally {
+    resolvingId.value = null
   }
 }
 
@@ -309,6 +373,8 @@ async function fetchCounts(silent = false) {
       shared_count:     parseInt(d?.shared_questions    ?? 0),
       avg_correct:      parseFloat(String(d?.cohort_avg_correct ?? d?.avg_correct ?? '0').replace('%', '')),
     }
+    sharedEnabled.value = d?.shared_pool_enabled !== false
+    if (!sharedEnabled.value && source.value === 'public') { source.value = 'all' }
   } catch {} finally { if (!silent) countsLoading.value = false }
 }
 
@@ -564,6 +630,8 @@ const detailId = ref<number | null>(null)
 const openId   = ref<number | null>(null)
 
 function openDetail(id: number) { detailId.value = id; view.value = 'detail'; openId.value = null }
+// Opening a row's inline preview loads its flag reports (own flagged questions only).
+watch(openId, id => { if (id != null) loadFlagReports(questions.value.find(q => q.id === id)) })
 function closeDetail()          { view.value = 'list'; detailId.value = null  }
 
 // ── Edit modal (own questions only) ───────────────────────────────────────────
@@ -849,16 +917,28 @@ function diffFilterLabel(d: string): string {
 const currentDetail = computed<ApiQuestion | undefined>(() =>
   detailId.value == null ? undefined : questions.value.find(q => q.id === detailId.value)
 )
+// "Related questions" = other rows on the currently loaded page (so they already
+// respect the active filters). Same topic first, then topped up with same-exam
+// questions — previously it was a single OR filter, so a same-exam question from
+// an unrelated topic could crowd out a true same-topic match.
 const similar = computed<ApiQuestion[]>(() => {
   const q = currentDetail.value
   if (!q) return []
-  return questions.value.filter(s =>
-    s.id !== q.id && (
-      (q.topic_id && s.topic_id === q.topic_id) ||
-      (q.exam_id  && s.exam_id  === q.exam_id)
-    )
-  ).slice(0, 4)
+  const others    = questions.value.filter(s => s.id !== q.id)
+  const sameTopic = q.topic_id ? others.filter(s => s.topic_id === q.topic_id) : []
+  const sameExam  = q.exam_id
+    ? others.filter(s => s.exam_id === q.exam_id && !sameTopic.includes(s))
+    : []
+  return [...sameTopic, ...sameExam].slice(0, 4)
 })
+
+watch(currentDetail, q => loadFlagReports(q))
+
+// Stems are stored as HTML — strip tags/entities before truncating for the list.
+function stemPreview(stem: unknown, max = 90): string {
+  const t = plain(stem).replace(/\s+/g, ' ').trim()
+  return t.length > max ? t.slice(0, max).trimEnd() + '…' : t
+}
 
 // ── Click outside dropdown ────────────────────────────────────────────────────
 function onDocClick(e: MouseEvent) {
@@ -951,7 +1031,7 @@ onBeforeUnmount(() => { if (import.meta.client) document.removeEventListener('cl
         <div>
           <div class="page-title">Question Bank</div>
           <div class="page-sub">
-            <template v-if="!countsLoading">Your institution’s questions and the shared pool · {{ counts.accessible_total.toLocaleString() }} accessible · browse, filter &amp; preview</template>
+            <template v-if="!countsLoading">Your institution’s questions{{ sharedEnabled ? ' and the shared pool' : '' }} · {{ counts.accessible_total.toLocaleString() }} accessible · browse, filter &amp; preview</template>
           </div>
         </div>
         <div class="page-header-right">
@@ -970,7 +1050,7 @@ onBeforeUnmount(() => { if (import.meta.client) document.removeEventListener('cl
       </div>
 
       <!-- Stat strip -->
-      <div class="stat-grid">
+      <div class="stat-grid" :class="{ 'stat-grid--4': !sharedEnabled }">
         <!-- Skeleton -->
         <template v-if="countsLoading">
           <div v-for="i in 5" :key="i" class="stat-card sk-stat-card">
@@ -985,7 +1065,7 @@ onBeforeUnmount(() => { if (import.meta.client) document.removeEventListener('cl
             @click="selectCard('all')">
             <div class="stat-label">All Questions</div>
             <div class="stat-val">{{ counts.accessible_total.toLocaleString() }}</div>
-            <div class="stat-sub">own + shared pool</div>
+            <div class="stat-sub">{{ sharedEnabled ? 'own + shared pool' : 'your institution’s own' }}</div>
           </div>
           <!-- 1 · Institute Qs → filter to this institution's own questions -->
           <div class="stat-card c-teal" :class="{ 'stat-active': source === 'mine' }" style="cursor:pointer;"
@@ -995,7 +1075,7 @@ onBeforeUnmount(() => { if (import.meta.client) document.removeEventListener('cl
             <div class="stat-sub">your institution's own</div>
           </div>
           <!-- 2 · Shared Pool Qs → filter to shared-pool questions -->
-          <div class="stat-card c-purple" :class="{ 'stat-active': source === 'public' }" style="cursor:pointer;"
+          <div v-if="sharedEnabled" class="stat-card c-purple" :class="{ 'stat-active': source === 'public' }" style="cursor:pointer;"
             @click="selectCard('public')">
             <div class="stat-label">Shared Pool Qs</div>
             <div class="stat-val">{{ counts.shared_count.toLocaleString() }}</div>
@@ -1006,7 +1086,7 @@ onBeforeUnmount(() => { if (import.meta.client) document.removeEventListener('cl
             @click="selectCard('flagged')">
             <div class="stat-label">Flagged</div>
             <div class="stat-val">{{ counts.flagged_count.toLocaleString() }}</div>
-            <div class="stat-sub">flagged for review</div>
+            <div class="stat-sub">your questions flagged for review</div>
           </div>
           <!-- 4 · Needs Review → status-4 review queue -->
           <div class="stat-card c-amber" :class="{ 'stat-active': reviewMode }" style="cursor:pointer;"
@@ -1079,7 +1159,7 @@ onBeforeUnmount(() => { if (import.meta.client) document.removeEventListener('cl
             @change="onSourceDropdown()">
             <option value="all">All Questions</option>
             <option value="mine">Institution</option>
-            <option value="public">Shared pool</option>
+            <option v-if="sharedEnabled" value="public">Shared pool</option>
             <option value="author">Authored by me</option>
           </select>
 
@@ -1297,6 +1377,9 @@ onBeforeUnmount(() => { if (import.meta.client) document.removeEventListener('cl
                       @click.stop="toggleFlag(q.id)">
                       {{ isFlagged(q) ? '🚩 Flagged' : '⚑ Flag' }}
                     </button>
+                    <div v-if="q.owned && q.flag_count" class="flag-count" title="Flag reports on your question — open the row to see them">
+                      {{ q.flag_count }} report{{ q.flag_count === 1 ? '' : 's' }}
+                    </div>
                   </td>
                   <td class="td-right">
                     <!-- Own questions are editable; shared-pool questions are view-only -->
@@ -1344,6 +1427,19 @@ onBeforeUnmount(() => { if (import.meta.client) document.removeEventListener('cl
                         </div> 
                          <div v-if="isImageUrl(q.question_image_ids)" class="qc-question-image qc-question-image--institute-detail">
                           <img :src="q.question_image_ids" alt="Question image" loading="lazy" />
+                        </div>
+                        <div v-if="q.owned && q.flag_count" class="flag-reports">
+                          <div class="flag-reports-hdr">
+                            <span class="exp-label" style="margin:0;">Flag reports</span>
+                            <button v-if="canEdit(PERM_AREA)" type="button" class="flag-resolve" :disabled="resolvingId === q.id" @click.stop="resolveFlags(q)">
+                              {{ resolvingId === q.id ? 'Resolving…' : '✓ Mark resolved' }}
+                            </button>
+                          </div>
+                          <div v-if="flagReports[q.id]?.loading" class="flag-report-empty">Loading…</div>
+                          <div v-for="r in (flagReports[q.id]?.rows || [])" :key="r.id" class="flag-report">
+                            <div class="flag-report-top"><strong>{{ r.reason }}</strong><span>{{ r.by }}<template v-if="r.date"> · {{ fmtDate(r.date) }}</template></span></div>
+                            <div v-if="r.note" class="flag-report-note">{{ r.note }}</div>
+                          </div>
                         </div>
                       </div>
                       <div class="expanded-side">
@@ -1459,13 +1555,28 @@ onBeforeUnmount(() => { if (import.meta.client) document.removeEventListener('cl
             <div class="expl-text">{{ plain(currentDetail.explanation) || 'No explanation provided.' }}</div>
           </div>
 
+          <!-- Flag reports (own questions only) -->
+          <div v-if="currentDetail.owned && currentDetail.flag_count" class="card flag-reports">
+            <div class="flag-reports-hdr">
+              <span class="expl-label" style="margin:0;">Flag reports</span>
+              <button v-if="canEdit(PERM_AREA)" type="button" class="flag-resolve" :disabled="resolvingId === currentDetail.id" @click="resolveFlags(currentDetail)">
+                {{ resolvingId === currentDetail.id ? 'Resolving…' : '✓ Mark resolved' }}
+              </button>
+            </div>
+            <div v-if="flagReports[currentDetail.id]?.loading" class="flag-report-empty">Loading…</div>
+            <div v-for="r in (flagReports[currentDetail.id]?.rows || [])" :key="r.id" class="flag-report">
+              <div class="flag-report-top"><strong>{{ r.reason }}</strong><span>{{ r.by }}<template v-if="r.date"> · {{ fmtDate(r.date) }}</template></span></div>
+              <div v-if="r.note" class="flag-report-note">{{ r.note }}</div>
+            </div>
+          </div>
+
           <!-- Similar -->
           <div v-if="similar.length" class="card">
             <div class="sim-label">Related questions — {{ currentDetail.topic?.name || currentDetail.exam?.name || 'Same exam' }}</div>
             <div class="sim-list">
               <div v-for="s in similar" :key="s.id" class="sim-row" @click="detailId = s.id" tabindex="0" role="button" @keydown.enter="detailId = s.id" @keydown.space.prevent="detailId = s.id">
                 <span class="sim-id">Q{{ s.id }}</span>
-                <span class="sim-stem">{{ s.question_stem.slice(0, 90) }}…</span>
+                <span class="sim-stem">{{ stemPreview(s.question_stem) }}</span>
                 <span class="diff-pill" :style="{ background: diffBg(s.difficulty as Difficulty), color: diffColor(s.difficulty as Difficulty) }">{{ diffLabel(s.difficulty) }}</span>
               </div>
             </div>
@@ -1498,6 +1609,15 @@ onBeforeUnmount(() => { if (import.meta.client) document.removeEventListener('cl
       </div>
     </div>
   </div>
+
+  <!-- Flag for review: reason + optional note -->
+  <FlagQuestionModal
+    :open="!!flagTarget"
+    :owned="!!flagTarget?.owned"
+    :busy="flagBusy"
+    @submit="submitFlag"
+    @cancel="flagTarget = null"
+  />
 
   <!-- Import Questions modal -->
   <ImportQuestionModal
@@ -1793,6 +1913,10 @@ onBeforeUnmount(() => { if (import.meta.client) document.removeEventListener('cl
 /* Stat strip */
 .stat-grid {
   display: grid; grid-template-columns: repeat(5, 1fr);
+  /* Shared Pool card hidden (opted out) → 4 cards; smaller screens unchanged. */
+  @media (min-width: 1201px) {
+    &.stat-grid--4 { grid-template-columns: repeat(4, 1fr); }
+  }
   gap: 12px; margin-bottom: 18px;
   @media (max-width: 1200px) {
     grid-template-columns: repeat(3, 1fr);
@@ -1963,6 +2087,26 @@ body.dark .search-wrap input {
 }
 .flag-btn.on { background: var(--amber-light); border-color: var(--amber-border); color: var(--amber); }
 .flag-btn.ml-auto { margin-left: auto; }
+.flag-count {
+  margin-top: 4px; font-size: .6rem; font-weight: 800; color: var(--rose);
+  text-align: center; white-space: nowrap;
+}
+.flag-reports { margin-top: 14px; }
+.flag-reports-hdr { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 8px; }
+.flag-resolve {
+  padding: 5px 10px; border-radius: 7px; cursor: pointer;
+  border: 1px solid var(--teal-border); background: var(--white);
+  color: var(--teal-mid); font-family: Figtree, sans-serif; font-size: .66rem; font-weight: 700;
+}
+.flag-resolve:disabled { opacity: .6; cursor: default; }
+.flag-report {
+  padding: 8px 10px; border-radius: 7px; margin-bottom: 6px;
+  background: var(--amber-light); border: 1px solid var(--amber-border);
+}
+.flag-report-top { display: flex; justify-content: space-between; gap: 10px; font-size: .7rem; color: var(--ink); }
+.flag-report-top span { color: var(--ink-dim); font-size: .64rem; text-align: right; }
+.flag-report-note { margin-top: 4px; font-size: .7rem; color: var(--ink-mid); white-space: pre-line; }
+.flag-report-empty { font-size: .7rem; color: var(--ink-dim); }
 
 .td-right { text-align: right; }
 .view-btn {
@@ -2054,8 +2198,13 @@ body.dark .search-wrap input {
 
 .expanded {
   padding: 14px 20px 16px 56px;
-  display: grid; grid-template-columns: 1fr auto; gap: 20px;
+  /* Question + options take 1/3, explanation 2/3 — explanations are the long
+     part, and the old fixed 240px side column made them a narrow scroll. */
+  display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 2fr); gap: 24px;
   border-top: 1px dashed var(--border);
+}
+@media (max-width: 900px) {
+  .expanded { grid-template-columns: minmax(0, 1fr); padding-left: 20px; }
 }
 .exp-stem { font-size: .73rem; color: var(--ink); line-height: 1.6; margin-bottom: 10px; white-space: pre-line; }
 .choices { display: flex; flex-direction: column; gap: 5px; }
@@ -2074,7 +2223,7 @@ body.dark .search-wrap input {
 .choice.correct .choice-text { color: var(--teal-dark); }
 .correct-tag { margin-left: auto; font-size: .6rem; font-weight: 800; color: var(--teal-mid); }
 
-.expanded-side { min-width: 200px; max-width: 240px; }
+.expanded-side { min-width: 0; }
 .exp-label {
   font-size: .6rem; font-weight: 800; text-transform: uppercase; letter-spacing: 1.5px;
   color: var(--ink-dim); margin-bottom: 8px;

@@ -284,7 +284,7 @@ async function exportReport() {
       <div>
         <div class="page-title">Program Dashboard</div>
         <div class="page-sub">
-          <template v-if="data">{{ data.header.type }} · {{ data.header.enrolled }} residents enrolled · Last updated {{ data.header.updated_at }}</template>
+          <template v-if="data">{{ data.header.enrolled }} residents enrolled · Last updated {{ data.header.updated_at }}</template>
           <template v-else>Loading…</template>
         </div>
       </div>

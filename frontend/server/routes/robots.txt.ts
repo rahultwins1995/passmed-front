@@ -46,6 +46,11 @@ export default defineEventHandler((event) => {
     'Disallow: /api/',
     'Disallow: /reset-password',
     'Disallow: /login',
+    // NEW-105: keep the authenticated app areas out of search results. The student and
+    // institute portals are behind login and hold no public/marketing content, so they
+    // should never be crawled or indexed.
+    'Disallow: /student',
+    'Disallow: /institute',
     'Allow: /',
     '',
     `Sitemap: ${siteUrl}/sitemap.xml`,

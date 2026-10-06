@@ -138,6 +138,7 @@ function mapCohort(raw: any): Cohort {
 // ── Seats state ───────────────────────────────────────────────────────────────
 const cohortsLoading = ref(true)
 const totalSeats     = ref(0)          // set from GET /seats-info → licence_seats
+const inviteCode     = ref('')         // institution's student self sign-up code
 const cohorts        = ref<Cohort[]>([])
 // ── Licence lifecycle (display-only; billing stays manual) ─────────────────────
 const licenceEnd     = ref<string | null>(null)   // ISO Y-m-d — expiry / renewal date
@@ -166,6 +167,7 @@ async function fetchSeatsInfo() {
   try {
     const res: any = await api('/seats-info')
     totalSeats.value = res.data?.total_seats ?? 0
+    inviteCode.value = res.data?.invite_code ?? ''
     // The licence EXPIRY (admin's End date) is the source of truth. Only fall back to
     // the renewal date when there is no end date — the renewal column historically
     // defaulted to the CREATION date, which wrongly showed "Expires today".
@@ -173,6 +175,16 @@ async function fetchSeatsInfo() {
     licenceAutoRenew.value = !!res.data?.licence_auto_renew
   } catch {} finally {
     seatsInfoLoading.value = false
+  }
+}
+
+async function copyInviteCode() {
+  if (!inviteCode.value) return
+  try {
+    await navigator.clipboard.writeText(inviteCode.value)
+    showToast('Invite code copied', 'var(--teal)')
+  } catch {
+    showToast('Could not copy — select the code and copy it manually', 'var(--rose)')
   }
 }
 
@@ -516,8 +528,13 @@ async function sendInvite(cohortId: number) {
       closeInvite()
       // Refresh existingStudents so the 4 top stat boxes update immediately
       fetchExistingStudents()
-      const left = seatsAvailable.value - 1
-      showToast(`Invite sent · ${left} seat${left !== 1 ? 's' : ''} remaining`, 'var(--teal)')
+      if (res?.email_sent === false) {
+        // Seat created, but the email didn't go out — say so (Resend invite retries it).
+        showToast(res?.message || 'Student added, but the invite email could not be sent.', 'var(--rose)')
+      } else {
+        const left = seatsAvailable.value - 1
+        showToast(`Invite sent · ${left} seat${left !== 1 ? 's' : ''} remaining`, 'var(--teal)')
+      }
     }
   } catch {
     showToast(isExisting ? 'Failed to add student' : 'Failed to send invite', 'var(--rose)')
@@ -793,7 +810,9 @@ const csvDragging = ref(false)
 // Ref-free (both $refs and a script-setup ref proved unreliable here): find the
 // child input from the click's currentTarget. The e.target === input guard stops
 // the programmatic .click() from bubbling back and re-firing this handler.
-function triggerFilePicker(e: MouseEvent) {
+// NEW-104: accepts keyboard events too so the drop-zone can be triggered with Enter/Space
+// (both MouseEvent and KeyboardEvent expose currentTarget/target).
+function triggerFilePicker(e: MouseEvent | KeyboardEvent) {
   const zone  = e.currentTarget as HTMLElement | null
   const input = zone?.querySelector('input[type="file"]') as HTMLInputElement | null
   if (!input || e.target === input) return
@@ -853,6 +872,197 @@ function downloadCohortTemplate() {
   URL.revokeObjectURL(url)
 }
 
+// ── Bulk upload: every student at once, allocated by a Cohort column ─────────
+// Missing cohorts are created on confirm. Cohort names are grouped by a
+// normalised key (case, spaces and punctuation ignored) so "Year 1", "Year1" and
+// "year 1" land in ONE cohort; the review step shows every group with the
+// spellings it merged, lets the admin rename (renaming one group to match
+// another merges them), and says which cohorts are new vs existing.
+type BuRow = { firstName: string; lastName: string; email: string; cohort: string; valid: boolean }
+type BuPlan = { key: string; name: string; existingId: number | null; rows: BuRow[]; variants: { name: string; count: number }[] }
+
+const bulkUpload = ref({
+  open: false,
+  step: 'upload' as 'upload' | 'review',
+  text: '',
+  fileName: '',
+  dragging: false,
+  names: {} as Record<string, string>,  // group key → chosen cohort name
+  blankTarget: '',                      // cohort name for rows with no cohort ('' = skip)
+  submitting: false,
+})
+
+function cohortKey(name: string) {
+  return (name || '').toLowerCase().replace(/[^a-z0-9]/g, '')
+}
+
+const buRows = computed<BuRow[]>(() => {
+  const text = bulkUpload.value.text
+  if (!text.trim()) return []
+  const lines = text.split(/\r?\n/).map(l => l.trim()).filter(Boolean)
+  if (!lines.length) return []
+  // Header row → map columns by name, so a reordered sheet still works.
+  let idx = { first: 0, last: 1, email: 2, cohort: 3 }
+  const head = parseCsvLine(lines[0]!).map(h => h.toLowerCase())
+  const hasHeader = head.some(h => h.includes('email') || h.includes('name') || h.includes('cohort'))
+  if (hasHeader) {
+    const find = (pred: (h: string) => boolean, dflt: number) => { const i = head.findIndex(pred); return i >= 0 ? i : dflt }
+    idx = {
+      first:  find(h => h.includes('first'), 0),
+      last:   find(h => h.includes('last') || h.includes('surname'), 1),
+      email:  find(h => h.includes('email'), 2),
+      cohort: find(h => h.includes('cohort') || h.includes('group'), 3),
+    }
+  }
+  return (hasHeader ? lines.slice(1) : lines).map(l => {
+    const c = parseCsvLine(l)
+    const firstName = c[idx.first] ?? '', lastName = c[idx.last] ?? '', email = c[idx.email] ?? ''
+    const cohort = (c[idx.cohort] ?? '').replace(/\s+/g, ' ').trim()
+    return { firstName, lastName, email, cohort, valid: !!firstName && /.+@.+\..+/.test(email) }
+  })
+})
+const buValid   = computed(() => buRows.value.filter(r => r.valid))
+const buInvalid = computed(() => buRows.value.length - buValid.value.length)
+const buBlank   = computed(() => buValid.value.filter(r => !r.cohort))
+
+// Raw groups straight from the file (before any renaming).
+const buGroups = computed(() => {
+  const m = new Map<string, { key: string; variants: Map<string, number>; rows: BuRow[] }>()
+  for (const r of buValid.value) {
+    if (!r.cohort) continue
+    const key = cohortKey(r.cohort)
+    if (!key) continue
+    const g = m.get(key) ?? { key, variants: new Map(), rows: [] }
+    g.variants.set(r.cohort, (g.variants.get(r.cohort) ?? 0) + 1)
+    g.rows.push(r)
+    m.set(key, g)
+  }
+  return [...m.values()].map(g => {
+    const variants = [...g.variants.entries()].map(([name, count]) => ({ name, count })).sort((a, b) => b.count - a.count)
+    const existing = cohorts.value.find(c => cohortKey(c.label) === g.key)
+    return { key: g.key, rows: g.rows, variants, defaultName: existing?.label ?? variants[0]!.name }
+  })
+})
+
+function buName(key: string) {
+  return bulkUpload.value.names[key] ?? buGroups.value.find(g => g.key === key)?.defaultName ?? ''
+}
+
+// Final allocation: groups merged by their CHOSEN name, matched to existing cohorts.
+const buPlan = computed<BuPlan[]>(() => {
+  const out = new Map<string, BuPlan>()
+  const add = (name: string, rows: BuRow[], variants: { name: string; count: number }[]) => {
+    const key = cohortKey(name)
+    if (!key) return
+    const existing = cohorts.value.find(c => cohortKey(c.label) === key)
+    const p = out.get(key) ?? { key, name: existing?.label ?? name.trim(), existingId: existing?.id ?? null, rows: [], variants: [] }
+    p.rows.push(...rows)
+    p.variants.push(...variants)
+    out.set(key, p)
+  }
+  for (const g of buGroups.value) add(buName(g.key), g.rows, g.variants)
+  if (bulkUpload.value.blankTarget && buBlank.value.length) {
+    add(bulkUpload.value.blankTarget, buBlank.value, [{ name: '(no cohort)', count: buBlank.value.length }])
+  }
+  return [...out.values()]
+})
+const buToInvite = computed(() => buPlan.value.reduce((n, p) => n + p.rows.length, 0))
+const buNewCount = computed(() => buPlan.value.filter(p => p.existingId == null).length)
+// Names offered in the rename / no-cohort pickers: existing cohorts + file groups.
+const buNameOptions = computed(() => {
+  const seen = new Set<string>(); const out: string[] = []
+  for (const n of [...cohorts.value.map(c => c.label), ...buGroups.value.map(g => buName(g.key))]) {
+    const k = cohortKey(n); if (k && !seen.has(k)) { seen.add(k); out.push(n) }
+  }
+  return out
+})
+
+function openBulkUpload() {
+  bulkUpload.value = { open: true, step: 'upload', text: '', fileName: '', dragging: false, names: {}, blankTarget: '', submitting: false }
+}
+function closeBulkUpload() {
+  if (bulkUpload.value.submitting) return
+  bulkUpload.value.open = false
+}
+async function loadBulkFile(file: File | undefined | null) {
+  if (!file) return
+  bulkUpload.value.fileName = file.name
+  bulkUpload.value.text = await fileToText(file)
+  bulkUpload.value.names = {}
+  bulkUpload.value.blankTarget = ''
+}
+function handleBulkFile(e: Event) { loadBulkFile((e.target as HTMLInputElement).files?.[0]) }
+function handleBulkDrop(e: DragEvent) {
+  e.preventDefault()
+  bulkUpload.value.dragging = false
+  loadBulkFile(e.dataTransfer?.files[0])
+}
+
+function downloadBulkTemplate() {
+  const csv = 'First name,Last name,Email,Cohort\nJane,Doe,jane.doe@example.com,Year 1\nJohn,Smith,john.smith@example.com,Year 2\n'
+  const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' })
+  const url = URL.createObjectURL(blob)
+  const a = document.createElement('a')
+  a.href = url
+  a.download = 'students-with-cohorts-template.csv'
+  document.body.appendChild(a)
+  a.click()
+  document.body.removeChild(a)
+  URL.revokeObjectURL(url)
+}
+
+async function submitBulkUpload() {
+  const plan = buPlan.value
+  if (!plan.length || bulkUpload.value.submitting) return
+  bulkUpload.value.submitting = true
+  const total = { invited: 0, duplicate: 0, invalid: 0, no_seats: 0, email_failed: 0 }
+  let created = 0
+  const failed: string[] = []
+  try {
+    for (const [i, p] of plan.entries()) {
+      let cohortId = p.existingId
+      if (cohortId == null) {
+        try {
+          const color = cohortColors[(cohorts.value.length + i) % cohortColors.length]!.label.toLowerCase()
+          const res: any = await api('/cohorts', { method: 'POST', body: { name: p.name, color, exam_ids: [] } })
+          cohortId = Number(res?.data?.id) || null
+          if (cohortId) created++
+        } catch (e) { logError('[seats-billing] bulk upload: create cohort failed', p.name, e) }
+        if (!cohortId) { failed.push(p.name); continue }
+      }
+      // The bulk endpoint takes up to 500 rows per call.
+      for (let k = 0; k < p.rows.length; k += 500) {
+        const chunk = p.rows.slice(k, k + 500)
+        try {
+          const resp: any = await api(`/cohorts/${cohortId}/students/bulk`, {
+            method: 'POST',
+            body: { students: chunk.map(r => ({ first_name: r.firstName, last_name: r.lastName, email: r.email })) },
+          })
+          const sm = resp?.summary || {}
+          for (const k2 of Object.keys(total) as (keyof typeof total)[]) total[k2] += Number(sm[k2] || 0)
+        } catch (e) {
+          logError('[seats-billing] bulk upload: invite chunk failed', p.name, e)
+          if (!failed.includes(p.name)) failed.push(p.name)
+        }
+      }
+    }
+  } finally {
+    bulkUpload.value.submitting = false
+  }
+  bulkUpload.value.open = false
+  await Promise.all([fetchCohorts(), fetchExistingStudents(), fetchSeatsInfo()].map(pr => pr?.catch?.(() => {})))
+
+  const parts: string[] = []
+  if (created)         parts.push(`${created} cohort${created !== 1 ? 's' : ''} created`)
+  parts.push(`${total.invited} invited`)
+  if (total.duplicate) parts.push(`${total.duplicate} already in institution`)
+  if (total.invalid)   parts.push(`${total.invalid} invalid`)
+  if (total.no_seats)  parts.push(`${total.no_seats} seat-full`)
+  if (total.email_failed) parts.push(`${total.email_failed} email${total.email_failed !== 1 ? 's' : ''} not sent`)
+  if (failed.length)   parts.push(`failed for: ${failed.join(', ')}`)
+  showToast(parts.join(' · '), failed.length || total.email_failed ? 'var(--rose)' : 'var(--teal)')
+}
+
 async function importCsv(cohortId: number) {
   const cohort = cohorts.value.find(c => c.id === cohortId)
   if (!cohort) return
@@ -873,7 +1083,8 @@ async function importCsv(cohortId: number) {
     if (s.duplicate) parts.push(`${s.duplicate} duplicate`)
     if (s.invalid)   parts.push(`${s.invalid} invalid`)
     if (s.no_seats)  parts.push(`${s.no_seats} seat-full`)
-    showToast(parts.join(' · ') || 'Nothing to invite', s.invited ? 'var(--teal)' : 'var(--rose)')
+    if (s.email_failed) parts.push(`${s.email_failed} email${s.email_failed !== 1 ? 's' : ''} not sent`)
+    showToast(parts.join(' · ') || 'Nothing to invite', s.invited && !s.email_failed ? 'var(--teal)' : 'var(--rose)')
   } catch (e) {
     logError('[seats-billing] bulk importCsv failed', e)
     showToast('Bulk invite failed — please try again', 'var(--rose)')
@@ -1057,8 +1268,9 @@ async function submitNewCohort() {
       if (s.duplicate) parts.push(`${s.duplicate} duplicate`)
       if (s.invalid)   parts.push(`${s.invalid} invalid`)
       if (s.no_seats)  parts.push(`${s.no_seats} seat-full`)
+      if (s.email_failed) parts.push(`${s.email_failed} email${s.email_failed !== 1 ? 's' : ''} not sent`)
       showToast(`Cohort "${name}" created${parts.length ? ' · ' + parts.join(' · ') : ''}`,
-        s.invited ? 'var(--teal)' : 'var(--amber)')
+        s.invited && !s.email_failed ? 'var(--teal)' : 'var(--amber)')
       // Surface the rows that were NOT invited (duplicate/invalid/no-seat) so the
       // admin can act on them — not just the aggregate count above.
       const problems = bulkResults.filter((r:any) => r && r.status && r.status !== 'invited')
@@ -1174,7 +1386,8 @@ const bulkStatusLabel = (s: string) =>
 
       <!-- ── Left: tabs ──────────────────────────────────────────────────── -->
       <div>
-        <!-- Tab toggle (pill style) -->
+        <!-- Tab toggle (pill style) + student invite code -->
+        <div class="tab-bar">
         <div class="tab-toggle">
           <button type="button" :class="{ active: activeTab === 'cohorts' }" @click="activeTab = 'cohorts'">
             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
@@ -1184,6 +1397,12 @@ const bulkStatusLabel = (s: string) =>
             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
             All residents
           </button>
+        </div>
+          <div v-if="inviteCode" class="invite-code-chip" title="Students can enter this code at sign-up to join your institution">
+            <span class="invite-code-label">Student invite code</span>
+            <code class="invite-code-val">{{ inviteCode }}</code>
+            <button type="button" class="invite-code-copy" @click="copyInviteCode">Copy</button>
+          </div>
         </div>
 
         <!-- ── Cohorts tab ─────────────────────────────────────────────── -->
@@ -1223,10 +1442,16 @@ const bulkStatusLabel = (s: string) =>
           <template v-else>
             <div v-if="cohorts.length" class="cohort-meta-row">
               <span>{{ seatsOccupied }} residents across {{ cohorts.length }} cohorts · click <strong>Invite</strong> on any cohort to add a resident</span>
-              <button type="button" v-if="canEdit(PERM_AREA)" class="btn-new-cohort" @click="openNewCohort">
-                <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-                New cohort
-              </button>
+              <div v-if="canEdit(PERM_AREA)" style="display:flex;gap:6px;">
+                <button type="button" class="btn-new-cohort" @click="openBulkUpload" title="Upload all students at once, with a Cohort column">
+                  <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+                  Bulk upload
+                </button>
+                <button type="button" class="btn-new-cohort" @click="openNewCohort">
+                  <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                  New cohort
+                </button>
+              </div>
             </div>
 
             <div v-for="cohort in cohorts" :key="cohort.id" class="cohort-card">
@@ -1382,10 +1607,15 @@ const bulkStatusLabel = (s: string) =>
                   <div
                     class="drop-zone"
                     :class="{ dragging: csvDragging }"
+                    role="button"
+                    tabindex="0"
+                    aria-label="Upload a CSV of students — choose a file or drag and drop"
                     @dragover.prevent="csvDragging = true"
                     @dragleave="csvDragging = false"
                     @drop="handleDrop"
                     @click="triggerFilePicker"
+                    @keydown.enter="triggerFilePicker"
+                    @keydown.space.prevent="triggerFilePicker"
                   >
                     <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="var(--teal-mid)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="margin:0 auto 10px;display:block;"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="12" y1="18" x2="12" y2="12"/><line x1="9" y1="15" x2="15" y2="15"/></svg>
                     <div class="drop-title">Drop CSV or spreadsheet here</div>
@@ -1497,7 +1727,10 @@ const bulkStatusLabel = (s: string) =>
             <div v-if="!cohorts.length" class="cohort-empty-state">
               <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="var(--ink-faint)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
               <div>No cohorts yet</div>
-              <button type="button" class="btn-new-cohort" @click="openNewCohort" style="margin-top:10px;">+ Create your first cohort</button>
+              <div v-if="canEdit(PERM_AREA)" style="display:flex;gap:8px;justify-content:center;margin-top:10px;">
+                <button type="button" class="btn-new-cohort" @click="openNewCohort">+ Create your first cohort</button>
+                <button type="button" class="btn-new-cohort" @click="openBulkUpload">Bulk upload students</button>
+              </div>
             </div>
           </template>
         </template>
@@ -1772,9 +2005,14 @@ const bulkStatusLabel = (s: string) =>
               <template v-else-if="newCohortModal.inviteMode === 'bulk'">
                 <div
                   class="drop-zone"
+                  role="button"
+                  tabindex="0"
+                  aria-label="Upload a CSV — choose a file or drag and drop"
                   @dragover.prevent
                   @drop="handleNcDrop"
                   @click="triggerFilePicker"
+                  @keydown.enter="triggerFilePicker"
+                  @keydown.space.prevent="triggerFilePicker"
                 >
                   <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="var(--ink-dim)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="margin:0 auto 8px;display:block;"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="12" y1="18" x2="12" y2="12"/><line x1="9" y1="15" x2="15" y2="15"/></svg>
                   <div class="drop-title">Drop CSV or spreadsheet here</div>
@@ -1803,6 +2041,95 @@ const bulkStatusLabel = (s: string) =>
             </button>
           </div>
 
+        </div>
+      </div>
+    </Transition>
+
+    <!-- Bulk upload (students + Cohort column) -->
+    <Transition name="modal">
+      <div v-if="bulkUpload.open" class="modal-overlay" @click.self="closeBulkUpload">
+        <div class="nc-modal" style="max-width:620px;">
+          <div class="nc-header">
+            <div>
+              <div class="nc-title">{{ bulkUpload.step === 'upload' ? 'Bulk upload students' : 'Confirm cohorts' }}</div>
+              <div class="nc-sub">{{ seatsAvailable }} seat{{ seatsAvailable !== 1 ? 's' : '' }} available</div>
+            </div>
+            <button type="button" class="nc-close" @click="closeBulkUpload" aria-label="Close">
+              <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+            </button>
+          </div>
+
+          <div class="nc-body">
+            <!-- Step 1: upload -->
+            <template v-if="bulkUpload.step === 'upload'">
+              <div
+                class="drop-zone"
+                :class="{ dragging: bulkUpload.dragging }"
+                role="button" tabindex="0"
+                aria-label="Upload a CSV or spreadsheet — choose a file or drag and drop"
+                @dragover.prevent="bulkUpload.dragging = true"
+                @dragleave="bulkUpload.dragging = false"
+                @drop="handleBulkDrop"
+                @click="triggerFilePicker"
+                @keydown.enter="triggerFilePicker"
+                @keydown.space.prevent="triggerFilePicker"
+              >
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="var(--ink-dim)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="margin:0 auto 8px;display:block;"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="12" y1="18" x2="12" y2="12"/><line x1="9" y1="15" x2="15" y2="15"/></svg>
+                <div class="drop-title">{{ bulkUpload.fileName || 'Drop CSV or spreadsheet here' }}</div>
+                <div class="drop-sub">or click to browse · .csv, .xlsx, .xls accepted</div>
+                <input type="file" accept=".csv,.xlsx,.xls" style="display:none" @change="handleBulkFile" />
+              </div>
+              <div v-if="buRows.length" class="nc-bulk-summary" :class="buInvalid ? 'amber' : 'green'">
+                {{ buValid.length }} student{{ buValid.length !== 1 ? 's' : '' }} found across {{ buGroups.length }} cohort name{{ buGroups.length !== 1 ? 's' : '' }}
+                <template v-if="buBlank.length"> · {{ buBlank.length }} with no cohort</template>
+                <template v-if="buInvalid"> · {{ buInvalid }} invalid row{{ buInvalid !== 1 ? 's' : '' }} (missing first name or email) will be skipped</template>
+              </div>
+              <div class="invite-note" style="margin-top:8px;">Columns: <code>First name, Last name, Email, Cohort</code>. Cohorts that don't exist yet are created for you — you'll confirm them on the next step.
+                <a href="#" @click.prevent="downloadBulkTemplate" style="color:var(--teal-mid);font-weight:600;text-decoration:underline;margin-left:6px;">Download template</a>
+              </div>
+            </template>
+
+            <!-- Step 2: review cohorts -->
+            <template v-else>
+              <div class="invite-note" style="margin-bottom:10px;">
+                Similar spellings (ignoring case, spaces and punctuation) have been grouped. Rename a cohort to merge it into another.
+              </div>
+              <datalist id="bu-cohort-names"><option v-for="n in buNameOptions" :key="n" :value="n" /></datalist>
+              <div class="bu-groups">
+                <div v-for="g in buGroups" :key="g.key" class="bu-group">
+                  <input type="text" class="modal-input bu-name" list="bu-cohort-names" :value="buName(g.key)"
+                    @input="bulkUpload.names[g.key] = ($event.target as HTMLInputElement).value" aria-label="Cohort name" />
+                  <span class="bu-count">{{ g.rows.length }} student{{ g.rows.length !== 1 ? 's' : '' }}</span>
+                  <span class="bu-tag" :class="cohorts.some(c => cohortKey(c.label) === cohortKey(buName(g.key))) ? 'existing' : 'new'">
+                    {{ cohorts.some(c => cohortKey(c.label) === cohortKey(buName(g.key))) ? 'Existing' : 'New' }}
+                  </span>
+                  <div v-if="g.variants.length > 1" class="bu-variants">
+                    Merged spellings: <template v-for="(v, i) in g.variants" :key="v.name">{{ i ? ', ' : '' }}"{{ v.name }}" ({{ v.count }})</template>
+                  </div>
+                </div>
+              </div>
+              <div v-if="buBlank.length" class="modal-field" style="margin-top:12px;">
+                <label class="modal-label">{{ buBlank.length }} student{{ buBlank.length !== 1 ? 's have' : ' has' }} no cohort</label>
+                <select v-model="bulkUpload.blankTarget" class="modal-input">
+                  <option value="">Skip them</option>
+                  <option v-for="n in buNameOptions" :key="n" :value="n">Add to {{ n }}</option>
+                </select>
+              </div>
+              <div class="nc-bulk-summary" :class="buToInvite > seatsAvailable ? 'amber' : 'green'" style="margin-top:12px;">
+                {{ buPlan.length }} cohort{{ buPlan.length !== 1 ? 's' : '' }} ({{ buNewCount }} new) · {{ buToInvite }} student{{ buToInvite !== 1 ? 's' : '' }} to invite · {{ seatsAvailable }} seats available
+                <template v-if="buToInvite > seatsAvailable"> — invites beyond your seat limit will be skipped</template>
+              </div>
+            </template>
+          </div>
+
+          <div class="nc-footer">
+            <button v-if="bulkUpload.step === 'review'" type="button" class="btn-secondary" :disabled="bulkUpload.submitting" @click="bulkUpload.step = 'upload'">Back</button>
+            <button v-else type="button" class="btn-secondary" @click="closeBulkUpload">Cancel</button>
+            <button v-if="bulkUpload.step === 'upload'" type="button" class="btn-send" :disabled="!buValid.length" @click="bulkUpload.step = 'review'">Review cohorts</button>
+            <button v-else type="button" class="btn-send" :disabled="bulkUpload.submitting || !buToInvite" @click="submitBulkUpload">
+              {{ bulkUpload.submitting ? 'Uploading…' : `Create ${buNewCount} cohort${buNewCount !== 1 ? 's' : ''} & invite ${buToInvite}` }}
+            </button>
+          </div>
         </div>
       </div>
     </Transition>
@@ -2152,6 +2479,30 @@ body.dark .bulk-res-badge.br-no_seats  { background: #312e81; color: #c7d2fe; }
   border-color: var(--teal-border); box-shadow: 0 1px 4px rgba(0,0,0,.06);
 }
 
+/* Tab toggle row: pills left, invite code chip right. */
+.tab-bar {
+  display: flex; align-items: center; justify-content: space-between;
+  gap: 12px; flex-wrap: wrap; margin-bottom: 16px;
+}
+.tab-bar .tab-toggle { margin-bottom: 0; }
+.invite-code-chip {
+  display: flex; align-items: center; gap: 8px;
+  padding: 6px 6px 6px 12px; border-radius: 10px;
+  background: var(--surface); border: 1px solid var(--border);
+  font-size: .7rem; color: var(--ink-dim);
+}
+.invite-code-label { font-weight: 700; }
+.invite-code-val {
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: .74rem; font-weight: 700; color: var(--ink);
+  user-select: all;
+}
+.invite-code-copy {
+  padding: 5px 10px; border-radius: 7px; cursor: pointer;
+  border: 1px solid var(--teal-border); background: var(--white);
+  color: var(--teal-mid); font-family: Figtree, sans-serif; font-size: .68rem; font-weight: 700;
+}
+
 /* ── Cohort meta row ─────────────────────────────────────────────────── */
 .cohort-meta-row {
   display: flex; align-items: center; justify-content: space-between;
@@ -2168,6 +2519,19 @@ body.dark .bulk-res-badge.br-no_seats  { background: #312e81; color: #c7d2fe; }
   font-size: .73rem; font-weight: 600; color: var(--ink-dim); cursor: pointer;
 }
 .btn-new-cohort:hover { border-color: var(--teal-border); color: var(--teal); }
+
+/* ── Bulk upload review ─────────────────────────────────────────────── */
+.bu-groups { display: flex; flex-direction: column; gap: 8px; max-height: 320px; overflow-y: auto; }
+.bu-group {
+  display: grid; grid-template-columns: minmax(0, 1fr) auto auto; gap: 8px; align-items: center;
+  padding: 8px 10px; border: 1px solid var(--border); border-radius: 8px; background: var(--surface);
+}
+.bu-name { margin: 0; }
+.bu-count { font-size: .72rem; font-weight: 700; color: var(--ink-mid); white-space: nowrap; }
+.bu-tag { font-size: .6rem; font-weight: 800; text-transform: uppercase; letter-spacing: .5px; padding: 3px 8px; border-radius: 20px; }
+.bu-tag.new { background: var(--teal-pale); color: var(--teal-mid); border: 1px solid var(--teal-border); }
+.bu-tag.existing { background: var(--surface); color: var(--ink-dim); border: 1px solid var(--border); }
+.bu-variants { grid-column: 1 / -1; font-size: .66rem; color: var(--amber); }
 
 /* ── Cohort card ─────────────────────────────────────────────────────── */
 .cohort-card {

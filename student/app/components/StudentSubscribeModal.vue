@@ -129,6 +129,10 @@ function unmountCard() {
 const submitting = ref(false)
 const submitError = ref('')
 const done = ref(false)
+// NEW-16: once the card is charged in this modal session, remember the succeeded
+// PaymentIntent so a FAILED grant can be retried WITHOUT charging the card again
+// (double-charge / orphan-payment bug). Cleared once the grant succeeds.
+const paidPiId = ref<string | null>(null)
 // preparing = true while the modal is getting ready on open (catalogue fetch +
 // Stripe card mount). Drives the loader so the body doesn't pop in piece by
 // piece — especially for "extend", where the exam + plans + card all depend on
@@ -159,7 +163,12 @@ async function submit() {
     // coupon) skips Stripe entirely — Stripe rejects a sub-minimum PaymentIntent
     // ("amount must be ≥ minimum charge") — and addstudentexam grants access
     // with a null payment_intent_id.
-    if (total.value > 0) {
+    if (total.value > 0 && paidPiId.value) {
+      // NEW-16: the card was already charged on a previous attempt whose grant failed.
+      // Reuse that PaymentIntent and retry ONLY the grant below — never create/confirm
+      // a second charge.
+      paymentIntentId = paidPiId.value
+    } else if (total.value > 0) {
       // 1) Create the PaymentIntent on the backend.
       const pi: any = await $fetch(getApiPath('stripe/payment-intent'), {
         method: 'POST',
@@ -199,6 +208,9 @@ async function submit() {
         throw new Error('Payment status: ' + (paymentIntent?.status || 'unknown'))
       }
       paymentIntentId = paymentIntent.id
+      // NEW-16: remember the successful charge so a failed grant can be retried
+      // without charging the card again.
+      paidPiId.value = paymentIntentId
     }
 
     // 4) Add / extend the student's exam access (payment_intent_id is null for
@@ -216,6 +228,9 @@ async function submit() {
     if (sub?.status !== 'success') throw new Error(sub?.msg || 'Subscription failed')
 
     // 5) Refresh the sidebar's exam list + notify any open billing view.
+    // NEW-16: grant succeeded — forget the remembered PaymentIntent so a later,
+    // separate purchase in the same session starts a fresh charge.
+    paidPiId.value = null
     done.value = true
     try { await fetchExams(true) } catch {}
     notifySuccess()

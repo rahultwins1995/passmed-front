@@ -213,7 +213,6 @@ const settingsRoute = computed(() => '/institute/settings')
     </div>
     <div>
       <div class="sb-prog-name">{{ instName || '—' }}</div>
-      <div class="sb-prog-sub">{{ instType || 'Institution' }}</div>
     </div>
   </NuxtLink>
 
@@ -321,7 +320,7 @@ const settingsRoute = computed(() => '/institute/settings')
 
 <style scoped>
 .ni { text-decoration: none; }
-.sb-prog { text-decoration: none; }
+.sb-prog { text-decoration: none; align-items: center; }
 
 /* Uploaded institution logo inside the avatar box (replaces the initials). */
 .sb-prog-logo {

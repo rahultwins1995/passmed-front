@@ -33,6 +33,8 @@ type ApiStudent = {
   name: string
   email?: string
   avatar_url?: string | null
+  cohort_id?: number | null
+  cohort_name?: string | null
 }
 
 type ApiAssignment = {
@@ -150,8 +152,12 @@ async function fetchExams() {
     if (res?.data?.exams) {
       const real = res.data.exams as Array<{ id: number; name: string; type?: string; owned?: boolean }>
       // Append the synthetic Shared Pool entry so it always sits at the end of the
-      // picker, holding every other institution's public questions.
-      exams.value = [...real, { id: SHARED_POOL_ID, name: 'Shared Pool', owned: false, shared: true }]
+      // picker, holding every other institution's public questions — unless the
+      // institution opted out of the Shared Pool (Settings → Program).
+      const sharedOn = res.data.shared_pool_enabled !== false
+      exams.value = sharedOn
+        ? [...real, { id: SHARED_POOL_ID, name: 'Shared Pool', owned: false, shared: true }]
+        : [...real]
       // Auto-select only when there is exactly one REAL exam (ignore the synthetic
       // Shared Pool entry so it never becomes the default selection).
       if (real.length === 1) selectedExamId.value = real[0].id
@@ -159,23 +165,65 @@ async function fetchExams() {
   } catch { /* fail silently */ }
 }
 
+// Query for the Individual list — shared by the paged list and Random fill so
+// both always honour the same bucket + filters.
+function individualQuery(): Record<string, any> {
+  const query: Record<string, any> = {
+    eid:     selectedExamId.value,
+    // Builder rule: exam_id gates Passmed only; My/Shared are exam-independent.
+    passmed_exam_gate: 1,
+  }
+  if (difficulty.value !== 'mixed') query.difficulty = difficulty.value
+  if (subjectId.value)     query.subject_id    = subjectId.value
+  if (domainId.value)      query.domain_id     = domainId.value
+  if (disciplineId.value)  query.discipline_id = disciplineId.value
+  if (source.value !== 'all') query.source = source.value
+  return query
+}
+
+// Random fill: top the selection up to the exam's question total with a random
+// sample of questions matching the current filters (existing picks are kept).
+const randomFilling = ref(false)
+async function randomFill() {
+  const need = questions.value - selectedQIds.value.size
+  if (!selectedExamId.value || need <= 0 || randomFilling.value) return
+  randomFilling.value = true
+  try {
+    const res = await api<any>('/questionbanklist', {
+      query: { ...individualQuery(), page: 1, orderBy: 'random', limit: Math.min(1000, need + selectedQIds.value.size) },
+    })
+    const pool: ApiQuestion[] = res?.status === 'success' && Array.isArray(res.data) ? res.data : []
+    const ids  = new Set(selectedQIds.value)
+    const objs = new Map(selectedQObjects.value)
+    let added = 0
+    for (const q of pool) {
+      if (added >= need) break
+      const id = Number(q.id)
+      if (ids.has(id)) continue
+      ids.add(id); objs.set(id, q); added++
+    }
+    selectedQIds.value     = ids
+    selectedQObjects.value = objs
+    showToast(added < need
+      ? `Added ${added} random question${added !== 1 ? 's' : ''} — only ${added} more match the current filters`
+      : `Added ${added} random question${added !== 1 ? 's' : ''}`)
+  } catch {
+    showToast('Could not pick random questions — please try again')
+  } finally {
+    randomFilling.value = false
+  }
+}
+
 async function fetchExamQuestions() {
   if (!selectedExamId.value) return
   questionsLoading.value = true
   try {
     const query: Record<string, any> = {
-      eid:     selectedExamId.value,
+      ...individualQuery(),
       page:    examQPage.value,
       limit:   examQPageSize,
       orderBy: 'asc',
-      // Builder rule: exam_id gates Passmed only; My/Shared are exam-independent.
-      passmed_exam_gate: 1,
     }
-    if (difficulty.value !== 'mixed') query.difficulty = difficulty.value
-    if (subjectId.value)     query.subject_id    = subjectId.value
-    if (domainId.value)      query.domain_id     = domainId.value
-    if (disciplineId.value)  query.discipline_id = disciplineId.value
-    if (source.value !== 'all') query.source = source.value
     const res = await api<any>('/questionbanklist', { query })
     if (res?.status === 'success') {
       examQuestions.value = res.data  ?? []
@@ -264,7 +312,9 @@ async function ensureAtRisk() {
 async function fetchStudents() {
   studentsLoading.value = true
   try {
-    const res = await api<any>('/testinstitutions', { query: { limit: 500 } })
+    // Was /testinstitutions — that route was removed (NEW-72), which left this
+    // picker permanently empty. /institutions is the live, perm-gated list.
+    const res = await api<any>('/institutions', { query: { limit: 1000 } })
     if (res?.status === 'success') apiStudents.value = res.data ?? []
   } catch { /* fail silently */ }
   finally { studentsLoading.value = false }
@@ -558,10 +608,11 @@ const dueDate   = ref('')
 const qSelMode          = ref<QSelMode>('blueprint')
 // Topics picker = Subject (parent) → Category (child) tree. selectedTopics holds
 // the selected CATEGORY ids (what the backend samples questions from).
-type TopicSubject       = { id: number; name: string; categories: { id: number; name: string }[] }
+// count = questions available in the current bucket (from /questionbank/topic-tree).
+type TopicSubject       = { id: number; name: string; count?: number; categories: { id: number; name: string; count?: number }[] }
 const topicTree         = ref<TopicSubject[]>([])
 const expandedSubject   = ref<number | null>(null)
-const selectedTopics    = ref<Set<number>>(new Set())   // real category ids
+const selectedTopics    = ref<Set<string>>(new Set())   // "subjectId:categoryId"
 const difficulty        = ref<'mixed' | Difficulty>('mixed')
 // Part 3 source picker — which pool the Topics/Individual lists draw from.
 const source            = ref<'all' | 'passmed' | 'mine' | 'public'>('all')
@@ -608,32 +659,20 @@ watch([subjectId, domainId, disciplineId], () => {
   else examQPage.value = 1
 })
 
-// When building a mock from the institution's OWN exam there is no Passmed
-// content to pull, so the "Passmed" source option is hidden — only My questions
-// + Shared pool make sense. For a Passmed exam all four options remain.
+// The bucket picked in step 1 IS the question source, so step 2 has no separate
+// source picker: Shared Pool → other institutions' public questions, the
+// institution's own bucket → its own questions, a Passmed bucket → Passmed.
+// The `source` watcher above refetches the list/facets/tree for the new scope.
 const selectedExamOwned = computed(() => {
   const e = exams.value.find(x => Number(x.id) === Number(selectedExamId.value))
   return !!e?.owned
 })
-// The synthetic Shared Pool entry IS the shared pool, so it only makes sense with
-// source = 'public' — lock the source options to that single choice.
 const isSharedPool = computed(() => Number(selectedExamId.value) === SHARED_POOL_ID)
-const sourceOptions = computed<Array<'all' | 'passmed' | 'mine' | 'public'>>(() =>
-  isSharedPool.value      ? ['public']
-  : selectedExamOwned.value ? ['all', 'mine', 'public']
-  :                           ['all', 'passmed', 'mine', 'public'],
-)
-// If the exam switches to an owned one while Passmed was selected, fall back to All.
-watch(selectedExamOwned, (owned) => {
-  if (owned && source.value === 'passmed') source.value = 'all'
-})
-// Selecting the Shared Pool forces source = 'public' (it IS the public pool). Moving
-// back to a real bucket restores the default 'all'. The existing `source` watcher then
-// refetches the list/facets/tree for the new scope.
-watch(selectedExamId, (id, prev) => {
-  if (Number(id) === SHARED_POOL_ID) source.value = 'public'
-  else if (Number(prev) === SHARED_POOL_ID) source.value = 'all'
-})
+function sourceForBucket(): 'all' | 'passmed' | 'mine' | 'public' {
+  if (!selectedExamId.value) return 'all'
+  return isSharedPool.value ? 'public' : selectedExamOwned.value ? 'mine' : 'passmed'
+}
+watch([selectedExamId, selectedExamOwned], () => { source.value = sourceForBucket() }, { immediate: true })
 
 // Must be after difficulty + examQPage declarations
 watch(examQPage, () => { if (step.value === 2) fetchExamQuestions() })
@@ -734,6 +773,18 @@ const blueprintSlices = computed(() => {
     }
   })
 })
+
+// No blueprint for this bucket → hide the Blueprint tab and fall back to Topics.
+// blueprintChecked stays false until the first fetch for a bucket finishes, so
+// the tab doesn't flicker away while it's still loading.
+const blueprintChecked = ref(false)
+const hasBlueprint = computed(() => blueprintSlices.value.length > 0)
+watch(blueprintLoading, (loading) => {
+  if (loading) return
+  blueprintChecked.value = true
+  if (!hasBlueprint.value && qSelMode.value === 'blueprint') qSelMode.value = 'topics'
+})
+watch(selectedExamId, () => { blueprintChecked.value = false })
 
 // Per-domain allocation: targetPct (the % the user wants) drives count; count
 // can also be nudged with the steppers, which keeps targetPct in sync. The
@@ -868,22 +919,34 @@ async function fetchTopicTree() {
     topicTree.value = Array.isArray(res?.data) ? res.data : []
   } catch { topicTree.value = [] }
 }
-// selectedTopics holds CATEGORY ids (the child). Toggling a category selects it.
-function toggleTopic(catId: number) {
+// selectedTopics holds "subjectId:categoryId" keys. A category (sub-topic) can
+// sit under several subjects, so keying by category id alone ticked it under
+// every topic at once and sampled questions from topics never picked.
+function topicKey(sub: TopicSubject, catId: number) { return `${sub.id}:${catId}` }
+function isTopicSel(sub: TopicSubject, catId: number) { return selectedTopics.value.has(topicKey(sub, catId)) }
+function toggleTopic(sub: TopicSubject, catId: number) {
   const next = new Set(selectedTopics.value)
-  if (next.has(catId)) next.delete(catId); else next.add(catId)
+  const k = topicKey(sub, catId)
+  if (next.has(k)) next.delete(k); else next.add(k)
   selectedTopics.value = next
 }
 function subjectSelCount(sub: TopicSubject) {
-  return sub.categories.filter(c => selectedTopics.value.has(c.id)).length
+  return sub.categories.filter(c => isTopicSel(sub, c.id)).length
+}
+// Questions available in the topic, and in its selected sub-topics.
+function subjectQTotal(sub: TopicSubject) {
+  return sub.count ?? sub.categories.reduce((n, c) => n + (c.count ?? 0), 0)
+}
+function subjectQSelected(sub: TopicSubject) {
+  return sub.categories.filter(c => isTopicSel(sub, c.id)).reduce((n, c) => n + (c.count ?? 0), 0)
 }
 function subjectAllSelected(sub: TopicSubject) {
-  return sub.categories.length > 0 && sub.categories.every(c => selectedTopics.value.has(c.id))
+  return sub.categories.length > 0 && sub.categories.every(c => isTopicSel(sub, c.id))
 }
 function toggleAllInSubject(sub: TopicSubject) {
   const next = new Set(selectedTopics.value)
-  if (subjectAllSelected(sub)) sub.categories.forEach(c => next.delete(c.id))
-  else sub.categories.forEach(c => next.add(c.id))
+  if (subjectAllSelected(sub)) sub.categories.forEach(c => next.delete(topicKey(sub, c.id)))
+  else sub.categories.forEach(c => next.add(topicKey(sub, c.id)))
   selectedTopics.value = next
 }
 
@@ -893,12 +956,21 @@ function toggleStudent(userId: number) {
   if (next.has(userId)) next.delete(userId); else next.add(userId)
   selectedStudents.value = next
 }
+// Custom picker cohort filter: 'all' | 'none' (no cohort) | a cohort id.
+const studentCohortFilter = ref<'all' | 'none' | number>('all')
+const filteredStudents = computed(() => {
+  const f = studentCohortFilter.value
+  if (f === 'all')  return apiStudents.value
+  if (f === 'none') return apiStudents.value.filter(s => !s.cohort_id)
+  return apiStudents.value.filter(s => Number(s.cohort_id) === f)
+})
+// "All" toggles just the students currently shown by the filter.
 function toggleAllStudents() {
-  if (selectedStudents.value.size === apiStudents.value.length) {
-    selectedStudents.value = new Set()
-  } else {
-    selectedStudents.value = new Set(apiStudents.value.map(s => s.user_id))
-  }
+  const shown = filteredStudents.value.map(s => s.user_id)
+  const next  = new Set(selectedStudents.value)
+  if (shown.length && shown.every(id => next.has(id))) shown.forEach(id => next.delete(id))
+  else shown.forEach(id => next.add(id))
+  selectedStudents.value = next
 }
 function toggleExtraTime(userId: number) {
   const next = new Set(extraTimeStudents.value)
@@ -1060,9 +1132,10 @@ function backStep() {
 function resetWizard() {
   step.value = 1; preset.value = null; reassignId.value = null; examName.value = ''
   examName.value = ''; questions.value = 20; duration.value = 60; timed.value = true; dueDate.value = ''
-  qSelMode.value = 'blueprint'; selectedTopics.value = new Set(); expandedSubject.value = null; difficulty.value = 'mixed'; source.value = 'all'
+  qSelMode.value = 'blueprint'; selectedTopics.value = new Set(); expandedSubject.value = null; difficulty.value = 'mixed'
   subjectId.value = null; domainId.value = null; disciplineId.value = null
   selectedExamId.value = exams.value.length === 1 ? exams.value[0].id : null
+  source.value = sourceForBucket()
   examQuestions.value = []; examQTotal.value = 0; examQPage.value = 1
   selectedQIds.value = new Set(); selectedQObjects.value = new Map()
   removedQs.value = new Set()
@@ -1401,18 +1474,12 @@ const finalRecipientCount = computed(() =>
       <!-- ── STEP 2 — Questions ──────────────────────────────────────────── -->
       <div v-else-if="step === 2" class="step-body">
 
-        <!-- Mode tabs + source picker (Part 3) -->
+        <!-- Mode tabs (source = the bucket chosen in step 1) -->
         <div class="card qsel-bar">
           <div class="qsel-tabs">
-            <button type="button" :class="{ on: qSelMode === 'blueprint' }" @click="qSelMode = 'blueprint'">Blueprint</button>
+            <button v-if="hasBlueprint || !blueprintChecked" type="button" :class="{ on: qSelMode === 'blueprint' }" @click="qSelMode = 'blueprint'">Blueprint</button>
             <button type="button" :class="{ on: qSelMode === 'topics' }" @click="qSelMode = 'topics'">Topics</button>
             <button type="button" :class="{ on: qSelMode === 'questions' }" @click="qSelMode = 'questions'">Individual</button>
-          </div>
-          <div v-if="qSelMode !== 'blueprint'" class="qsel-source">
-            <span class="qsel-source-label">Source</span>
-            <button type="button" v-for="s in sourceOptions" :key="s" :class="{ on: source === s }" @click="source = s">
-              {{ s === 'all' ? 'All' : s === 'passmed' ? 'Passmed' : s === 'mine' ? 'My questions' : 'Shared pool' }}
-            </button>
           </div>
         </div>
 
@@ -1488,21 +1555,37 @@ const finalRecipientCount = computed(() =>
           </div>
           <div class="topics-list">
             <div v-for="sub in topicTree" :key="sub.id" class="topic-group">
-              <button type="button" class="topic-head" @click="expandedSubject = expandedSubject === sub.id ? null : sub.id">
+              <div class="topic-head" role="button" tabindex="0"
+                @click="expandedSubject = expandedSubject === sub.id ? null : sub.id"
+                @keydown.enter.prevent="expandedSubject = expandedSubject === sub.id ? null : sub.id">
+                <!-- Tick the whole topic (all its sub-topics) without opening it. -->
+                <span class="chk topic-head-chk" role="checkbox" tabindex="0"
+                  :class="{ on: subjectAllSelected(sub), part: !subjectAllSelected(sub) && subjectSelCount(sub) > 0 }"
+                  :aria-checked="subjectAllSelected(sub) ? 'true' : subjectSelCount(sub) ? 'mixed' : 'false'"
+                  :aria-label="`Select all of ${sub.name}`"
+                  @click.stop="toggleAllInSubject(sub)"
+                  @keydown.enter.stop.prevent="toggleAllInSubject(sub)"
+                  @keydown.space.stop.prevent="toggleAllInSubject(sub)">
+                  <span v-if="subjectAllSelected(sub)">✓</span><span v-else-if="subjectSelCount(sub)">–</span>
+                </span>
                 <span class="topic-head-name">{{ sub.name }}</span>
                 <span class="topic-head-state">
-                  <span v-if="subjectSelCount(sub)" class="topic-count">{{ subjectSelCount(sub) }} selected</span>
+                  <span v-if="subjectSelCount(sub)" class="topic-count">{{ subjectSelCount(sub) }}/{{ sub.categories.length }} sub-topics</span>
+                  <span class="topic-qcount" :title="subjectSelCount(sub) ? 'Questions in selected sub-topics / available' : 'Questions available'">
+                    <template v-if="subjectSelCount(sub)">{{ subjectQSelected(sub) }}/</template>{{ subjectQTotal(sub) }}
+                  </span>
                   <span class="topic-chev" :class="{ open: expandedSubject === sub.id }">⌄</span>
                 </span>
-              </button>
+              </div>
               <div v-if="expandedSubject === sub.id" class="topic-subs">
                 <button type="button" class="topic-all" @click="toggleAllInSubject(sub)">
                   {{ subjectAllSelected(sub) ? 'Clear all' : 'Select all' }}
                 </button>
-                <label v-for="cat in sub.categories" :key="cat.id" class="topic-sub" :class="{ on: selectedTopics.has(cat.id) }">
-                  <input type="checkbox" class="sr-only" :checked="selectedTopics.has(cat.id)" @change="toggleTopic(cat.id)" />
-                  <span class="chk" :class="{ on: selectedTopics.has(cat.id) }"><span v-if="selectedTopics.has(cat.id)">✓</span></span>
+                <label v-for="cat in sub.categories" :key="cat.id" class="topic-sub" :class="{ on: isTopicSel(sub, cat.id) }">
+                  <input type="checkbox" class="sr-only" :checked="isTopicSel(sub, cat.id)" @change="toggleTopic(sub, cat.id)" />
+                  <span class="chk" :class="{ on: isTopicSel(sub, cat.id) }"><span v-if="isTopicSel(sub, cat.id)">✓</span></span>
                   {{ cat.name }}
+                  <span v-if="cat.count != null" class="topic-sub-count">{{ cat.count }}</span>
                 </label>
               </div>
             </div>
@@ -1552,7 +1635,11 @@ const finalRecipientCount = computed(() =>
                   <template v-else-if="selectedQIds.size === questions">{{ selectedQIds.size }}/{{ questions }} allocated</template>
                   <template v-else>{{ selectedQIds.size }}/{{ questions }} allocated · {{ selectedQIds.size - questions }} over</template>
                 </span>
-                <button type="button" v-if="selectedQIds.size" class="reset-btn" @click="selectedQIds = new Set()">Reset</button>
+                <button type="button" class="reset-btn random-btn" :disabled="randomFilling || selectedQIds.size >= questions || !examQTotal"
+                  :title="`Randomly pick questions matching the filters until ${questions} are selected`" @click="randomFill">
+                  {{ randomFilling ? 'Picking…' : `🎲 Random fill${selectedQIds.size < questions ? ' (' + (questions - selectedQIds.size) + ')' : ''}` }}
+                </button>
+                <button type="button" v-if="selectedQIds.size" class="reset-btn" @click="selectedQIds = new Set(); selectedQObjects = new Map()">Reset</button>
               </div>
             </div>
             <div class="q-pick-list">
@@ -1728,16 +1815,24 @@ const finalRecipientCount = computed(() =>
           <div v-if="recipients === 'custom'" class="custom-picker">
             <div class="custom-picker-head">
               <span>Select recipients <span class="recip-count-badge">{{ selectedStudents.size }} selected</span></span>
-              <div style="display:flex;gap:8px;">
-                <button type="button" class="link-btn" @click="toggleAllStudents">All</button>
+              <div style="display:flex;gap:8px;align-items:center;">
+                <select class="stu-cohort-filter" aria-label="Filter by cohort"
+                  :value="String(studentCohortFilter)"
+                  @change="(e) => { const v = (e.target as HTMLSelectElement).value; studentCohortFilter = v === 'all' || v === 'none' ? v : Number(v) }">
+                  <option value="all">All students</option>
+                  <option v-for="c in cohortsForPicker" :key="c.id" :value="String(c.id)">{{ c.name }}</option>
+                  <option value="none">No cohort</option>
+                </select>
+                <button type="button" class="link-btn" @click="toggleAllStudents">{{ studentCohortFilter === 'all' ? 'All' : 'Select shown' }}</button>
                 <button type="button" class="link-btn link-btn-dim" @click="selectedStudents = new Set()">Clear</button>
               </div>
             </div>
             <div v-if="studentsLoading" class="q-loading"><div class="page-spinner"></div></div>
             <div v-else-if="!apiStudents.length" class="rev-empty">No students found.</div>
+            <div v-else-if="!filteredStudents.length" class="rev-empty">No students in this cohort.</div>
             <div v-else class="custom-picker-list">
               <label
-                v-for="s in apiStudents" :key="s.user_id"
+                v-for="s in filteredStudents" :key="s.user_id"
                 class="custom-picker-row" :class="{ on: selectedStudents.has(s.user_id) }"
               >
                 <input type="checkbox" :checked="selectedStudents.has(s.user_id)" @change="toggleStudent(s.user_id)" style="accent-color:var(--teal);cursor:pointer;flex-shrink:0;">
@@ -1747,7 +1842,7 @@ const finalRecipientCount = computed(() =>
                 </div>
                 <div style="flex:1;">
                   <div class="student-name">{{ s.name }}</div>
-                  <div class="student-email">{{ s.email }}</div>
+                  <div class="student-email">{{ s.email }}<template v-if="s.cohort_name"> · {{ s.cohort_name }}</template></div>
                 </div>
               </label>
             </div>
@@ -2190,6 +2285,19 @@ input:disabled { opacity: .45; }
 .qsel-tabs { display: inline-flex; gap: 4px; background: var(--surface); border-radius: 9px; padding: 3px; }
 .qsel-tabs button { padding: 7px 14px; border: none; background: transparent; border-radius: 7px; font-family: 'Figtree', sans-serif; font-size: .76rem; font-weight: 700; color: var(--ink-dim); cursor: pointer; transition: all .14s; }
 .qsel-tabs button.on { background: var(--white); color: var(--teal); box-shadow: 0 1px 3px rgba(15,31,46,.1); }
+.topic-head-chk { flex-shrink: 0; cursor: pointer; }
+.topic-group .topic-head-name { flex: 1; text-align: left; }
+.topic-head-chk.part { border-color: var(--teal); color: var(--teal); }
+.topic-qcount {
+  font-size: .7rem; font-weight: 800; color: var(--ink-mid);
+  font-variant-numeric: tabular-nums; min-width: 48px; text-align: right;
+}
+.topic-sub-count { margin-left: auto; font-size: .66rem; font-weight: 700; color: var(--ink-dim); font-variant-numeric: tabular-nums; }
+.stu-cohort-filter {
+  padding: 4px 8px; border-radius: 7px; border: 1.5px solid var(--border);
+  background: var(--white); font-family: inherit; font-size: .7rem; font-weight: 600; color: var(--ink-mid);
+}
+.random-btn:disabled { opacity: .5; cursor: default; }
 .qsel-source { display: inline-flex; align-items: center; gap: 5px; flex-wrap: wrap; }
 .qsel-source-label { font-size: .6rem; font-weight: 800; text-transform: uppercase; letter-spacing: 1.2px; color: var(--ink-dim); margin-right: 2px; }
 .qsel-source button { padding: 5px 11px; border-radius: 7px; border: 1.5px solid var(--border); background: var(--white); font-size: .72rem; font-weight: 700; color: var(--ink-mid); cursor: pointer; transition: all .14s; }
