@@ -21,6 +21,15 @@ const sessions    = ref<Session[]>([])
 const loadingList = ref(true)
 const loadError   = ref('')
 
+// NEW-68: server-side pagination — show 10, then "Load more" fetches the next page.
+// The old call read only the first page and hid all older history; the backend
+// (/sessions) accepts ?page=&limit= and returns `total`.
+const PAGE_SIZE   = 10
+const page        = ref(1)
+const total       = ref(0)
+const loadingMore = ref(false)
+const baseParams  = ref<Record<string, any>>({})
+
 // Map a single API session row to the UI shape. `exam` relation is loaded
 // with `id,name` columns by the controller's index() — the Exam model has
 // a `name` field (confirmed via StudentExam->examrow definition).
@@ -74,18 +83,45 @@ async function loadSessions() {
   // date-group v-for keeps rendering them under the skeleton while the new
   // exam's request is in flight.
   sessions.value    = []
+  page.value        = 1
+  baseParams.value  = params   // NEW-68: reused by loadMore()
   try {
     const studentApi = useStudentApi()
-    const res: any = await studentApi('/sessions', { params })
+    // NEW-68: first page only (10); "Load more" fetches the rest.
+    const res: any = await studentApi('/sessions', { params: { ...params, page: 1, limit: PAGE_SIZE } })
     sessions.value = (res?.data ?? []).map(mapApiSession)
+    total.value    = Number(res?.total ?? sessions.value.length)
   } catch (e: any) {
     loadError.value = e?.data?.msg || e?.message || 'Failed to load past sessions.'
     sessions.value = []
+    total.value    = 0
   } finally {
     loadingList.value   = false
     examSwitching.value = false   // clear sidebar-set flag after our fetch
   }
 }
+
+// NEW-68: append the next page of 10. Filters (mode/score) apply client-side to the
+// rows loaded so far; loading more brings more into the filterable set.
+async function loadMore() {
+  if (loadingMore.value) return
+  loadingMore.value = true
+  try {
+    const studentApi = useStudentApi()
+    const next = page.value + 1
+    const res: any = await studentApi('/sessions', { params: { ...baseParams.value, page: next, limit: PAGE_SIZE } })
+    const more = (res?.data ?? []).map(mapApiSession)
+    sessions.value = [...sessions.value, ...more]
+    total.value = Number(res?.total ?? total.value)
+    page.value = next
+  } catch (e: any) {
+    loadError.value = e?.data?.msg || e?.message || 'Failed to load more sessions.'
+  } finally {
+    loadingMore.value = false
+  }
+}
+
+const hasMore = computed(() => sessions.value.length < total.value)
 
 onMounted(loadSessions)
 
@@ -542,6 +578,14 @@ function toggleCard(id: number) {
         </div>
       </div>
     </template>
+
+    <!-- NEW-68: Load more (10 at a time) so older history isn't hidden -->
+    <div v-if="hasMore" class="load-more-wrap">
+      <button type="button" class="load-more-btn" :disabled="loadingMore" @click="loadMore">
+        {{ loadingMore ? 'Loading…' : 'Load more' }}
+      </button>
+      <div class="load-more-count">Showing {{ sessions.length }} of {{ total }}</div>
+    </div>
     </template><!-- /v-if !loadingList -->
 
   </div>
@@ -555,6 +599,17 @@ function toggleCard(id: number) {
 </template>
 
 <style scoped>
+/* ── NEW-68: Load more ─────────────────────────────────────────────────── */
+.load-more-wrap { display:flex; flex-direction:column; align-items:center; gap:6px; margin:18px 0 8px; }
+.load-more-btn {
+  padding:9px 22px; border-radius:20px; border:1px solid var(--border, #d7e2ea);
+  background:var(--surface-2, #f3f7fa); color:var(--text, #1f2d3a);
+  font-size:0.85rem; font-weight:600; cursor:pointer; transition:background .15s;
+}
+.load-more-btn:hover:not(:disabled) { background:var(--surface-3, #e7eef3); }
+.load-more-btn:disabled { opacity:.6; cursor:default; }
+.load-more-count { font-size:0.72rem; color:var(--text-muted, #6b7280); }
+
 /* ── Skeleton loaders ─────────────────────────────────────────────────────
    Pulse animation works against surface-2 background so it reads as "shimmer"
    in both light and dark mode without hard-coded colors. */
