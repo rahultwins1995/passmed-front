@@ -38,6 +38,21 @@ const invitePasswordError  = ref('')
 
 const inviteSubmitting = ref(false)
 const inviteServerError = ref('')
+const turnstileToken = ref('')   // NEW-17
+const tsRef = ref(null)
+
+// NEW-17: the register call consumes the Turnstile token, but the auto-login right after
+// goes through the login proxy which ALSO verifies Turnstile. Reset the widget and wait
+// for a fresh token so the post-register login isn't rejected ("Verification failed").
+async function freshTurnstileToken (timeoutMs = 4000) {
+  turnstileToken.value = ''
+  tsRef.value?.reset()
+  const start = Date.now()
+  while (!turnstileToken.value && Date.now() - start < timeoutMs) {
+    await new Promise((r) => setTimeout(r, 100))
+  }
+  return turnstileToken.value
+}
 
 /* step 1 — validate code */
 async function validateInviteCode () {
@@ -109,6 +124,7 @@ async function submitInviteSignup () {
         lname: inviteLastName.value,
         email: inviteEmail.value,
         password: invitePassword.value,
+        turnstileToken: turnstileToken.value,   // NEW-17
         accept_terms: inviteAcceptTerms.value,
         cohort_id: inviteCohortId.value ? Number(inviteCohortId.value) : null,
       },
@@ -119,17 +135,14 @@ async function submitInviteSignup () {
     // entered and route to their portal.
     if (res.status === 'success') {
       inviteExistingAccount.value = false
-      const loggedInUser = await login(inviteEmail.value, invitePassword.value)
-      const role = String(loggedInUser?.user?.role || '').toLowerCase()
-      // Close the pop-up — it used to stay open over the new dashboard until the
-      // user clicked away.
+      // NEW-17: do NOT auto-login here. The register call consumed the Turnstile token and
+      // the login proxy needs a FRESH one, which a widget reset can't reliably mint in
+      // time (the re-challenge is async). The account is created — send the user to the
+      // login screen, whose own widget mints a fresh token, to sign in. Routing to the
+      // portal then happens through the normal login flow.
       closeInvite()
       resetInvite()
-      if (role === 'institution-admin' || role === 'professor') {
-        await router.push('/institute')
-      } else {
-        await router.push('/student')
-      }
+      openLogin()
     } else {
       inviteServerError.value = res?.msg || res?.message || 'Registration failed. Please try again.'
     }
@@ -346,6 +359,9 @@ function switchToSignup () {
           <div v-if="inviteServerError" class="field-error" style="margin-top:8px;">
             {{ inviteServerError }}
           </div>
+
+          <!-- NEW-17: Cloudflare Turnstile — inert until a site key is configured. -->
+          <TurnstileWidget v-model="turnstileToken" ref="tsRef" />
 
           <button
             type="button"

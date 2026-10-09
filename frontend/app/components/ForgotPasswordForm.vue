@@ -8,6 +8,8 @@ const { loginView, closeLogin } = useLoginModal()
 const forgotEmail   = ref('')
 const forgotLoading = ref(false)
 const forgotError   = ref('')
+const turnstileToken = ref('')   // NEW-17
+const tsRef = ref(null)
 
 const submitForgot = async () => {
   forgotError.value = ''
@@ -19,13 +21,14 @@ const submitForgot = async () => {
   try {
     await $fetch(getApiPath('forgot-password'), {
       method: 'POST',
-      body: { email: forgotEmail.value },
+      body: { email: forgotEmail.value, turnstileToken: turnstileToken.value },   // NEW-17
     })
     loginView.value = 'forgot-sent'
   } catch (e) {
     loginView.value = 'forgot-sent'
   } finally {
     forgotLoading.value = false
+    tsRef.value?.reset()   // NEW-17: single-use token
   }
 }
 
@@ -55,6 +58,8 @@ function closeforgotsent () {
             <input v-model="forgotEmail" type="email" autocomplete="email" required />
           </div>
           <p v-if="forgotError" class="error">{{ forgotError }}</p>
+          <!-- NEW-17: Cloudflare Turnstile — inert until a site key is configured. -->
+          <TurnstileWidget v-model="turnstileToken" ref="tsRef" />
           <button type="submit" class="login-submit" :disabled="forgotLoading">
             {{ forgotLoading ? 'Sending…' : 'Send reset link' }}
           </button>

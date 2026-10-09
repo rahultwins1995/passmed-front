@@ -14,14 +14,11 @@
 <script setup>
 const token = defineModel({ type: String, default: '' })
 
-// ONE shared Cloudflare Turnstile widget for every market. The site key is PUBLIC
-// (it ships in the widget markup). We deliberately do NOT read the per-project
-// NUXT_PUBLIC_TURNSTILE_SITE_KEY: those envs had drifted to different, mis-
-// configured widgets (e.g. SA pointed at 0x4AAAAAADl3LNrE0DYiwhmw, which isn't
-// allowed on passmed.co.za) — which is exactly why the captcha only worked on US.
-// This widget lists all six production hostnames and its secret is set server-side
-// (config services.turnstile.secret), so site key + secret stay a matched pair.
-const siteKey = '0x4AAAAAADlGf3BsegbqLNa7'
+// NEW-17: site key is ENV-driven via NUXT_PUBLIC_TURNSTILE_SITE_KEY
+// (runtimeConfig.public.turnstileSiteKey). Each market's Vercel env MUST be set to the
+// key whose SECRET is configured server-side (TURNSTILE_SECRET_KEY) — a matched pair.
+// Empty → the widget stays inert (no token).
+const siteKey = useRuntimeConfig().public.turnstileSiteKey || ''
 
 const el = ref(null)
 let widgetId = null

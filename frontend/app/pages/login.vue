@@ -51,6 +51,8 @@ const loginEmailError    = ref('')
 const loginPasswordError = ref('')
 const loginLoading  = ref(false)
 const loginErrorMsg = ref('')
+const turnstileToken = ref('')   // NEW-17
+const tsRef = ref(null)
 
 function isValidEmail (e) { return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(e) }
 
@@ -78,7 +80,8 @@ async function submitLogin () {
 
   loginLoading.value = true
   try {
-    const loggedInUser = await login(loginEmail.value, loginPassword.value)
+    const loggedInUser = await login(loginEmail.value, loginPassword.value, turnstileToken.value)
+    tsRef.value?.reset()   // NEW-17: single-use token
     // 2FA enabled → backend emailed an OTP; show the OtpVerify popup.
     if (loggedInUser?.status === '2fa_required') {
       openOtp(loggedInUser.email || loginEmail.value)
@@ -160,6 +163,9 @@ async function submitLogin () {
           <div v-if="loginErrorMsg" class="login-error-msg" style="display:block;margin-top:-8px;">
             {{ loginErrorMsg }}
           </div>
+
+          <!-- NEW-17: Cloudflare Turnstile — the login proxy verifies this token. -->
+          <TurnstileWidget v-model="turnstileToken" ref="tsRef" />
 
           <button class="login-submit" type="submit" :disabled="loginLoading">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/><polyline points="10 17 15 12 10 7"/><line x1="15" y1="12" x2="3" y2="12"/></svg>

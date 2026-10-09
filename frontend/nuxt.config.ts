@@ -201,11 +201,13 @@ export default defineNuxtConfig({
       stripePublishableKey: process.env.NUXT_PUBLIC_STRIPE_PUBLISHABLE_KEY,
       siteUrl: process.env.NUXT_PUBLIC_SITE_URL,
       googleAuthKey: process.env.NUXT_PUBLIC_GOOGLE_AUTH_KEY,
-      // NOTE: the Cloudflare Turnstile site key is NOT exposed here anymore. All
-      // markets use one shared widget hardcoded in app/components/TurnstileWidget.vue
-      // (the per-project NUXT_PUBLIC_TURNSTILE_SITE_KEY envs had drifted to
-      // different, mis-configured widgets). That env var is now unused and safe to
-      // delete from the Vercel projects.
+      // NEW-17: Cloudflare Turnstile site key — ENV-driven again. Set
+      // NUXT_PUBLIC_TURNSTILE_SITE_KEY per Vercel project to the key whose SECRET is
+      // set server-side (TURNSTILE_SECRET_KEY) — they must be a matched pair. The
+      // default below keeps the previously-working shared widget active until each
+      // market sets its own env; remove it once every market has the env set. Empty
+      // → the widget stays inert (no token) and backend verify fails open.
+      turnstileSiteKey: process.env.NUXT_PUBLIC_TURNSTILE_SITE_KEY || '0x4AAAAAADlGf3BsegbqLNa7',
       // Settings key for CMS-driven header/footer chrome (useSiteChrome). When
       // unset, the footer uses hardcoded constant defaults (no network call).
       chromeSettingsKey: process.env.NUXT_PUBLIC_CHROME_SETTINGS_KEY,

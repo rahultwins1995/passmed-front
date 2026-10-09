@@ -469,11 +469,15 @@ async function submitAll() {
         result.value = { ...result.value, [question.id]: r as any }
         const isCurrent = current.value?.id === question.id
         const spent = isCurrent ? captureElapsed(question.id) : (qTimeMap.value[question.id] || 0)
-        syncQuestion(question.id, {
-          chosen_answer: ch || null,
-          result:        r as any,
-          q_time_spent:  spent,
-        })
+        // NEW-122: an answered question MUST be sent with submit:true so the BE scores
+        // it server-side (NEW-60 only grades on submit) — exactly like handleNext and the
+        // per-question timeout path. Without it the pick stays result=NULL and complete()
+        // marks it 'skipped', losing answers submitted via "Submit all & finish".
+        if (ch) {
+          syncQuestion(question.id, { chosen_answer: ch, submit: true, q_time_spent: spent })
+        } else {
+          syncQuestion(question.id, { result: 'skipped', q_time_spent: spent })
+        }
       }
     }
     // Final session-level state push.

@@ -314,6 +314,21 @@ const signupFirstName = ref('')
 const signupLastName  = ref('')
 const signupEmail     = ref('')
 const signupPassword  = ref('')
+const turnstileToken  = ref('')   // NEW-17
+const tsRef = ref(null)
+
+// NEW-17: the signup call consumes the Turnstile token; the attach-to-existing auto-login
+// right after goes through the login proxy which ALSO verifies Turnstile. Reset the widget
+// and wait for a fresh token so that login isn't rejected ("Verification failed").
+async function freshTurnstileToken (timeoutMs = 4000) {
+  turnstileToken.value = ''
+  tsRef.value?.reset()
+  const start = Date.now()
+  while (!turnstileToken.value && Date.now() - start < timeoutMs) {
+    await new Promise((r) => setTimeout(r, 100))
+  }
+  return turnstileToken.value
+}
 // Advisory password-strength meter (same estimator as reset/set-password).
 const signupPwStrength = computed(() => estimatePasswordStrength(signupPassword.value))
 const signupFirstNameError = ref('')
@@ -806,6 +821,7 @@ async function submitSignup (method = 'email') {
             lname: signupLastName.value,
             email: signupEmail.value,
             password: signupPassword.value,
+            turnstileToken: turnstileToken.value,   // NEW-17
             exam_slug: signupExamSlug.value,
             plan: signupPlan.value,
             payment_intent_id: paymentIntentId,
@@ -843,7 +859,8 @@ async function submitSignup (method = 'email') {
           user.value = signupResponse.user
           finalUserRole = signupResponse.user?.role ?? null
         } else {
-          const loggedInUser = await login(signupEmail.value, signupPassword.value)
+          const freshToken = await freshTurnstileToken()   // NEW-17: fresh token for login proxy
+          const loggedInUser = await login(signupEmail.value, signupPassword.value, freshToken)
           finalUserRole = loggedInUser?.user?.role
         }
       } catch (err) {
@@ -1124,6 +1141,9 @@ async function submitSignup (method = 'email') {
           </div>
 
           <div v-if="signupError" class="login-error-msg" style="display:block;">{{ signupError }}</div>
+
+          <!-- NEW-17: Cloudflare Turnstile — inert until a site key is configured. -->
+          <TurnstileWidget v-model="turnstileToken" ref="tsRef" />
 
           <button
             class="signup-submit"
